@@ -106,7 +106,7 @@ var jBridgeVariableDefinitionMap = new Object();
 var jBridgeInitializationList = [];
 var jBridgeComponentMap = new Object();
 var JBRIDGE_COMPONENT_SKIP_PROPERTIES = ["Uuid", "$Version", "TextAlignment"]; //properties to skip when reading Json File
-var JBRIDGE_COMPONENT_TEXT_PROPERTIES = ["Title", "Text", "BackgroundImage"]; //Properties that should include the double qoutes "" in the output JBridge Javacode
+var JBRIDGE_COMPONENT_TEXT_PROPERTIES = ["Title", "Text", "BackgroundImage", "Image", "Icon"]; //Properties that should include the double qoutes "" in the output JBridge Javacode
 
 
 /**
@@ -667,9 +667,9 @@ Blockly.Yail.parseJBridgeJsonData = function(jsonObject){
   var title = property.Title;
   var icon = property.Icon;
   if (title != undefined){
-    jBridgeInitializationList.push("this.Title("+title +");");
+    jBridgeInitializationList.push("this.Title(\""+title +"\");");
   }if(icon != undefined){
-    jBridgeInitializationList.push("this.Icon("+icon +");");
+    jBridgeInitializationList.push("this.Icon(\""+icon +"\");");
   }
   for(var i=0;i<property.$Components.length;i++){
     Blockly.Yail.parseJBridgeJsonComopnents(property.$Components[i], "this");
