@@ -817,14 +817,16 @@ Blockly.Yail.parseBlock = function (block){
   }else if (blockCategory == "Colors"){
     code = Blockly.Yail.parseJBridgeColorBlock(block);
   }else if (blockCategory == "Variables"){
-    code = Blockly.Yail.parseVariableBlocks(block);
+    code = Blockly.Yail.parseJBridgeVariableBlocks(block);
   }else if(blockCategory == "Math"){
     code = Blockly.Yail.parseJBridgeMathBlocks(block);
+  }else if( blockCategory == "Logic"){
+    code = Blockly.Yail.parseJBridgeLogicBlocks(block);
   }
 
   return code;
 }
-Blockly.Yail.parseVariableBlocks = function (variableBlock){
+Blockly.Yail.parseJBridgeVariableBlocks = function (variableBlock){
 var code = "";
   var componentType = variableBlock.type;
   if (componentType == "lexical_variable_set"){
@@ -849,13 +851,16 @@ Blockly.Yail.genJBridgeVariableGetBlock = function(paramName){
 
 
 Blockly.Yail.parseJBridgeVariableSetBlock = function(variableSetBlock){
-    return Blockly.Yail.genJBridgeVariableSetBlock();
+    var leftValue = variableSetBlock.getFieldValue("VAR");
+    var rightValue = ""
+    for(var x = 0, childBlock; childBlock = variableSetBlock.childBlocks_[x]; x++){
+        rightValue = rightValue 
+                     + " "
+                     + Blockly.Yail.parseBlock(childBlock);
+    }
+    return Blockly.Yail.genJBridgeVariableIntializationBlock(leftValue, rightValue);
   };
 
-Blockly.Yail.genJBridgeVariableSetBlock = function(){
-  var code = ""
-  return code;
-};
 
 Blockly.Yail.parseJBridgeComponentBlock = function(componentBlock){
   var code = "";
@@ -1082,12 +1087,12 @@ Blockly.Yail.parseJBridgeGlobalIntializationBlock = function(globalBlock){
                      + Blockly.Yail.parseBlock(childBlock);
   }
 
-  jBridgeInitializationList.push(Blockly.Yail.genJBridgeGlobalIntializationBlock(leftValue, rightValue));
+  jBridgeInitializationList.push(Blockly.Yail.genJBridgeVariableIntializationBlock(leftValue, rightValue));
   
   return "";
 };
 
-Blockly.Yail.genJBridgeGlobalIntializationBlock = function(leftValue, rightValue){
+Blockly.Yail.genJBridgeVariableIntializationBlock = function(leftValue, rightValue){
   var code = ""
   code = leftValue 
          + " = "
@@ -1095,4 +1100,21 @@ Blockly.Yail.genJBridgeGlobalIntializationBlock = function(leftValue, rightValue
          +";";
   return code
 };
-  
+
+Blockly.Yail.parseJBridgeLogicBlocks = function (logicBlock){
+var code = "";
+  var componentType = logicBlock.type;
+  if (componentType == "logic_boolean"){
+      code = Blockly.Yail.parseJBridgeBooleanBlock(logicBlock);
+  }
+  return code;
+};
+
+Blockly.Yail.parseJBridgeBooleanBlock = function(logicBlock){
+  var value = logicBlock.getFieldValue("BOOL");
+  return Blockly.Yail.genJBridgeBooleanBlock(value);
+};
+
+Blockly.Yail.genJBridgeBooleanBlock = function(value){
+  return value.toLowerCase();
+};
