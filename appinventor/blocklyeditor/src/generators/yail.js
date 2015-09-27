@@ -841,6 +841,12 @@ var code = "";
 
 Blockly.Yail.parseJBridgeVariableGetBlock = function(variableGetBlock){
     var paramName = variableGetBlock.getFieldValue('VAR');
+    var paramsMap = new Object();
+    //Check if the variable is global or fuction param
+    if(variableGetBlock.parentBlock_.category == "Component"){
+      paramsMap = Blockly.Yail.getFieldMap(variableGetBlock.parentBlock_, "PARAMETERS");  
+    }
+    paramName = Blockly.Yail.getJBridgeRelativeParamName(paramsMap, paramName);
     return Blockly.Yail.genJBridgeVariableGetBlock(paramName);
   };
 
@@ -852,10 +858,16 @@ Blockly.Yail.genJBridgeVariableGetBlock = function(paramName){
 
 Blockly.Yail.parseJBridgeVariableSetBlock = function(variableSetBlock){
     var leftValue = variableSetBlock.getFieldValue("VAR");
+    var paramsMap = new Object();
+    //Check if the variable is global or fuction param
+    if(variableSetBlock.parentBlock_.category == "Component"){
+      paramsMap = Blockly.Yail.getFieldMap(variableSetBlock.parentBlock_, "PARAMETERS");  
+    }
+    leftValue = Blockly.Yail.getJBridgeRelativeParamName(paramsMap, leftValue);
+
     var rightValue = ""
     for(var x = 0, childBlock; childBlock = variableSetBlock.childBlocks_[x]; x++){
         rightValue = rightValue 
-                     + " "
                      + Blockly.Yail.parseBlock(childBlock);
     }
     return Blockly.Yail.genJBridgeVariableIntializationBlock(leftValue, rightValue);
@@ -896,19 +908,24 @@ Blockly.Yail.parseJBridgeMethodCallBlock = function(methodCallBlock){
   var jBridgeParamList = [];
 
   for (var y = 0, param; param = paramsList[y]; y++){
-    var paramIndex = parentParamMap[param];
-    if ( paramIndex == undefined ){
-      //check for "global " keyword in param name and remove it
-      if( param.startsWith("global ")){
-        param = param.replace("global ", "");
-      }
-      jBridgeParamList.push(param);
-    }else{
-      jBridgeParamList.push("params[" + paramIndex+"]");
-    }
+    jBridgeParamList.push(Blockly.Yail.getJBridgeRelativeParamName(parentParamMap, param))
   }
 
   return Blockly.Yail.genJBridgeMethodCallBlock(objectName ,methodName, jBridgeParamList);
+};
+
+//This function identifies if the param is a global variable or functional variable 
+//and returns the appropriate name
+Blockly.Yail.getJBridgeRelativeParamName = function(paramsMap, paramName){
+  var paramIndex = paramsMap[paramName];
+    if ( paramIndex == undefined ){
+      //check for "global " keyword in param name and remove it
+      if( paramName.substring(0,7) == "global "){
+        paramName = paramName.replace("global ", "");
+      }
+      return paramName;
+    }
+    return "params[" + paramIndex+"]";
 };
 
 Blockly.Yail.getFieldMap = function(block, fieldName){
@@ -986,7 +1003,6 @@ Blockly.Yail.parseJBridgeSetBlock = function(setBlock){
   var value = "";
   for (var x = 0, childBlock; childBlock = setBlock.childBlocks_[x]; x++) {
     value = value
-            + " "
             + Blockly.Yail.parseBlock(childBlock);
   }
   return Blockly.Yail.genJBridgeSetBlock(componentName, property, value);
@@ -1068,24 +1084,30 @@ Blockly.Yail.genJBridgeMathNumberBlock= function(numberValue){
 Blockly.Yail.parseJBridgeGlobalIntializationBlock = function(globalBlock){
   var leftValue ;
   var rightValue ;
-  //Assuming the "name" of the global variable is always in the second place in inputlist.
-  leftValue = globalBlock.getFieldValue('NAME');
 
-  //Declaring all the global blocks to be a float
-  //Fix this issue by checking the type of the child block by 
-  //and setting the appropirate type for the global
-
-  jBridgeComponentMap[leftValue] = [];
-  jBridgeComponentMap[leftValue].push({"Type" : "float"});
-  jBridgeVariableDefinitionMap[leftValue] = "float";
-
-
+  leftValue = globalBlock.getFieldValue('NAME').replace("global ", "");
   rightValue = ""
   for(var x = 0, childBlock; childBlock = globalBlock.childBlocks_[x]; x++){
         rightValue = rightValue 
-                     + " "
                      + Blockly.Yail.parseBlock(childBlock);
   }
+
+  jBridgeComponentMap[leftValue] = [];
+  var childType = globalBlock.childBlocks_[0].category;
+  var variableType = "Sting";
+  if (childType == "Math"){
+    if(rightValue.indexOf(".") != -1){
+      variableType = "float";
+    }else{
+      variableType = "int";
+    }
+  }else if(childType == "Logic"){
+    variableType = "boolean";
+  }
+
+  jBridgeComponentMap[leftValue].push({"Type" : variableType});
+  jBridgeVariableDefinitionMap[leftValue] = variableType;
+
 
   jBridgeInitializationList.push(Blockly.Yail.genJBridgeVariableIntializationBlock(leftValue, rightValue));
   
