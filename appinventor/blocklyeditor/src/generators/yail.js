@@ -640,6 +640,7 @@ Blockly.Yail.blockToCode1 = function(block) {
 
 
 Blockly.Yail.genJBridgeCode = function(topBlocks, jsonObject){
+  Blockly.Yail.initAllVariables();
   Blockly.Yail.parseJBridgeJsonData(jsonObject);
   Blockly.Yail.parseTopBlocks(topBlocks);
 
@@ -649,6 +650,16 @@ Blockly.Yail.genJBridgeCode = function(topBlocks, jsonObject){
   Blockly.Yail.genJBridgeClass(topBlocks);
 
   return code;  
+};
+
+Blockly.Yail.initAllVariables = function(){
+    jBridgeTopBlockCodesList = [];
+    jBridgeRegisterEventMap = new Object();
+    jBridgeEventsList = [];
+    jBridgeVariableDefinitionMap = new Object();
+    jBridgeInitializationList = [];
+    jBridgeComponentMap = new Object();
+
 };
 
 Blockly.Yail.parseJBridgeJsonData = function(jsonObject){
@@ -827,7 +838,7 @@ var code = "";
 };
 
 Blockly.Yail.parseJBridgeVariableGetBlock = function(variableGetBlock){
-    var paramName = variableGetBlock.eventparam;
+    var paramName = variableGetBlock.getFieldValue('VAR');
     return Blockly.Yail.genJBridgeVariableGetBlock(paramName);
   };
 
@@ -869,7 +880,8 @@ Blockly.Yail.parseJBridgeComponentBlock = function(componentBlock){
 Blockly.Yail.parseJBridgeMethodCallBlock = function(methodCallBlock){
   var objectName = methodCallBlock.instanceName;
   var methodName = methodCallBlock.methodName;
-  var parentParamMap = Blockly.Yail.parseParamsMap(methodCallBlock.parentBlock_);
+  var parentParamMap = Blockly.Yail.getFieldMap(methodCallBlock.parentBlock_, "PARAMETERS");
+  var test = methodCallBlock.parentBlock_.getFieldValue("PARAMETERS");
   var paramsList = [];
 
   //parse all the params Block
@@ -881,6 +893,10 @@ Blockly.Yail.parseJBridgeMethodCallBlock = function(methodCallBlock){
   for (var y = 0, param; param = paramsList[y]; y++){
     var paramIndex = parentParamMap[param];
     if ( paramIndex == undefined ){
+      //check for "global " keyword in param name and remove it
+      if( param.startsWith("global ")){
+        param = param.replace("global ", "");
+      }
       jBridgeParamList.push(param);
     }else{
       jBridgeParamList.push("params[" + paramIndex+"]");
@@ -890,21 +906,36 @@ Blockly.Yail.parseJBridgeMethodCallBlock = function(methodCallBlock){
   return Blockly.Yail.genJBridgeMethodCallBlock(objectName ,methodName, jBridgeParamList);
 };
 
-Blockly.Yail.parseParamsMap = function(block){
-  var paramsMap = new Object();
+Blockly.Yail.getFieldMap = function(block, fieldName){
+  var fieldMap = new Object();
   for (var x = 0, input; input = block.inputList[x]; x++) {
-    var paramIndex = 0;
-    if(input.name == "PARAMETERS"){
-      for (var y = 0, param; param = input.fieldRow[y]; y++){
-        var paramName = param.getText();
-        if (paramName.replace(/ /g,'').length > 0){
-            paramsMap[paramName] = paramIndex;
-            paramIndex ++;
+    var fieldIndex = 0;
+    if(input.name == fieldName){
+      for (var y = 0, field; field = input.fieldRow[y]; y++){
+        var fieldName = field.getText();
+        if (fieldName.replace(/ /g,'').length > 0){
+            fieldMap[fieldName] = fieldIndex;
+            fieldIndex ++;
         }
       }  
     }
   }
-  return paramsMap;
+  return fieldMap;
+};
+
+Blockly.Yail.getFieldList = function(block, fieldName){
+  var fieldsList = [];
+  for (var x = 0, input; input = block.inputList[x]; x++) {
+    if(input.name == fieldName){
+      for (var y = 0, field; field = input.fieldRow[y]; y++){
+        var fieldName = field.getText();
+        if (fieldName.replace(/ /g,'').length > 0){
+            fieldsList.push(fieldName);
+        }
+      }  
+    }
+  }
+  return fieldsList;
 };
 
 Blockly.Yail.genJBridgeMethodCallBlock = function(objectName, methodName, paramsList){
@@ -1019,7 +1050,7 @@ Blockly.Yail.parseJBridgeMathBlocks = function(mathBlock){
 Blockly.Yail.parseJBridgeMathNumberBlock = function(mathBlock){
   var numberValue ;
   //Assuming numver value always in the fieldRow[0] in inputlist[0].
-  numberValue = mathBlock.inputList[0].fieldRow[0].text_;
+  numberValue = mathBlock.getFieldValue('NUM');
   return Blockly.Yail.genJBridgeMathNumberBlock(numberValue);
 };
 
@@ -1033,7 +1064,7 @@ Blockly.Yail.parseJBridgeGlobalIntializationBlock = function(globalBlock){
   var leftValue ;
   var rightValue ;
   //Assuming the "name" of the global variable is always in the second place in inputlist.
-  leftValue = globalBlock.inputList[0].fieldRow[1].text_;
+  leftValue = globalBlock.getFieldValue('NAME');
 
   //Declaring all the global blocks to be a float
   //Fix this issue by checking the type of the child block by 
@@ -1064,3 +1095,4 @@ Blockly.Yail.genJBridgeGlobalIntializationBlock = function(leftValue, rightValue
          +";";
   return code
 };
+  
