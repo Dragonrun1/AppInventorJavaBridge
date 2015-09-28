@@ -646,7 +646,7 @@ Blockly.Yail.genJBridgeCode = function(topBlocks, jsonObject){
 
   var code = Blockly.Yail.JBRIDGE_PACKAGE_NAME + 
   Blockly.Yail.JBRIDGE_BASE_IMPORTS +
-  
+  Blockly.Yail.genComponentImport(jBridgeVariableDefinitionMap)+
   Blockly.Yail.genJBridgeClass(topBlocks);
 
   return code;  
@@ -760,6 +760,17 @@ Blockly.Yail.genComponentDefinition = function(type, name){
              + " "
              + name
              +";";
+  return code;
+};
+
+Blockly.Yail.genComponentImport = function(jBridgeVariableDefinitionMap){
+  var code = "";
+  for (var key in jBridgeVariableDefinitionMap) {
+      code = code 
+             + "import com.google.appinventor.components.runtime."
+             + jBridgeVariableDefinitionMap[key]
+             +";\n";
+  }
   return code;
 };
 
