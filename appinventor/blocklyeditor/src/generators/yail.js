@@ -106,8 +106,8 @@ var jBridgeVariableDefinitionMap = new Object();
 var jBridgeInitializationList = [];
 var jBridgeComponentMap = new Object();
 var JBRIDGE_COMPONENT_SKIP_PROPERTIES = ["Uuid", "$Version", "TextAlignment"]; //properties to skip when reading Json File
-var JBRIDGE_COMPONENT_TEXT_PROPERTIES = ["Title", "Text", "BackgroundImage", "Image", "Icon"]; //Properties that should include the double qoutes "" in the output JBridge Javacode
-
+var JBRIDGE_COMPONENT_TEXT_PROPERTIES = ["Title", "Text", "BackgroundImage", "Image", "Icon", "Source"]; //Properties that should include the double qoutes "" in the output JBridge Javacode
+var jBridgeImportsMap = new Object();
 
 /**
  * Generate the Yail code for this blocks workspace, given its associated form specification.
@@ -646,7 +646,7 @@ Blockly.Yail.genJBridgeCode = function(topBlocks, jsonObject){
 
   var code = Blockly.Yail.JBRIDGE_PACKAGE_NAME + 
   Blockly.Yail.JBRIDGE_BASE_IMPORTS +
-  
+  Blockly.Yail.genComponentImport(jBridgeImportsMap)+
   Blockly.Yail.genJBridgeClass(topBlocks);
 
   return code;  
@@ -659,6 +659,7 @@ Blockly.Yail.initAllVariables = function(){
     jBridgeVariableDefinitionMap = new Object();
     jBridgeInitializationList = [];
     jBridgeComponentMap = new Object();
+    jBridgeImportsMap = new Object();
 
 };
 
@@ -692,7 +693,7 @@ Blockly.Yail.parseJBridgeJsonComopnents = function (componentJson, rootName){
   jBridgeComponentMap[name].push({"Type": componentJson.$Type});
 
   jBridgeVariableDefinitionMap[name] = componentJson.$Type;
-  
+  jBridgeImportsMap[componentJson.$Type] = "import com.google.appinventor.components.runtime."+componentJson.$Type+";" 
   var newObj = name
                +" = new "
                +componentJson.$Type
@@ -715,19 +716,28 @@ Blockly.Yail.parseJBridgeJsonComopnents = function (componentJson, rootName){
         }
         jBridgeComponentMap[name].push({printableKey:componentJson[key]})
         var initString;
+        //Convert color code & lower case for boolean value
+        var valueOfLowerCase =componentJson[key].toLowerCase();
+        var printableValue =componentJson[key];
+        if(componentJson[key].substring(0,2) == "&H" && componentJson[key].length == 10){
+          printableValue ="0x"+componentJson[key].substring(2);
+        }
+        if(valueOfLowerCase == "true" || valueOfLowerCase == "false"){
+                  printableValue = valueOfLowerCase;
+        }
         if(JBRIDGE_COMPONENT_TEXT_PROPERTIES.indexOf(key) <= -1){
           initString = name
                          +"."
                          +printableKey
                          +"("
-                         +componentJson[key]
+                         +printableValue
                          +");";
         }else {
           initString = name
                          +"."
                          +printableKey
                          +"(\""
-                         +componentJson[key]
+                         +printableValue
                          +"\");";
         }
         jBridgeInitializationList.push(initString);
@@ -760,6 +770,16 @@ Blockly.Yail.genComponentDefinition = function(type, name){
              + " "
              + name
              +";";
+  return code;
+};
+
+Blockly.Yail.genComponentImport = function(jBridgeImportsMap){
+  var code = "";
+  for (var key in jBridgeImportsMap) {
+      code = code 
+             + '\n' 
+             + jBridgeImportsMap[key];
+  }
   return code;
 };
 
@@ -903,18 +923,23 @@ Blockly.Yail.parseJBridgeMethodCallBlock = function(methodCallBlock){
   var parentParamMap = Blockly.Yail.getFieldMap(methodCallBlock.parentBlock_, "PARAMETERS");
   var test = methodCallBlock.parentBlock_.getFieldValue("PARAMETERS");
   var paramsList = [];
-
+  var code = "";
   //parse all the params Block
   for (var y = 0, paramBlock; paramBlock = methodCallBlock.childBlocks_[y]; y++){
-      paramsList.push(Blockly.Yail.parseBlock(paramBlock));
+      if( methodCallBlock.childBlocks_[y].category == "Component"){
+        code = code + Blockly.Yail.parseBlock(paramBlock)+"\n";
+      }
+      else{
+        paramsList.push(Blockly.Yail.parseBlock(paramBlock));
+      }
   }
   var jBridgeParamList = [];
 
   for (var y = 0, param; param = paramsList[y]; y++){
     jBridgeParamList.push(Blockly.Yail.getJBridgeRelativeParamName(parentParamMap, param))
   }
-
-  return Blockly.Yail.genJBridgeMethodCallBlock(objectName ,methodName, jBridgeParamList);
+  code = code + Blockly.Yail.genJBridgeMethodCallBlock(objectName ,methodName, jBridgeParamList);
+  return code;
 };
 
 //This function identifies if the param is a global variable or functional variable 
@@ -1031,6 +1056,9 @@ Blockly.Yail.genJBridgeSetBlock = function(componentName, property, value){
 //   var componentName = eventBlock.instanceName;
 
 //   code = Blockly.Yail.parseJBridgeEventBlock(eventBlock);
+
+//   //Add to RegisterEventsMap
+//   jBridgeRegisterEventMap[eventName] = Blockly.Yail.genJBridgeEventDispatcher(eventName); 
 
 //   return code;
 // };
