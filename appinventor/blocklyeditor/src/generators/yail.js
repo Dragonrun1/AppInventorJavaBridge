@@ -108,7 +108,7 @@ var jBridgeComponentMap = new Object();
 var JBRIDGE_COMPONENT_SKIP_PROPERTIES = ["Uuid", "$Version", "TextAlignment"]; //properties to skip when reading Json File
 var JBRIDGE_COMPONENT_TEXT_PROPERTIES = ["Title", "Text", "BackgroundImage", "Image", "Icon", "Source"]; //Properties that should include the double qoutes "" in the output JBridge Javacode
 var jBridgeImportsMap = new Object();
-
+var isIndividualBlock = false; // is to Identify if a block is Iduvidal root block or sub-block
 /**
  * Generate the Yail code for this blocks workspace, given its associated form specification.
  * 
@@ -830,6 +830,7 @@ Blockly.Yail.getJBridgeInstanceName = function(block){
 };
 
 Blockly.Yail.parseBlock = function (block){
+  isIndividualBlock = false;
   var code = "";
   var blockCategory = block.category;
   if (blockCategory == "Component"){
@@ -850,6 +851,7 @@ Blockly.Yail.parseJBridgeVariableBlocks = function (variableBlock){
 var code = "";
   var componentType = variableBlock.type;
   if (componentType == "lexical_variable_set"){
+      isIndividualBlock = true;
       code = Blockly.Yail.parseJBridgeVariableSetBlock(variableBlock);
   }else if(componentType == "lexical_variable_get"){
       code = Blockly.Yail.parseJBridgeVariableGetBlock(variableBlock);
@@ -904,11 +906,13 @@ Blockly.Yail.parseJBridgeComponentBlock = function(componentBlock){
        code = Blockly.Yail.parseJBridgeEventBlock(componentBlock);
   }else if (componentType == "component_set_get"){
       if (componentBlock.setOrGet == "set"){
+          isIndividualBlock = true;
           code = Blockly.Yail.parseJBridgeSetBlock(componentBlock);
       }else{
           code = Blockly.Yail.parseJBridgeGetBlock(componentBlock);
       }
   }else if (componentType == "component_method" ){
+    isIndividualBlock = true;
     code = Blockly.Yail.parseJBridgeMethodCallBlock(componentBlock);
   }else{
     code =  "Invalid Component type : " + componentType ;
@@ -926,11 +930,11 @@ Blockly.Yail.parseJBridgeMethodCallBlock = function(methodCallBlock){
   var code = "";
   //parse all the params Block
   for (var y = 0, paramBlock; paramBlock = methodCallBlock.childBlocks_[y]; y++){
-      if( methodCallBlock.childBlocks_[y].category == "Component"){
-        code = code + Blockly.Yail.parseBlock(paramBlock)+"\n";
-      }
-      else{
-        paramsList.push(Blockly.Yail.parseBlock(paramBlock));
+      var genCode = Blockly.Yail.parseBlock(paramBlock);
+      if(isIndividualBlock){
+        code = code + genCode+"\n";
+      }else{
+        paramsList.push(genCode);
       }
   }
   var jBridgeParamList = [];
