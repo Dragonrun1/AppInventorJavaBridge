@@ -843,9 +843,7 @@ Blockly.Yail.parseJBridgeVariableGetBlock = function(variableGetBlock){
     var paramName = variableGetBlock.getFieldValue('VAR');
     var paramsMap = new Object();
     //Check if the variable is global or fuction param
-    if(variableGetBlock.parentBlock_.category == "Component"){
-      paramsMap = Blockly.Yail.getFieldMap(variableGetBlock.parentBlock_, "PARAMETERS");  
-    }
+    paramsMap = Blockly.Yail.getJBridgeParentBlockFieldMap(variableGetBlock.parentBlock_, "component_event", "PARAMETERS");
     paramName = Blockly.Yail.getJBridgeRelativeParamName(paramsMap, paramName);
     return Blockly.Yail.genJBridgeVariableGetBlock(paramName);
   };
@@ -855,20 +853,25 @@ Blockly.Yail.genJBridgeVariableGetBlock = function(paramName){
   return code;
 };
 
+//It itertates through all the parent to find the specific blockType and loads fieldName map
+Blockly.Yail.getJBridgeParentBlockFieldMap = function (block, blockType, fieldName){
+  if(block.type == blockType && block != undefined && block != null){
+      return Blockly.Yail.getFieldMap(block, fieldName);  
+  }
+  return Blockly.Yail.getJBridgeParentBlockFieldMap(block.parentBlock_, blockType, fieldName);
+};
 
 Blockly.Yail.parseJBridgeVariableSetBlock = function(variableSetBlock){
     var leftValue = variableSetBlock.getFieldValue("VAR");
     var paramsMap = new Object();
     //Check if the variable is global or fuction param
-    if(variableSetBlock.parentBlock_.category == "Component"){
-      paramsMap = Blockly.Yail.getFieldMap(variableSetBlock.parentBlock_, "PARAMETERS");  
-    }
+    paramsMap = Blockly.Yail.getJBridgeParentBlockFieldMap(variableSetBlock.parentBlock_, "component_event", "PARAMETERS");
     leftValue = Blockly.Yail.getJBridgeRelativeParamName(paramsMap, leftValue);
 
     var rightValue = ""
     for(var x = 0, childBlock; childBlock = variableSetBlock.childBlocks_[x]; x++){
         rightValue = rightValue 
-                     + Blockly.Yail.parseBlock(childBlock);
+                     + Blockly.Yail.parseBlock(childBlock); 
     }
     return Blockly.Yail.genJBridgeVariableIntializationBlock(leftValue, rightValue);
   };
@@ -878,7 +881,7 @@ Blockly.Yail.parseJBridgeComponentBlock = function(componentBlock){
   var code = "";
   var componentType = componentBlock.type;
   if (componentType == "component_event"){
-       code = Blockly.Yail.paseJBridgeEventBlock(componentBlock);
+       code = Blockly.Yail.parseJBridgeEventBlock(componentBlock);
   }else if (componentType == "component_set_get"){
       if (componentBlock.setOrGet == "set"){
           code = Blockly.Yail.parseJBridgeSetBlock(componentBlock);
@@ -930,16 +933,18 @@ Blockly.Yail.getJBridgeRelativeParamName = function(paramsMap, paramName){
 
 Blockly.Yail.getFieldMap = function(block, fieldName){
   var fieldMap = new Object();
-  for (var x = 0, input; input = block.inputList[x]; x++) {
-    var fieldIndex = 0;
-    if(input.name == fieldName){
-      for (var y = 0, field; field = input.fieldRow[y]; y++){
-        var fieldName = field.getText();
-        if (fieldName.replace(/ /g,'').length > 0){
-            fieldMap[fieldName] = fieldIndex;
-            fieldIndex ++;
-        }
-      }  
+  if(block.inputList != undefined){
+    for (var x = 0, input; input = block.inputList[x]; x++) {
+      var fieldIndex = 0;
+      if(input.name == fieldName){
+        for (var y = 0, field; field = input.fieldRow[y]; y++){
+          var fieldName = field.getText();
+          if (fieldName.replace(/ /g,'').length > 0){
+              fieldMap[fieldName] = fieldIndex;
+              fieldIndex ++;
+          }
+        }  
+      }
     }
   }
   return fieldMap;
@@ -947,14 +952,16 @@ Blockly.Yail.getFieldMap = function(block, fieldName){
 
 Blockly.Yail.getFieldList = function(block, fieldName){
   var fieldsList = [];
-  for (var x = 0, input; input = block.inputList[x]; x++) {
-    if(input.name == fieldName){
-      for (var y = 0, field; field = input.fieldRow[y]; y++){
-        var fieldName = field.getText();
-        if (fieldName.replace(/ /g,'').length > 0){
-            fieldsList.push(fieldName);
-        }
-      }  
+  if(block.inputList != undefined){
+    for (var x = 0, input; input = block.inputList[x]; x++) {
+      if(input.name == fieldName){
+        for (var y = 0, field; field = input.fieldRow[y]; y++){
+          var fieldName = field.getText();
+          if (fieldName.replace(/ /g,'').length > 0){
+              fieldsList.push(fieldName);
+          }
+        }  
+      }
     }
   }
   return fieldsList;
@@ -1018,17 +1025,15 @@ Blockly.Yail.genJBridgeSetBlock = function(componentName, property, value){
   return code;
 };
 
-Blockly.Yail.paseJBridgeEventBlock = function(eventBlock){
-  var code = "";
-  var eventName = eventBlock.eventName;
-  var componentName = eventBlock.instanceName;
+// Blockly.Yail.paseJBridgeEventBlock = function(eventBlock){
+//   var code = "";
+//   var eventName = eventBlock.eventName;
+//   var componentName = eventBlock.instanceName;
 
-  code = Blockly.Yail.parseJBridgeEventBlock(eventBlock);
-  //Add to RegisterEventsMap
-  jBridgeRegisterEventMap[eventName] = Blockly.Yail.genJBridgeEventDispatcher(eventName); 
+//   code = Blockly.Yail.parseJBridgeEventBlock(eventBlock);
 
-  return code;
-};
+//   return code;
+// };
 
 
 Blockly.Yail.parseJBridgeEventBlock = function(eventBlock, isChildBlock){
@@ -1044,6 +1049,10 @@ Blockly.Yail.parseJBridgeEventBlock = function(eventBlock, isChildBlock){
   }
 
   code = Blockly.Yail.genJBridgeEventBlock(componentName, eventName, body);
+
+  //Add to RegisterEventsMap
+  jBridgeRegisterEventMap[eventName] = Blockly.Yail.genJBridgeEventDispatcher(eventName); 
+
   return code;
 };
 
@@ -1058,7 +1067,7 @@ Blockly.Yail.genJBridgeEventBlock = function(componentName, eventName, body){
 }; 
 
 Blockly.Yail.genJBridgeEventDispatcher = function(eventName){
-  return "EventDispatcher.registerEventForDelegation( this, " + eventName +"Event, "+ eventName +" );";
+  return "EventDispatcher.registerEventForDelegation( this, \"" + eventName +"Event\", \""+ eventName +"\" );";
 };
 
 Blockly.Yail.parseJBridgeMathBlocks = function(mathBlock){
