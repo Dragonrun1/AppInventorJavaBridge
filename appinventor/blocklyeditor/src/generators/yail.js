@@ -940,7 +940,7 @@ Blockly.Yail.parseJBridgeMethodCallBlock = function(methodCallBlock){
   var jBridgeParamList = [];
 
   for (var y = 0, param; param = paramsList[y]; y++){
-    jBridgeParamList.push(Blockly.Yail.getJBridgeRelativeParamName(parentParamMap, param))
+    jBridgeParamList.push(Blockly.Yail.getJBridgeRelativeParamName(parentParamMap, param));
   }
   code = code + Blockly.Yail.genJBridgeMethodCallBlock(objectName ,methodName, jBridgeParamList);
   return code;
@@ -1050,7 +1050,7 @@ Blockly.Yail.genJBridgeSetBlock = function(componentName, property, value){
              +property
              +"("
              +value 
-             +")";
+             +");";
   return code;
 };
 
@@ -1154,7 +1154,7 @@ Blockly.Yail.parseJBridgeGlobalIntializationBlock = function(globalBlock){
   
   return "";
 };
-
+    
 Blockly.Yail.genJBridgeVariableIntializationBlock = function(leftValue, rightValue){
   var code = ""
   code = leftValue 
