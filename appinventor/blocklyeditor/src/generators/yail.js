@@ -108,7 +108,7 @@ var jBridgeComponentMap = new Object();
 var JBRIDGE_COMPONENT_SKIP_PROPERTIES = ["Uuid", "$Version", "TextAlignment"]; //properties to skip when reading Json File
 var JBRIDGE_COMPONENT_TEXT_PROPERTIES = ["Title", "Text", "BackgroundImage", "Image", "Icon", "Source"]; //Properties that should include the double qoutes "" in the output JBridge Javacode
 var jBridgeImportsMap = new Object();
-var jBridgeIndividualChildBlock = ["component_set_get", "component_method"]; // is to Identify if a block is Iduvidal root block or sub-block
+var jBridgeIsIndividualBlock = false; // is to Identify if a block is Iduvidal root block or sub-block
 /**
  * Generate the Yail code for this blocks workspace, given its associated form specification.
  * 
