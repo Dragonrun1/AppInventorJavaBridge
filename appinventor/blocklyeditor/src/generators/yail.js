@@ -110,6 +110,7 @@ var JBRIDGE_COMPONENT_TEXT_PROPERTIES = ["Title", "Text", "BackgroundImage", "Im
 var jBridgeImportsMap = new Object();
 var jBridgeProceduresMap = new Object();
 var jBridgeIsIndividualBlock = false; // is to Identify if a block is Iduvidal root block or sub-block
+var jBridgeCurrentScreen = "Screen1";
 /**
  * Generate the Yail code for this blocks workspace, given its associated form specification.
  * 
@@ -1113,7 +1114,10 @@ Blockly.Yail.parseJBridgeEventBlock = function(eventBlock, isChildBlock){
              + "\n"
              + Blockly.Yail.parseBlock(childBlock);
   }
-
+  //This is to handle the if the component is the Screen Object
+  if(componentName == jBridgeCurrentScreen){
+    componentName = "this";
+  }
   code = Blockly.Yail.genJBridgeEventBlock(componentName, eventName, body);
 
   //Add to RegisterEventsMap
@@ -1220,14 +1224,14 @@ Blockly.Yail.parseJBridgeProceduresBlocks = function(proceduresBlock){
   var code = "";
   var proceduresType = proceduresBlock.type;
   if(proceduresType == "procedures_defnoreturn"){
-     Blockly.Yail.parseProcDefNoReturn(proceduresBlock);
+     Blockly.Yail.parseJBridgeProcDefNoReturn(proceduresBlock);
   }else if(proceduresType == "procedures_callnoreturn"){
-     code = code + Blockly.Yail.parseProcCallNoReturn(proceduresBlock);
+     code = code + Blockly.Yail.parseJBridgeProcCallNoReturn(proceduresBlock);
   }
   return code;
 };
 
-Blockly.Yail.parseProcDefNoReturn = function(proceduresBlock){
+Blockly.Yail.parseJBridgeProcDefNoReturn = function(proceduresBlock){
   var code = "";
   var procName = Blockly.Yail.getProcName(proceduresBlock, "HEADER", "NAME");
   var procParms = "";  //TO DO
@@ -1248,7 +1252,7 @@ Blockly.Yail.parseProcDefNoReturn = function(proceduresBlock){
   jBridgeProceduresMap[procName] = code;
 };
 
-Blockly.Yail.parseProcCallNoReturn = function(proceduresBlock){
+Blockly.Yail.parseJBridgeProcCallNoReturn = function(proceduresBlock){
   var code = "";
   var procName = Blockly.Yail.getProcName(proceduresBlock, "", "PROCNAME");
   if(jBridgeProceduresMap[procName]){
