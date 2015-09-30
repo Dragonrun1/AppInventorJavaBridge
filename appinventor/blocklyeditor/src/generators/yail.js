@@ -1038,11 +1038,17 @@ Blockly.Yail.parseJBridgeSetBlock = function(setBlock){
   var property = setBlock.propertyName;
 
   var value = "";
+  var code = "";
   for (var x = 0, childBlock; childBlock = setBlock.childBlocks_[x]; x++) {
-    value = value
-            + Blockly.Yail.parseBlock(childBlock);
+    var genCode = Blockly.Yail.parseBlock(childBlock);
+     if(jBridgeIsIndividualBlock){
+        code = code + genCode + "\n";
+      }else{
+        value = value + genCode;
+      }
   }
-  return Blockly.Yail.genJBridgeSetBlock(componentName, property, value);
+  code = code + Blockly.Yail.genJBridgeSetBlock(componentName, property, value);
+  return code;
 };
 
 Blockly.Yail.genJBridgeSetBlock = function(componentName, property, value){
