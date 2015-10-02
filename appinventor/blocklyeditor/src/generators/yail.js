@@ -1147,8 +1147,14 @@ Blockly.Yail.parseJBridgeMathBlocks = function(mathBlock){
     code = Blockly.Yail.parseJBridgeMathNumberBlock(mathBlock);
   }else if(mathBlock.type == "math_random_int"){
     code = Blockly.Yail.parseJBridgeMathRandomInt(mathBlock);
+  }else if(mathBlock.type == "math_add"){
+    code = Blockly.Yail.parseJBridgeMathAdd(mathBlock);
   }else if(mathBlock.type == "math_subtract"){
     code = Blockly.Yail.parseJBridgeMathSubtract(mathBlock);
+  }else if(mathBlock.type == "math_multiply"){
+    code = Blockly.Yail.parseJBridgeMathMultiply(mathBlock);
+  }else if(mathBlock.type == "math_division"){
+    code = Blockly.Yail.parseJBridgeMathDivision(mathBlock);
   }
   return code;
 };
@@ -1159,10 +1165,28 @@ Blockly.Yail.parseJBridgeMathNumberBlock = function(mathBlock){
   return Blockly.Yail.genJBridgeMathNumberBlock(numberValue);
 };
 
+Blockly.Yail.parseJBridgeMathAdd = function(mathBlock){
+    var leftValue = Blockly.Yail.parseBlock(mathBlock.childBlocks_[0]);
+    var rightValue = Blockly.Yail.parseBlock(mathBlock.childBlocks_[1]);
+    return Blockly.Yail.genJBridgeMathOperation(leftValue, rightValue, "+");
+};
+
 Blockly.Yail.parseJBridgeMathSubtract = function(mathBlock){
     var leftValue = Blockly.Yail.parseBlock(mathBlock.childBlocks_[0]);
     var rightValue = Blockly.Yail.parseBlock(mathBlock.childBlocks_[1]);
     return Blockly.Yail.genJBridgeMathOperation(leftValue, rightValue, "-");
+};
+
+Blockly.Yail.parseJBridgeMathMultiply = function(mathBlock){
+    var leftValue = Blockly.Yail.parseBlock(mathBlock.childBlocks_[0]);
+    var rightValue = Blockly.Yail.parseBlock(mathBlock.childBlocks_[1]);
+    return Blockly.Yail.genJBridgeMathOperation(leftValue, rightValue, "*");
+};
+
+Blockly.Yail.parseJBridgeMathDivision = function(mathBlock){
+    var leftValue = Blockly.Yail.parseBlock(mathBlock.childBlocks_[0]);
+    var rightValue = Blockly.Yail.parseBlock(mathBlock.childBlocks_[1]);
+    return Blockly.Yail.genJBridgeMathOperation(leftValue, rightValue, "/");
 };
 
 Blockly.Yail.parseJBridgeMathRandomInt = function(mathBlock){
