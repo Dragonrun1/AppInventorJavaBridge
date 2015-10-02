@@ -106,11 +106,12 @@ var jBridgeVariableDefinitionMap = new Object();
 var jBridgeInitializationList = [];
 var jBridgeComponentMap = new Object();
 var JBRIDGE_COMPONENT_SKIP_PROPERTIES = ["Uuid", "$Version", "TextAlignment"]; //properties to skip when reading Json File
-var JBRIDGE_COMPONENT_TEXT_PROPERTIES = ["Title", "Text", "BackgroundImage", "Image", "Icon", "Source", "Picture"]; //Properties that should include the double qoutes "" in the output JBridge Javacode
+var JBRIDGE_JSON_TEXT_PROPERTIES = ["Title", "Text", "BackgroundImage", "Image", "Icon", "Source", "Picture"]; //Properties that should include the double qoutes "" in the output JBridge Javacode
 var jBridgeImportsMap = new Object();
 var jBridgeProceduresMap = new Object();
 var jBridgeIsIndividualBlock = false; // is to Identify if a block is Iduvidal root block or sub-block
 var jBridgeCurrentScreen = "Screen1";
+var JBRIDGE_COMPONENT_TEXT_PROPERTIES = ["text"];
 /**
  * Generate the Yail code for this blocks workspace, given its associated form specification.
  * 
@@ -718,43 +719,40 @@ Blockly.Yail.parseJBridgeJsonComopnents = function (componentJson, rootName){
           printableKey = key.substring(1);
         }
         jBridgeComponentMap[name].push({printableKey:componentJson[key]})
-        var initString;
         //Convert color code & lower case for boolean value
         var valueOfLowerCase =componentJson[key].toLowerCase();
         var printableValue =componentJson[key];
         if(componentJson[key].substring(0,2) == "&H" && componentJson[key].length == 10){
           printableValue ="0x"+componentJson[key].substring(2);
         }
+        //for True and False properties 
         if(valueOfLowerCase == "true" || valueOfLowerCase == "false"){
-                  printableValue = valueOfLowerCase;
+              printableValue = valueOfLowerCase;
         }
-        if(JBRIDGE_COMPONENT_TEXT_PROPERTIES.indexOf(key) <= -1){
-          initString = name
-                         +"."
-                         +printableKey
-                         +"("
-                         +printableValue
-                         +");";
-        }else {
-          initString = name
-                         +"."
-                         +printableKey
-                         +"(\""
-                         +printableValue
-                         +"\");";
+        //for properties that require qoutes ""
+        if(JBRIDGE_JSON_TEXT_PROPERTIES.indexOf(key) > -1){
+          printableValue = "\""+ printableValue +"\"";
         }
-        jBridgeInitializationList.push(initString);
+        jBridgeInitializationList.push(Blockly.Yail.genJBridgeJsonComopnents(name, printableKey, printableValue));
       }
     }
   }
   //Assuming that $Components Property is always an array 
   if(componentsObj != undefined){
-  for(var i=0;i<componentsObj.length;i++){
-    Blockly.Yail.parseJBridgeJsonComopnents(componentsObj[i], name);
-  } 
-    
+    for(var i=0;i<componentsObj.length;i++){
+      Blockly.Yail.parseJBridgeJsonComopnents(componentsObj[i], name);
+    } 
   }
+};
 
+Blockly.Yail.genJBridgeJsonComopnents = function (componentName, property, value){
+var code = componentName
+           +"."
+           +property
+           +"("
+           +value
+           +");"
+return code;
 };
 
 Blockly.Yail.parseComponentDefinition = function(jBridgeVariableDefinitionMap){
@@ -1076,6 +1074,9 @@ Blockly.Yail.parseJBridgeSetBlock = function(setBlock){
         value = value + genCode;
       }
   }
+  if(JBRIDGE_COMPONENT_TEXT_PROPERTIES.indexOf(property.toLowerCase()) > -1){
+    value = "\"" +value+"\"";
+  }
   code = code + Blockly.Yail.genJBridgeSetBlock(componentName, property, value);
   return code;
 };
@@ -1085,7 +1086,7 @@ Blockly.Yail.genJBridgeSetBlock = function(componentName, property, value){
              +"."
              +property
              +"("
-             +value 
+             +value
              +");";
   return code;
 };
@@ -1270,16 +1271,16 @@ Blockly.Yail.parseJBridgeProceduresBlocks = function(proceduresBlock){
   var code = "";
   var proceduresType = proceduresBlock.type;
   if(proceduresType == "procedures_defnoreturn"){
-     Blockly.Yail.parseJBridgeProcDefNoReturn(proceduresBlock);
+     code = Blockly.Yail.parseJBridgeProcDefNoReturn(proceduresBlock);
   }else if(proceduresType == "procedures_callnoreturn"){
-     code = code + Blockly.Yail.parseJBridgeProcCallNoReturn(proceduresBlock);
+     code = Blockly.Yail.parseJBridgeProcCallNoReturn(proceduresBlock);
   }
   return code;
 };
 
 Blockly.Yail.parseJBridgeProcDefNoReturn = function(proceduresBlock){
   var code = "";
-  var procName = Blockly.Yail.getProcName(proceduresBlock, "HEADER", "NAME");
+  var procName = proceduresBlock.getFieldValue("NAME");
   var procParms = "";  //TO DO
   if (proceduresBlock.getParameters.length != 0){
       //TO DO
@@ -1288,24 +1289,34 @@ Blockly.Yail.parseJBridgeProcDefNoReturn = function(proceduresBlock){
   for (var x = 0, childBlock; childBlock = proceduresBlock.childBlocks_[x]; x++) {
     statementList.push(Blockly.Yail.parseBlock(childBlock));
   }
-  code = "\npublic void " 
-       + procName
-       + "("
-       + procParms 
-       + "){\n"
-       + statementList.join("\n")
-       + "\n}";
-  jBridgeProceduresMap[procName] = code;
+  
+  jBridgeProceduresMap[procName] = Blockly.Yail.genJBridgeProcDefNoReturn(procName, procParms, statementList.join("\n"));
+
+  return code;
 };
 
+Blockly.Yail.genJBridgeProcDefNoReturn = function (procedureName, procedureParams, body){
+  var code = "\npublic void " 
+       + procedureName
+       + "("
+       + procedureParams 
+       + "){\n"
+       + body
+       + "\n}"; 
+  return code;
+}
+
 Blockly.Yail.parseJBridgeProcCallNoReturn = function(proceduresBlock){
-  var code = "";
-  var procName = Blockly.Yail.getProcName(proceduresBlock, "", "PROCNAME");
-  if(jBridgeProceduresMap[procName]){
-    code = code 
-       + "\n"
-       + procName
-       + "();"
-  }
+  var params = "";
+  var procName = proceduresBlock.getFieldValue("PROCNAME");
+  return Blockly.Yail.genJBridgeProcCallNoReturn(procName, params);
+};
+
+Blockly.Yail.genJBridgeProcCallNoReturn = function(procName, params){
+  var code = procName
+             + "("
+             + params
+             +");"
+  
   return code;
 };
