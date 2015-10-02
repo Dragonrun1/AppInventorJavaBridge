@@ -856,9 +856,56 @@ Blockly.Yail.parseBlock = function (block){
     code = Blockly.Yail.parseJBridgeLogicBlocks(block);
   }else if (blockCategory == "Procedures"){
     code = Blockly.Yail.parseJBridgeProceduresBlocks(block);
+  }else if (blockCategory == "Control"){
+    code = Blockly.Yail.parseJBridgeControlBlocks(block);
   }
   return code;
 }
+Blockly.Yail.parseJBridgeControlBlocks = function(controlBlock){
+  var code = "";
+  var controlType = controlBlock.type;
+  if(controlType == "controls_if"){
+    code = Blockly.Yail.parseJBridgeControlIfBlock(controlBlock);
+  }
+  return code;
+
+}
+Blockly.Yail.parseJBridgeControlIfBlock = function(controlIfBlock){
+  var conditions = [];
+  var ifElseStatements = [];
+  var ifStatement;
+  var elseStatement;
+  var elseCount = controlIfBlock.elseCount;
+  if(elseCount != 1) elseCount = 0;
+  conditions.push(Blockly.Yail.parseBlock(controlIfBlock.childBlocks_[0]));
+  ifStatement = Blockly.Yail.parseBlock(controlIfBlock.childBlocks_[1]);
+    for(var x = 2; x < controlIfBlock.childBlocks_.length- elseCount; x++){
+      if(x%2 == 0){
+          conditions.push(Blockly.Yail.parseBlock(controlIfBlock.childBlocks_[x]));
+        }
+        else ifElseStatements.push(Blockly.Yail.parseBlock(controlIfBlock.childBlocks_[x]));
+      }
+      if(elseCount>0) elseStatement = Blockly.Yail.parseBlock(controlIfBlock.childBlocks_[controlBlock.childBlocks_.length-1]);
+      return Blockly.Yail.genJBridgeControlIfBlock(conditions, ifStatement, ifElseStatements, elseStatement);
+  }
+
+Blockly.Yail.genJBridgeControlIfBlock = function(conditions, ifStatement, ifElseStatements, elseStatement){
+  var code = "";
+  code += "if("+conditions[0]+")"
+       + "{\n" + ifStatement + "\n}\n";
+  for(var i = 1,j=0; i < conditions.length && j<i; j++,i++){
+      code += "else if("+conditions[i]+")\n"
+              + "{\n" + ifElseStatements[j] + "\n}\n";
+  }
+
+  if(elseStatement != null)
+  {
+    code += "else "+ elseStatement+"\n";
+  }
+  return code;
+}
+
+
 Blockly.Yail.parseJBridgeVariableBlocks = function (variableBlock){
 var code = "";
   var componentType = variableBlock.type;
@@ -1148,8 +1195,14 @@ Blockly.Yail.parseJBridgeMathBlocks = function(mathBlock){
     code = Blockly.Yail.parseJBridgeMathNumberBlock(mathBlock);
   }else if(mathBlock.type == "math_random_int"){
     code = Blockly.Yail.parseJBridgeMathRandomInt(mathBlock);
+  }else if(mathBlock.type == "math_add"){
+    code = Blockly.Yail.parseJBridgeMathAdd(mathBlock);
   }else if(mathBlock.type == "math_subtract"){
     code = Blockly.Yail.parseJBridgeMathSubtract(mathBlock);
+  }else if(mathBlock.type == "math_multiply"){
+    code = Blockly.Yail.parseJBridgeMathMultiply(mathBlock);
+  }else if(mathBlock.type == "math_division"){
+    code = Blockly.Yail.parseJBridgeMathDivision(mathBlock);
   }
   return code;
 };
@@ -1160,10 +1213,28 @@ Blockly.Yail.parseJBridgeMathNumberBlock = function(mathBlock){
   return Blockly.Yail.genJBridgeMathNumberBlock(numberValue);
 };
 
+Blockly.Yail.parseJBridgeMathAdd = function(mathBlock){
+    var leftValue = Blockly.Yail.parseBlock(mathBlock.childBlocks_[0]);
+    var rightValue = Blockly.Yail.parseBlock(mathBlock.childBlocks_[1]);
+    return Blockly.Yail.genJBridgeMathOperation(leftValue, rightValue, "+");
+};
+
 Blockly.Yail.parseJBridgeMathSubtract = function(mathBlock){
     var leftValue = Blockly.Yail.parseBlock(mathBlock.childBlocks_[0]);
     var rightValue = Blockly.Yail.parseBlock(mathBlock.childBlocks_[1]);
     return Blockly.Yail.genJBridgeMathOperation(leftValue, rightValue, "-");
+};
+
+Blockly.Yail.parseJBridgeMathMultiply = function(mathBlock){
+    var leftValue = Blockly.Yail.parseBlock(mathBlock.childBlocks_[0]);
+    var rightValue = Blockly.Yail.parseBlock(mathBlock.childBlocks_[1]);
+    return Blockly.Yail.genJBridgeMathOperation(leftValue, rightValue, "*");
+};
+
+Blockly.Yail.parseJBridgeMathDivision = function(mathBlock){
+    var leftValue = Blockly.Yail.parseBlock(mathBlock.childBlocks_[0]);
+    var rightValue = Blockly.Yail.parseBlock(mathBlock.childBlocks_[1]);
+    return Blockly.Yail.genJBridgeMathOperation(leftValue, rightValue, "/");
 };
 
 Blockly.Yail.parseJBridgeMathRandomInt = function(mathBlock){
