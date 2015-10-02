@@ -1121,8 +1121,9 @@ Blockly.Yail.parseJBridgeSetBlock = function(setBlock){
         value = value + genCode;
       }
   }
+
   if(JBRIDGE_COMPONENT_TEXT_PROPERTIES.indexOf(property.toLowerCase()) > -1){
-    value = "\"" +value+"\"";
+    value = "String.valueOf(" +value+")";
   }
   code = code + Blockly.Yail.genJBridgeSetBlock(componentName, property, value);
   return code;
