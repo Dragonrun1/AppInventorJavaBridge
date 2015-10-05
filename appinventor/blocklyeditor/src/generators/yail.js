@@ -1204,18 +1204,21 @@ Blockly.Yail.genJBridgeEventDispatcher = function(eventName){
 
 Blockly.Yail.parseJBridgeMathBlocks = function(mathBlock){
   var code = "";
-  if(mathBlock.type == "math_number"){
+  var type = mathBlock.type;
+  if( type == "math_number"){
     code = Blockly.Yail.parseJBridgeMathNumberBlock(mathBlock);
-  }else if(mathBlock.type == "math_random_int"){
+  }else if(type == "math_random_int"){
     code = Blockly.Yail.parseJBridgeMathRandomInt(mathBlock);
-  }else if(mathBlock.type == "math_add"){
+  }else if(type == "math_add"){
     code = Blockly.Yail.parseJBridgeMathAdd(mathBlock);
-  }else if(mathBlock.type == "math_subtract"){
+  }else if(type == "math_subtract"){
     code = Blockly.Yail.parseJBridgeMathSubtract(mathBlock);
-  }else if(mathBlock.type == "math_multiply"){
+  }else if(type == "math_multiply"){
     code = Blockly.Yail.parseJBridgeMathMultiply(mathBlock);
-  }else if(mathBlock.type == "math_division"){
+  }else if(type == "math_division"){
     code = Blockly.Yail.parseJBridgeMathDivision(mathBlock);
+  }else if(type == "math_compare"){
+    code = Blockly.Yail.parseJBridgeMathCompare(mathBlock);
   }
   return code;
 };
@@ -1437,6 +1440,8 @@ Blockly.Yail.parseJBridgeListBlocks = function(listBlock){
       code = Blockly.Yail.parseJBridgeListsCreateWithBlock(listBlock);
   }else if (type == "lists_select_item"){
       code = Blockly.Yail.parseJBridgeListSelectItemBlock(listBlock);
+  }else if(type == "lists_length"){
+      code = Blockly.Yail.parseJBridgeListLengthBlock(listBlock);
   }
   return code;
 };
@@ -1480,4 +1485,47 @@ Blockly.Yail.genJBridgeNewList = function(type){
 Blockly.Yail.genJBridgeListsAddItemBlock = function(listName, addItem){
    var code = listName+".add("+addItem+"); \n";
    return code;
+};
+
+Blockly.Yail.parseJBridgeMathCompare = function (mathBlock){
+  var operator = mathBlock.getFieldValue("OP");
+  var leftValue = Blockly.Yail.parseBlock(mathBlock.childBlocks_[0]);
+  var rightValue = Blockly.Yail.parseBlock(mathBlock.childBlocks_[1]);
+
+  return Blockly.Yail.genJBridgeMathCompare(leftValue, rightValue, Blockly.Yail.getJBridgeOperator(operator));
+};
+
+Blockly.Yail.genJBridgeMathCompare = function (leftValue, rightValue, operator){
+  var code = leftValue
+             + operator
+             + rightValue;
+  return code;
+};
+
+Blockly.Yail.getJBridgeOperator = function(operator){
+  var op = "";
+  if(operator == "GT"){
+    op = ">";
+  }else if(operator == "LT"){
+    op = "<";
+  }else if(operator == "EQ"){
+    op = "==";
+  }else if(operator == "NEQ"){
+    op = "!=";
+  }else if(operator == "GTE"){
+    op = ">=";
+  }else if(operator == "LTE"){
+    op = "<=";
+  }
+  return op;
+};
+
+Blockly.Yail.parseJBridgeListLengthBlock = function(listBlock){
+  var listName = Blockly.Yail.parseBlock(listBlock.childBlocks_[0]);
+  return Blockly.Yail.genJBridgeListLengthBlock(listName);
+};
+
+Blockly.Yail.genJBridgeListLengthBlock = function(listName){
+  var code = listName + ".size()"
+  return code;
 };
