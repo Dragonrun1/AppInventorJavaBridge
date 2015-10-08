@@ -546,6 +546,10 @@ public interface OdeMessages extends Messages {
   @Description("Label of item for building a project and downloading")
   String downloadToComputerMenuItem();
 
+  @DefaultMessage("Generate Java")
+  @Description("Label of item for generating Java code")
+  String generateJavaItem();
+
   @DefaultMessage("Generate YAIL")
   @Description("Label of the cascade item for generating YAIL for a project")
   String generateYailMenuItem();

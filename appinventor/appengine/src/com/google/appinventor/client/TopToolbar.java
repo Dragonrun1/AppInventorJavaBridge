@@ -99,7 +99,8 @@ public class TopToolbar extends Composite {
   private static final String WIDGET_NAME_IMPORTTEMPLATE = "ImportTemplate";
   private static final String WIDGET_NAME_EXPORTALLPROJECTS = "ExportAllProjects";
   private static final String WIDGET_NAME_EXPORTPROJECT = "ExportProject";
-
+  private static final String WIDGET_NAME_GENERATEJAVA = "GenerateJava";
+    
   private static final String WIDGET_NAME_ADMIN = "Admin";
   private static final String WIDGET_NAME_DOWNLOAD_USER_SOURCE = "DownloadUserSource";
   private static final String WIDGET_NAME_SWITCH_TO_DEBUG = "SwitchToDebugPane";
@@ -174,6 +175,8 @@ public class TopToolbar extends Composite {
     buildItems.add(new DropDownItem(WIDGET_NAME_BUILD_BARCODE, MESSAGES.showBarcodeMenuItem(),
         new BarcodeAction()));
     buildItems.add(new DropDownItem(WIDGET_NAME_BUILD_DOWNLOAD, MESSAGES.downloadToComputerMenuItem(),
+        new DownloadAction()));
+    buildItems.add(new DropDownItem(WIDGET_NAME_GENERATEJAVA, MESSAGES.generateJavaItem(),
         new DownloadAction()));
     if (AppInventorFeatures.hasYailGenerationOption() && Ode.getInstance().getUser().getIsAdmin()) {
       buildItems.add(null);
