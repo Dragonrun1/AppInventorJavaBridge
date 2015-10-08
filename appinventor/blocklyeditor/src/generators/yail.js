@@ -876,39 +876,93 @@ Blockly.Yail.parseJBridgeControlBlocks = function(controlBlock){
 
 }
 Blockly.Yail.parseJBridgeControlIfBlock = function(controlIfBlock){
-  var conditions = [];
-  var ifElseStatements = [];
-  var ifStatement;
-  var elseStatement;
-  var elseCount = controlIfBlock.elseCount_;
-  if(elseCount != 1) elseCount = 0;
-  conditions.push(Blockly.Yail.parseBlock(controlIfBlock.childBlocks_[0]));
-  ifStatement = Blockly.Yail.parseBlock(controlIfBlock.childBlocks_[1]);
-    for(var x = 2; x < controlIfBlock.childBlocks_.length- elseCount; x++){
-      if(x%2 == 0){
-          conditions.push(Blockly.Yail.parseBlock(controlIfBlock.childBlocks_[x]));
-        }
-        else ifElseStatements.push(Blockly.Yail.parseBlock(controlIfBlock.childBlocks_[x]));
-      }
-      if(elseCount>0) elseStatement = Blockly.Yail.parseBlock(controlIfBlock.childBlocks_[controlIfBlock.childBlocks_.length-1]);
-      return Blockly.Yail.genJBridgeControlIfBlock(conditions, ifStatement, ifElseStatements, elseStatement);
-  }
-
-Blockly.Yail.genJBridgeControlIfBlock = function(conditions, ifStatement, ifElseStatements, elseStatement){
+  // var conditions = [];
+  // var ifElseStatements = [];
+  // var ifStatement;
+  // var elseStatement;
   var code = "";
-  code += "if("+conditions[0]+")"
-       + "{\n" + ifStatement + "\n}\n";
-  for(var i = 1,j=0; i < ifElseStatements.length && j<i; j++,i++){
-      code += "else if("+conditions[i]+")\n"
-              + "{\n" + ifElseStatements[j] + "\n}\n";
+  var elseCount = controlIfBlock.elseCount_;
+  var elseIfCount = controlIfBlock.elseifCount_;
+  var ifCondition = Blockly.Yail.parseBlock(controlIfBlock.childBlocks_[0]);
+  var ifStatement = Blockly.Yail.parseBlock(controlIfBlock.childBlocks_[1]);
+  code =  Blockly.Yail.genJBridgeControlIfBlock(ifCondition, ifStatement);  
+  var index = 2 + (elseIfCount * 2);
+  if(elseIfCount > 0){
+    for(var i=2; i< index; i=i+2){
+      var elseIfCondition = Blockly.Yail.parseBlock(controlIfBlock.childBlocks_[i]);
+      var elseIfStatement = Blockly.Yail.parseBlock(controlIfBlock.childBlocks_[i+1]);
+      code = code 
+             + Blockly.Yail.genJBridgeControlElseIfBlock(elseIfCondition, elseIfStatement);
+    }
+  }
+  if(elseCount == 1){
+    var elseStatement = Blockly.Yail.parseBlock(controlIfBlock.childBlocks_[index]);
+    code = code 
+           + Blockly.Yail.genJBridgeControlElseIfBlock(elseStatement);
+  }
+  for (var x = index+elseCount ; x < controlIfBlock.childBlocks_.length; x++){
+    code = code 
+           + Blockly.Yail.parseBlock(controlIfBlock.childBlocks_[x]);
   }
 
-  if(elseStatement != undefined)
-  {
-    code += "else {"+ elseStatement+"\n}";
-  }
   return code;
-}
+
+  // conditions.push(Blockly.Yail.parseBlock(controlIfBlock.childBlocks_[0]));
+  // ifStatement = Blockly.Yail.parseBlock(controlIfBlock.childBlocks_[1]);
+  //   for(var x = 2; x < controlIfBlock.childBlocks_.length- elseCount; x++){
+  //     if(x%2 == 0){
+  //         conditions.push(Blockly.Yail.parseBlock(controlIfBlock.childBlocks_[x]));
+  //       }
+  //       else ifElseStatements.push(Blockly.Yail.parseBlock(controlIfBlock.childBlocks_[x  
+  //     }
+  //     if(elseCount>0) elseStatement = Blockly.Yail.parseBlock(controlIfBlock.childBlocks_[controlIfBlock.childBlocks_.length-1]);
+  //     return Blockly.Yail.genJBridgeControlIfBlock(conditions, ifStatement, ifElseStatements, elseStatement);
+};
+
+Blockly.Yail.genJBridgeControlIfBlock = function(condition, statement){
+  var code = "";
+  code = "if("
+         +condition
+         +"){ \n"
+         + statement
+         + "\n}"
+
+  return code;
+};
+
+Blockly.Yail.genJBridgeControlElseIfBlock = function(condition, statement){
+  var code = "";
+  code = "else if("
+         +condition
+         +"){ \n"
+         + statement
+         + "\n}"
+  return code;
+};
+
+Blockly.Yail.genJBridgeControlElseIfBlock = function(statement){
+  var code = "";
+  code = "else { \n"
+         + statement
+         + "\n}"
+  return code;
+};
+
+// Blockly.Yail.genJBridgeControlIfBlock = function(conditions, ifStatement, ifElseStatements, elseStatement){
+//   var code = "";
+//   code += "if("+conditions[0]+")"
+//        + "{\n" + ifStatement + "\n}\n";
+//   for(var i = 1,j=0; i < ifElseStatements.length && j<i; j++,i++){
+//       code += "else if("+conditions[i]+")\n"
+//               + "{\n" + ifElseStatements[j] + "\n}\n";
+//   }
+
+//   if(elseStatement != undefined)
+//   {
+//     code += "else {"+ elseStatement+"\n}";
+//   }
+//   return code;
+// };
 
 
 Blockly.Yail.parseJBridgeVariableBlocks = function (variableBlock){
