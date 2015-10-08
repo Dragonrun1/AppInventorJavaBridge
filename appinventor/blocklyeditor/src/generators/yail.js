@@ -1039,7 +1039,10 @@ Blockly.Yail.parseJBridgeComponentBlock = function(componentBlock){
       }
   }else if (componentType == "component_method" ){
     code = Blockly.Yail.parseJBridgeMethodCallBlock(componentBlock);
-    jBridgeIsIndividualBlock = true;
+    var methodname = componentBlock.methodName;
+    if(methodname != undefined && methodname.substring(0,3) != "Get"){
+      jBridgeIsIndividualBlock = true;
+    }
   }else{
     code =  "Invalid Component type : " + componentType ;
   }
