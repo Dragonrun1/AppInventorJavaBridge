@@ -106,7 +106,7 @@ var jBridgeVariableDefinitionMap = new Object();
 var jBridgeInitializationList = [];
 var jBridgeComponentMap = new Object();
 var JBRIDGE_COMPONENT_SKIP_PROPERTIES = ["Uuid", "$Version", "TextAlignment"]; //properties to skip when reading Json File
-var JBRIDGE_JSON_TEXT_PROPERTIES = ["Title", "Text", "BackgroundImage", "Image", "Icon", "Source", "Picture"]; //Properties that should include the double qoutes "" in the output JBridge Javacode
+var JBRIDGE_JSON_TEXT_PROPERTIES = ["Title", "Text", "BackgroundImage", "Image", "Icon", "Source", "Picture", "Hint"]; //Properties that should include the double qoutes "" in the output JBridge Javacode
 var jBridgeImportsMap = new Object();
 var jBridgeProceduresMap = new Object();
 var jBridgeIsIndividualBlock = false; // is to Identify if a block is Iduvidal root block or sub-block
@@ -1375,7 +1375,7 @@ Blockly.Yail.parseJBridgeGlobalIntializationBlock = function(globalBlock){
   return "";
 };
 Blockly.Yail.getValueType = function(childType, value){
-  var variableType = "Sting";
+  var variableType = "String";
   if (childType == "Math"){
     if(value.indexOf(".") != -1){
       variableType = "float";
