@@ -349,7 +349,14 @@ public final class YaBlocksEditor extends FileEditor
             packageNameFromPath(getFileId())));
   }
 
-  /**
+  public FileDescriptorWithContent getJava() throws YailGenerationException {
+        return new FileDescriptorWithContent(getProjectId(), javaFileName(),
+                blocksArea.getJava(myFormEditor.encodeFormAsJsonString(),
+                        packageNameFromPath(getFileId())));
+    }
+
+
+    /**
    * Converts a source file path (e.g.,
    * src/com/gmail/username/project1/Form.extension) into a package
    * name (e.g., com.gmail.username.project1.Form)
@@ -464,6 +471,12 @@ public final class YaBlocksEditor extends FileEditor
     return fileId.replace(YoungAndroidSourceAnalyzer.BLOCKLY_SOURCE_EXTENSION,
         YoungAndroidSourceAnalyzer.YAIL_FILE_EXTENSION);
   }
+
+  private String javaFileName(){
+        String fileId = getFileId();
+        return fileId.replace(YoungAndroidSourceAnalyzer.BLOCKLY_SOURCE_EXTENSION,
+                YoungAndroidSourceAnalyzer.JAVA_FILE_EXTENSION);
+    }
 
   // FormChangeListener implementation
   // Note: our companion YaFormEditor adds us as a listener on the form

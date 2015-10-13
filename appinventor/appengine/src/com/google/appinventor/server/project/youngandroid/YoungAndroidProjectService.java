@@ -41,6 +41,7 @@ import com.google.appinventor.shared.rpc.project.youngandroid.YoungAndroidProjec
 import com.google.appinventor.shared.rpc.project.youngandroid.YoungAndroidSourceFolderNode;
 import com.google.appinventor.shared.rpc.project.youngandroid.YoungAndroidSourceNode;
 import com.google.appinventor.shared.rpc.project.youngandroid.YoungAndroidYailNode;
+import com.google.appinventor.shared.rpc.project.youngandroid.YoungAndroidJavaNode;
 import com.google.appinventor.shared.rpc.user.User;
 import com.google.appinventor.shared.settings.Settings;
 import com.google.appinventor.shared.settings.SettingsConstants;
@@ -100,6 +101,8 @@ public final class YoungAndroidProjectService extends CommonProjectService {
       YoungAndroidSourceAnalyzer.BLOCKLY_SOURCE_EXTENSION;
   private static final String YAIL_FILE_EXTENSION =
       YoungAndroidSourceAnalyzer.YAIL_FILE_EXTENSION;
+  private static final String JAVA_FILE_EXTENSION =
+            YoungAndroidSourceAnalyzer.JAVA_FILE_EXTENSION;
 
   public static final String PROJECT_PROPERTIES_FILE_NAME = PROJECT_DIRECTORY + "/" +
       "project.properties";
@@ -302,6 +305,9 @@ public final class YoungAndroidProjectService extends CommonProjectService {
     String yailFileName = YoungAndroidYailNode.getYailFileId(qualifiedFormName);
     String yailFileContents = "";
 
+    String javaFileName = YoungAndroidJavaNode.getJavaFileId(qualifiedFormName);
+    String javaFileContents = "";
+
     Project project = new Project(projectName);
     project.setProjectType(YoungAndroidProjectNode.YOUNG_ANDROID_PROJECT_TYPE);
     // Project history not supported in legacy ode new project wizard
@@ -309,6 +315,7 @@ public final class YoungAndroidProjectService extends CommonProjectService {
     project.addTextFile(new TextFile(formFileName, formFileContents));
     project.addTextFile(new TextFile(blocklyFileName, blocklyFileContents));
     project.addTextFile(new TextFile(yailFileName, yailFileContents));
+    project.addTextFile(new TextFile(javaFileName, javaFileContents));
 
     // Create new project
     return storageIo.createProject(userId, project, getProjectSettings("", "1", "1.0", "false", projectName, "Fixed"));
@@ -429,6 +436,8 @@ public final class YoungAndroidProjectService extends CommonProjectService {
           }
         } else if (fileId.endsWith(YAIL_FILE_EXTENSION)) {
           sourceNode = new YoungAndroidYailNode(fileId);
+        }else if (fileId.endsWith(JAVA_FILE_EXTENSION)) {
+            sourceNode = new YoungAndroidJavaNode(fileId);
         }
         if (sourceNode != null) {
           String packageName = StorageUtil.getPackageName(sourceNode.getQualifiedName());

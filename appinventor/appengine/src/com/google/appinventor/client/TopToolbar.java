@@ -15,6 +15,7 @@ import com.google.appinventor.client.explorer.commands.ChainableCommand;
 import com.google.appinventor.client.explorer.commands.CopyYoungAndroidProjectCommand;
 import com.google.appinventor.client.explorer.commands.DownloadProjectOutputCommand;
 import com.google.appinventor.client.explorer.commands.GenerateYailCommand;
+import com.google.appinventor.client.explorer.commands.GenerateJavaCommand;
 import com.google.appinventor.client.explorer.commands.SaveAllEditorsCommand;
 import com.google.appinventor.client.explorer.commands.ShowBarcodeCommand;
 import com.google.appinventor.client.explorer.commands.ShowProgressBarCommand;
@@ -177,7 +178,7 @@ public class TopToolbar extends Composite {
     buildItems.add(new DropDownItem(WIDGET_NAME_BUILD_DOWNLOAD, MESSAGES.downloadToComputerMenuItem(),
         new DownloadAction()));
     buildItems.add(new DropDownItem(WIDGET_NAME_GENERATEJAVA, MESSAGES.generateJavaItem(),
-        new DownloadAction()));
+        new GenerateJavaAction()));
     if (AppInventorFeatures.hasYailGenerationOption() && Ode.getInstance().getUser().getIsAdmin()) {
       buildItems.add(null);
       buildItems.add(new DropDownItem(WIDGET_NAME_BUILD_YAIL, MESSAGES.generateYailMenuItem(),
@@ -868,6 +869,7 @@ public class TopToolbar extends Composite {
       fileDropDown.setItemEnabled(MESSAGES.checkpointMenuItem(), false);
       buildDropDown.setItemEnabled(MESSAGES.showBarcodeMenuItem(), false);
       buildDropDown.setItemEnabled(MESSAGES.downloadToComputerMenuItem(), false);
+      buildDropDown.setItemEnabled(MESSAGES.generateJavaItem(),false);
     } else { // We have to be in the Designer/Blocks view
       fileDropDown.setItemEnabled(MESSAGES.deleteProjectButton(), true);
       fileDropDown.setItemEnabled(MESSAGES.exportAllProjectsMenuItem(),
@@ -878,6 +880,7 @@ public class TopToolbar extends Composite {
       fileDropDown.setItemEnabled(MESSAGES.checkpointMenuItem(), true);
       buildDropDown.setItemEnabled(MESSAGES.showBarcodeMenuItem(), true);
       buildDropDown.setItemEnabled(MESSAGES.downloadToComputerMenuItem(), true);
+      buildDropDown.setItemEnabled(MESSAGES.generateJavaItem(),true);
     }
     updateKeystoreFileMenuButtons();
   }
@@ -918,5 +921,27 @@ public class TopToolbar extends Composite {
       Ode.getInstance().switchToDebuggingView();
     }
   }
+    private class GenerateJavaAction implements Command {
+        @Override
+        public void execute() {
+            ProjectRootNode projectRootNode = Ode.getInstance().getCurrentYoungAndroidProjectRootNode();
+            if (projectRootNode != null) {
+                ChainableCommand cmd = new SaveAllEditorsCommand(new GenerateJavaCommand(null));
+                //updateBuildButton(true);
+                cmd.startExecuteChain(Tracking.PROJECT_ACTION_BUILD_YAIL_YA, projectRootNode,
+                        new Command() {
+                            @Override
+                            public void execute() {
+                                long projectId = Ode.getInstance().getCurrentYoungAndroidProjectId();
+                                String projectName = Ode.getInstance().getCurrentYoungAndroidProjectRootNode().getName();
+                                Downloader.getInstance().download(ServerLayout.DOWNLOAD_SERVLET_BASE + ServerLayout.DOWNLOAD_FILE + "/" + projectId+"/src/appinventor/ai_test/"+projectName+"/Screen1.java");
+                            }
+                        });
+            }
+
+
+
+        }
+    }
 
 }

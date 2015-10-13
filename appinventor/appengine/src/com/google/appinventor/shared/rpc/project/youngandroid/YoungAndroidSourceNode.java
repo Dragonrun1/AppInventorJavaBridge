@@ -56,7 +56,8 @@ public abstract class YoungAndroidSourceNode extends SourceNode {
         sourceFileId.endsWith(YoungAndroidSourceAnalyzer.FORM_PROPERTIES_EXTENSION) ||
         sourceFileId.endsWith(YoungAndroidSourceAnalyzer.CODEBLOCKS_SOURCE_EXTENSION) ||
         sourceFileId.endsWith(YoungAndroidSourceAnalyzer.BLOCKLY_SOURCE_EXTENSION) ||
-        sourceFileId.endsWith(YoungAndroidSourceAnalyzer.YAIL_FILE_EXTENSION)));
+        sourceFileId.endsWith(YoungAndroidSourceAnalyzer.YAIL_FILE_EXTENSION) ||
+        sourceFileId.endsWith(YoungAndroidSourceAnalyzer.JAVA_FILE_EXTENSION)));
 
     String name = sourceFileId.substring(SRC_PREFIX.length());
     name = StorageUtil.trimOffExtension(name);

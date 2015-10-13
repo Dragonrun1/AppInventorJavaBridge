@@ -337,6 +337,54 @@ public final class EditorManager {
     });
   }
 
+    public void generateJavaForBlocksEditors(final Command successCommand,
+                                             final Command failureCommand) {
+        List<FileDescriptorWithContent> yailFiles =  new ArrayList<FileDescriptorWithContent>();
+        long currentProjectId = Ode.getInstance().getCurrentYoungAndroidProjectId();
+        for (long projectId : openProjectEditors.keySet()) {
+            if (projectId == currentProjectId) {
+                // Generate yail for each blocks editor in this project and add it to the list of
+                // yail files. If an error occurs we stop the generation process, report the error,
+                // and return without executing nextCommand.
+                ProjectEditor projectEditor = openProjectEditors.get(projectId);
+                for (FileEditor fileEditor : projectEditor.getOpenFileEditors()) {
+                    if (fileEditor instanceof YaBlocksEditor) {
+                        YaBlocksEditor yaBlocksEditor = (YaBlocksEditor) fileEditor;
+                        try {
+                            yailFiles.add(yaBlocksEditor.getJava());
+                        } catch (YailGenerationException e) {
+                            ErrorReporter.reportInfo(MESSAGES.yailGenerationError(e.getFormName(),
+                                    e.getMessage()));
+                            if (failureCommand != null) {
+                                failureCommand.execute();
+                            }
+                            return;
+                        }
+                    }
+                }
+                break;
+            }
+        }
+
+        Ode.getInstance().getProjectService().save(Ode.getInstance().getSessionId(),
+                yailFiles,
+                new OdeAsyncCallback<Long>(MESSAGES.saveErrorMultipleFiles()) {
+                    @Override
+                    public void onSuccess(Long date) {
+                        if (successCommand != null) {
+                            successCommand.execute();
+                        }
+                    }
+
+                    @Override
+                    public void onFailure(Throwable caught) {
+                        super.onFailure(caught);
+                        if (failureCommand != null) {
+                            failureCommand.execute();
+                        }
+                    }
+                });
+    }
 
   /**
    * This code used to send the contents of all changed files to the server

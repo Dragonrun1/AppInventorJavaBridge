@@ -43,6 +43,8 @@ public class YoungAndroidSourceAnalyzer {
    */
   public static final String YAIL_FILE_EXTENSION = ".yail";
 
+  public static final String JAVA_FILE_EXTENSION = ".java";
+
   private static final String FORM_PROPERTIES_PREFIX = "#|\n";
   private static final String FORM_PROPERTIES_SUFFIX = "\n|#";
 
