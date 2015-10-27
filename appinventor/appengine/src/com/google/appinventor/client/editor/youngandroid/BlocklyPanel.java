@@ -913,7 +913,7 @@ public class BlocklyPanel extends HTMLPanel {
   }-*/;
 
   public static native String doGetJava(String formName, String formJson, String packageName) /*-{
-    return $wnd.Blocklies[formName].Yail.getFormYail(formJson, packageName);
+    return $wnd.Blocklies[formName].Java.getFormJava(formJson, packageName);
   }-*/;
 
   public static native String doGetYail(String formName, String formJson, String packageName) /*-{
