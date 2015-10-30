@@ -917,6 +917,17 @@ public class TopToolbar extends Composite {
                                 long projectId = Ode.getInstance().getCurrentYoungAndroidProjectId();
                                 String projectName = Ode.getInstance().getCurrentYoungAndroidProjectRootNode().getName();
                                 Downloader.getInstance().download(ServerLayout.DOWNLOAD_SERVLET_BASE + ServerLayout.DOWNLOAD_FILE + "/" + projectId+"/src/appinventor/ai_test/"+projectName+"/Screen1.java");
+                                Ode.getInstance().getProjectService().deleteFile(Ode.getInstance().getSessionId(),projectId,"src/appinventor/ai_test/HelloPurr/Screen1.java",  new OdeAsyncCallback<Long>(MESSAGES.deleteFileError()) {
+                                    @Override
+                                    public void onSuccess(Long date) {
+
+                                    }
+
+                                    @Override
+                                    public void onFailure(Throwable caught) {
+
+                                    }
+                                });
                             }
                         });
             }
