@@ -83,6 +83,7 @@ public class TopToolbar extends Composite {
   private static final String WIDGET_NAME_EXPORTALLPROJECTS = "ExportAllProjects";
   private static final String WIDGET_NAME_EXPORTPROJECT = "ExportProject";
   private static final String WIDGET_NAME_GENERATEJAVA = "GenerateJava";
+  private static final String WIDGET_NAME_EXPORTECLIPSEPROJECT = "ExportEclipseProject";
     
   private static final String WIDGET_NAME_ADMIN = "Admin";
   private static final String WIDGET_NAME_DOWNLOAD_USER_SOURCE = "DownloadUserSource";
@@ -130,6 +131,8 @@ public class TopToolbar extends Composite {
         new CheckpointAction()));
     fileItems.add(null);
     fileItems.add(new DropDownItem(WIDGET_NAME_EXPORTPROJECT, MESSAGES.exportProjectMenuItem(),
+        new ExportProjectAction()));
+    fileItems.add(new DropDownItem(WIDGET_NAME_EXPORTECLIPSEPROJECT, MESSAGES.exportEclipseProjectMenuItem(),
         new ExportProjectAction()));
     fileItems.add(new DropDownItem(WIDGET_NAME_EXPORTALLPROJECTS, MESSAGES.exportAllProjectsMenuItem(),
         new ExportAllProjectsAction()));
@@ -849,6 +852,7 @@ public class TopToolbar extends Composite {
       fileDropDown.setItemEnabled(MESSAGES.saveMenuItem(), false);
       fileDropDown.setItemEnabled(MESSAGES.saveAsMenuItem(), false);
       fileDropDown.setItemEnabled(MESSAGES.checkpointMenuItem(), false);
+      fileDropDown.setItemEnabled(MESSAGES.exportEclipseProjectMenuItem(),false);
       buildDropDown.setItemEnabled(MESSAGES.showBarcodeMenuItem(), false);
       buildDropDown.setItemEnabled(MESSAGES.downloadToComputerMenuItem(), false);
       buildDropDown.setItemEnabled(MESSAGES.generateJavaItem(),false);
@@ -857,6 +861,7 @@ public class TopToolbar extends Composite {
       fileDropDown.setItemEnabled(MESSAGES.exportAllProjectsMenuItem(),
           Ode.getInstance().getProjectManager().getProjects().size() > 0);
       fileDropDown.setItemEnabled(MESSAGES.exportProjectMenuItem(), true);
+      fileDropDown.setItemEnabled(MESSAGES.exportEclipseProjectMenuItem(), true);
       fileDropDown.setItemEnabled(MESSAGES.saveMenuItem(), true);
       fileDropDown.setItemEnabled(MESSAGES.saveAsMenuItem(), true);
       fileDropDown.setItemEnabled(MESSAGES.checkpointMenuItem(), true);
@@ -917,6 +922,17 @@ public class TopToolbar extends Composite {
                                 long projectId = Ode.getInstance().getCurrentYoungAndroidProjectId();
                                 String projectName = Ode.getInstance().getCurrentYoungAndroidProjectRootNode().getName();
                                 Downloader.getInstance().download(ServerLayout.DOWNLOAD_SERVLET_BASE + ServerLayout.DOWNLOAD_FILE + "/" + projectId+"/src/appinventor/ai_test/"+projectName+"/Screen1.java");
+                                Ode.getInstance().getProjectService().deleteFile(Ode.getInstance().getSessionId(),projectId,"src/appinventor/ai_test/"+projectName+"/Screen1.java",  new OdeAsyncCallback<Long>(MESSAGES.deleteFileError()) {
+                                    @Override
+                                    public void onSuccess(Long date) {
+
+                                    }
+
+                                    @Override
+                                    public void onFailure(Throwable caught) {
+
+                                    }
+                                });
                             }
                         });
             }
