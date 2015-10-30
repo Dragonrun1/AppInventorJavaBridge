@@ -472,6 +472,10 @@ public interface OdeMessages extends Messages {
   @Description("Name of Export Project menuitem")
   String exportProjectMenuItem();
 
+  @DefaultMessage("Export Eclipse Project to my computer")
+  @Description("Name of Export  Eclipse Project menuitem")
+  String exportEclipseProjectMenuItem();
+
   @DefaultMessage("Export all projects")
   @Description("Name of Export all Project menuitem")
   String exportAllProjectsMenuItem();
