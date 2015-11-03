@@ -1476,6 +1476,8 @@ Blockly.Yail.parseJBridgeTextTypeBlocks = function(textBlock){
   var type = textBlock.type;
   if (type == "text"){
     code = Blockly.Yail.parseJBridgeTextBlock(textBlock);
+  }else if(type == "text_join"){
+    code = Blockly.Yail.parseJBridgeTextJoinBlock(textBlock);
   }
   return code;
 };
@@ -1485,8 +1487,35 @@ Blockly.Yail.parseJBridgeTextBlock = function(textBlock){
   return Blockly.Yail.genJBridgeTextBlock(textData);
 };
 
+Blockly.Yail.parseJBridgeTextJoinBlock = function(textBlock){
+  var joinList = [];
+  for (var y = 0, joinBlock; joinBlock = textBlock.childBlocks_[y]; y++){
+    var genCode = Blockly.Yail.parseBlock(joinBlock);
+    joinList.push(genCode);
+  }
+  if (joinList.length == 0){
+    return "";
+  }
+  else{
+    return Blockly.Yail.genJBridgeTextJoinBlock(joinList);
+  }
+};
+
 Blockly.Yail.genJBridgeTextBlock = function(text){
   var code = "\""+text+"\"";
+  return code;
+};
+
+Blockly.Yail.genJBridgeTextJoinBlock = function(joinList){
+  var code = "";
+  for (var x = 0; x < joinList.length; x++){
+    if(x == (joinList.length - 1)){
+      code = code + "(" + joinList[x] + ")" + ".toString()";
+    }
+    else{
+      code = code + "(" + joinList[x] + ")" + ".toString()" + " + ";
+    }
+  }
   return code;
 };
 
