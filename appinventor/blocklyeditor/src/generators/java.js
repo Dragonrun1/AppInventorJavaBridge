@@ -111,7 +111,7 @@ var jBridgeImportsMap = new Object();
 var jBridgeProceduresMap = new Object();
 var jBridgeIsIndividualBlock = false; // is to Identify if a block is Iduvidal root block or sub-block
 var jBridgeCurrentScreen = "Screen1";
-var JBRIDGE_COMPONENT_TEXT_PROPERTIES = ["text"];
+var JBRIDGE_COMPONENT_TEXT_PROPERTIES = ["text", "picture"];
 /**
  * Generate the Yail code for this blocks workspace, given its associated form specification.
  * 
@@ -1522,7 +1522,9 @@ Blockly.Yail.genJBridgeTextJoinBlock = function(joinList){
 Blockly.Yail.parseJBridgeListBlocks = function(listBlock){
   var code = "";
   var type = listBlock.type;
-  if( type == "lists_create_with"){
+    var name = "ArrayList";
+    jBridgeImportsMap[name] = "import java.util.ArrayList;";
+    if( type == "lists_create_with"){
       code = Blockly.Yail.parseJBridgeListsCreateWithBlock(listBlock);
   }else if (type == "lists_select_item"){
       code = Blockly.Yail.parseJBridgeListSelectItemBlock(listBlock);
@@ -1547,7 +1549,7 @@ Blockly.Yail.parseJBridgeListsCreateWithBlock = function(listBlock){
      code = code 
             + Blockly.Yail.genJBridgeListsAddItemBlock(listName, addItemData);
    }
-   code = Blockly.Yail.genJBridgeNewList(childType) 
+    code = Blockly.Yail.genJBridgeNewList(childType)
           +"\n"
           + code;
 
@@ -1560,7 +1562,7 @@ Blockly.Yail.parseJBridgeListSelectItemBlock = function(listBlock){
   return Blockly.Yail.genJBridgeListSelectItemBlock(listName, index);  
 };
 Blockly.Yail.genJBridgeListSelectItemBlock = function(listName, index){
-  var code = listName + "[" + index + "]";
+  var code = listName + ".get(" + index + ")";
   return code;
 };
 Blockly.Yail.genJBridgeNewList = function(type){
