@@ -891,7 +891,7 @@ Blockly.Yail.parseJBridgeControlIfBlock = function(controlIfBlock){
     for(var i=2; i< index; i=i+2){
       var elseIfCondition = Blockly.Yail.parseBlock(controlIfBlock.childBlocks_[i]);
       var elseIfStatement = Blockly.Yail.parseBlock(controlIfBlock.childBlocks_[i+1]);
-      code = code 
+      code = code  
              + Blockly.Yail.genJBridgeControlElseIfBlock(elseIfCondition, elseIfStatement);
     }
   }
@@ -925,7 +925,7 @@ Blockly.Yail.genJBridgeControlIfBlock = function(condition, statement){
          +condition
          +"){ \n"
          + statement
-         + "\n}"
+         + "\n} \n"
 
   return code;
 };
@@ -936,7 +936,7 @@ Blockly.Yail.genJBridgeControlElseIfBlock = function(condition, statement){
          +condition
          +"){ \n"
          + statement
-         + "\n}"
+         + "\n} \n"
   return code;
 };
 
@@ -944,7 +944,7 @@ Blockly.Yail.genJBridgeControlElseIfBlock = function(statement){
   var code = "";
   code = "else { \n"
          + statement
-         + "\n}"
+         + "\n} \n"
   return code;
 };
 
@@ -996,8 +996,11 @@ Blockly.Yail.genJBridgeVariableGetBlock = function(paramName){
 
 //It itertates through all the parent to find the specific blockType and loads fieldName map
 Blockly.Yail.getJBridgeParentBlockFieldMap = function (block, blockType, fieldName){
-  if(block.type == blockType && block != undefined && block != null){
+  if(block != undefined && block != null && block.type == blockType){
       return Blockly.Yail.getFieldMap(block, fieldName);  
+  }
+  if(block == null || block == undefined){
+    return new Object();
   }
   return Blockly.Yail.getJBridgeParentBlockFieldMap(block.parentBlock_, blockType, fieldName);
 };
@@ -1043,6 +1046,8 @@ Blockly.Yail.parseJBridgeComponentBlock = function(componentBlock){
     if(methodname != undefined && methodname.substring(0,3) != "Get"){
       jBridgeIsIndividualBlock = true;
     }
+  }else if (componentType == "component_component_block"){
+    code = Blockly.Yail.parseJBridgeComponentComponentBlock(componentBlock);
   }else{
     code =  "Invalid Component type : " + componentType ;
   }
@@ -1071,7 +1076,7 @@ Blockly.Yail.parseJBridgeMethodCallBlock = function(methodCallBlock){
   for (var y = 0, param; param = paramsList[y]; y++){
     jBridgeParamList.push(Blockly.Yail.getJBridgeRelativeParamName(parentParamMap, param));
   }
-  code = code + Blockly.Yail.genJBridgeMethodCallBlock(objectName ,methodName, jBridgeParamList);
+  code = Blockly.Yail.genJBridgeMethodCallBlock(objectName ,methodName, jBridgeParamList) + "\n" + code;
   return code;
 };
 
@@ -1266,6 +1271,8 @@ Blockly.Yail.parseJBridgeMathBlocks = function(mathBlock){
     code = Blockly.Yail.parseJBridgeMathNumberBlock(mathBlock);
   }else if(type == "math_random_int"){
     code = Blockly.Yail.parseJBridgeMathRandomInt(mathBlock);
+  }else if(type == "math_random_float"){
+    code = Blockly.Yail.parseJBridgeMathRandomFloat(mathBlock);
   }else if(type == "math_add"){
     code = Blockly.Yail.parseJBridgeMathAdd(mathBlock);
   }else if(type == "math_subtract"){
@@ -1322,15 +1329,18 @@ Blockly.Yail.parseJBridgeMathRandomInt = function(mathBlock){
     return Blockly.Yail.genJBridgeMathRandomInt(leftValue, rightValue);
 };
 
-
+//TODO try other alternatives for Random integer like "Random.randInt(min, max)"
 Blockly.Yail.genJBridgeMathRandomInt = function(leftValue, rightValue){
-    var code = "random.nextInt("
+    var code = "(random.nextInt("
              + rightValue
              + " - "
              + leftValue
+             + " + "
+             + " 1 "
              + ")"
              + " + "
-             + leftValue;
+             + leftValue
+             + ")";
     return code;
 };
 
@@ -1404,6 +1414,8 @@ var code = "";
   var componentType = logicBlock.type;
   if (componentType == "logic_boolean"){
       code = Blockly.Yail.parseJBridgeBooleanBlock(logicBlock);
+  }else if (componentType == "logic_operation"){
+      code = Blockly.Yail.parseJBridgeLogicOperationBlock(logicBlock);
   }
   return code;
 };
@@ -1425,6 +1437,7 @@ Blockly.Yail.parseJBridgeProceduresBlocks = function(proceduresBlock){
   }else if(proceduresType == "procedures_callnoreturn"){
      code = Blockly.Yail.parseJBridgeProcCallNoReturn(proceduresBlock);
   }
+  jBridgeIsIndividualBlock = true;
   return code;
 };
 
@@ -1457,15 +1470,33 @@ Blockly.Yail.genJBridgeProcDefNoReturn = function (procedureName, procedureParam
 }
 
 Blockly.Yail.parseJBridgeProcCallNoReturn = function(proceduresBlock){
-  var params = "";
   var procName = proceduresBlock.getFieldValue("PROCNAME");
-  return Blockly.Yail.genJBridgeProcCallNoReturn(procName, params);
+  var paramsList = [];
+  var code = "";
+  var parentParamMap = Blockly.Yail.getFieldMap(proceduresBlock.parentBlock_, "PARAMETERS");
+  //parse all the params Block
+  for (var y = 0, paramBlock; paramBlock = proceduresBlock.childBlocks_[y]; y++){
+      var genCode = Blockly.Yail.parseBlock(paramBlock);
+      if(jBridgeIsIndividualBlock){
+        code = code + genCode+"\n";
+      }else{
+        paramsList.push(genCode);
+      }
+  }
+
+  var jBridgeParamList = [];
+
+  for (var y = 0, param; param = paramsList[y]; y++){
+    jBridgeParamList.push(Blockly.Yail.getJBridgeRelativeParamName(parentParamMap, param));
+  }
+
+  return Blockly.Yail.genJBridgeProcCallNoReturn(procName, jBridgeParamList) + "\n" + code;
 };
 
-Blockly.Yail.genJBridgeProcCallNoReturn = function(procName, params){
+Blockly.Yail.genJBridgeProcCallNoReturn = function(procName, paramsList){
   var code = procName
              + "("
-             + params
+             + paramsList.join(",")
              +");";
   
   return code;
@@ -1591,7 +1622,7 @@ Blockly.Yail.genJBridgeMathCompare = function (leftValue, rightValue, operator){
 };
 
 Blockly.Yail.getJBridgeOperator = function(operator){
-  var op = "";
+  var op = operator;
   if(operator == "GT"){
     op = ">";
   }else if(operator == "LT"){
@@ -1604,7 +1635,10 @@ Blockly.Yail.getJBridgeOperator = function(operator){
     op = ">=";
   }else if(operator == "LTE"){
     op = "<=";
+  }else if(operator == 'AND'){
+    op = "&&"
   }
+
   return op;
 };
 
@@ -1616,4 +1650,47 @@ Blockly.Yail.parseJBridgeListLengthBlock = function(listBlock){
 Blockly.Yail.genJBridgeListLengthBlock = function(listName){
   var code = listName + ".size()"
   return code;
+};
+
+Blockly.Yail.parseJBridgeLogicOperationBlock = function(logicBlock){
+  var operator = logicBlock.getFieldValue("OP");
+  var leftValue = Blockly.Yail.parseBlock(logicBlock.childBlocks_[0]);
+  var rightValue = Blockly.Yail.parseBlock(logicBlock.childBlocks_[1]);
+
+return Blockly.Yail.genJBridgeLogicOperation(leftValue, rightValue, Blockly.Yail.getJBridgeOperator(operator));
+};
+
+Blockly.Yail.genJBridgeLogicOperation = function (leftValue, rightValue, operator){
+
+  var code = leftValue
+             + " "
+             + operator
+             + " "
+             + rightValue;
+  return code;
+};
+
+Blockly.Yail.parseJBridgeComponentComponentBlock = function(componentBlock){
+  var name = componentBlock.instanceName;
+  return Blockly.Yail.genJBridgeComponentComponentBlock(name);
+};
+
+Blockly.Yail.genJBridgeComponentComponentBlock = function(name){
+  var code = name;
+  return code;
+};
+
+Blockly.Yail.parseJBridgeMathRandomFloat = function(mathBlock){
+    var name = "random";
+    if(!jBridgeVariableDefinitionMap[name]){
+        jBridgeVariableDefinitionMap[name] = "Random";
+        jBridgeInitializationList.push("random = new Random();");
+        jBridgeImportsMap[name] = "import java.util.Random;";
+    }
+    return Blockly.Yail.genJBridgeMathRandomFloat();
+};
+
+Blockly.Yail.genJBridgeMathRandomFloat = function(){
+    var code = "(random.nextFloat())"
+    return code;
 };
