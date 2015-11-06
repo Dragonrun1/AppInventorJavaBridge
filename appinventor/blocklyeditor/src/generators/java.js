@@ -1568,7 +1568,12 @@ Blockly.Yail.parseJBridgeListBlocks = function(listBlock){
 Blockly.Yail.parseJBridgeListsCreateWithBlock = function(listBlock){
    var code = "";
    var childType;
-   var listName = listBlock.parentBlock_.getFieldValue('NAME').replace("global ", "")
+   var listName = "[Unknown]";
+   if (listBlock.parentBlock_.getFieldValue('NAME') != undefined){
+      listName = listBlock.parentBlock_.getFieldValue('NAME').replace("global ", "")
+   }else if(listBlock.parentBlock_.getFieldValue('VAR') != undefined){
+      listName = listBlock.parentBlock_.getFieldValue('VAR').replace("global ", "")
+   }
    for (var x = 0, childBlock; childBlock = listBlock.childBlocks_[x]; x++) {
      var addItemData = Blockly.Yail.parseBlock(childBlock);
      childType = Blockly.Yail.getValueType(childBlock.type, addItemData);
