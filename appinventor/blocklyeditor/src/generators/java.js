@@ -1199,7 +1199,7 @@ Blockly.Yail.parseJBridgeSetBlock = function(setBlock){
   if(JBRIDGE_COMPONENT_TEXT_PROPERTIES.indexOf(property.toLowerCase()) > -1){
     value = "String.valueOf(" +value+")";
   }
-  code = code + Blockly.Yail.genJBridgeSetBlock(componentName, property, value);
+  code = Blockly.Yail.genJBridgeSetBlock(componentName, property, value) + "\n" + code;
   return code;
 };
 
@@ -1444,16 +1444,16 @@ Blockly.Yail.parseJBridgeProceduresBlocks = function(proceduresBlock){
 Blockly.Yail.parseJBridgeProcDefNoReturn = function(proceduresBlock){
   var code = "";
   var procName = proceduresBlock.getFieldValue("NAME");
-  var procParms = "";  //TO DO
-  if (proceduresBlock.getParameters.length != 0){
-      //TO DO
+  var procParms = [];
+  for (var x = 0, params; params = proceduresBlock.arguments_[x]; x++) {
+    procParms.push("Object " + params);
   }
   var statementList = [];
   for (var x = 0, childBlock; childBlock = proceduresBlock.childBlocks_[x]; x++) {
     statementList.push(Blockly.Yail.parseBlock(childBlock));
   }
   
-  jBridgeProceduresMap[procName] = Blockly.Yail.genJBridgeProcDefNoReturn(procName, procParms, statementList.join("\n"));
+  jBridgeProceduresMap[procName] = Blockly.Yail.genJBridgeProcDefNoReturn(procName, procParms.join(", "), statementList.join("\n"));
 
   return code;
 };
