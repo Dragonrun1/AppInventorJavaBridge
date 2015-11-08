@@ -1042,10 +1042,11 @@ Blockly.Yail.parseJBridgeComponentBlock = function(componentBlock){
       }
   }else if (componentType == "component_method" ){
     code = Blockly.Yail.parseJBridgeMethodCallBlock(componentBlock);
-    var methodname = componentBlock.methodName;
-    if(methodname != undefined && methodname.substring(0,3) != "Get"){
+    //TODO Not sure what is the side effect of commiting below lines
+    // var methodname = componentBlock.methodName;
+    // if(methodname != undefined && methodname.substring(0,3) != "Get"){
       jBridgeIsIndividualBlock = true;
-    }
+    // }
   }else if (componentType == "component_component_block"){
     code = Blockly.Yail.parseJBridgeComponentComponentBlock(componentBlock);
   }else{
@@ -1272,7 +1273,7 @@ Blockly.Yail.parseJBridgeMathBlocks = function(mathBlock){
   }else if(type == "math_random_int"){
     code = Blockly.Yail.parseJBridgeMathRandomInt(mathBlock);
   }else if(type == "math_random_float"){
-    code = Blockly.Yail.parseJBridgeMathRandomFloat(mathBlock);
+    code = Blockly.Yail.parseJBridgeMathRandomFloatBlock(mathBlock);
   }else if(type == "math_add"){
     code = Blockly.Yail.parseJBridgeMathAdd(mathBlock);
   }else if(type == "math_subtract"){
@@ -1509,6 +1510,8 @@ Blockly.Yail.parseJBridgeTextTypeBlocks = function(textBlock){
     code = Blockly.Yail.parseJBridgeTextBlock(textBlock);
   }else if(type == "text_join"){
     code = Blockly.Yail.parseJBridgeTextJoinBlock(textBlock);
+  }else if(type == "text_changeCase"){
+    code = Blockly.Yail.parseJBridgeTextChangeCaseBlock(textBlock);
   }
   return code;
 };
@@ -1662,10 +1665,10 @@ Blockly.Yail.parseJBridgeLogicOperationBlock = function(logicBlock){
   var leftValue = Blockly.Yail.parseBlock(logicBlock.childBlocks_[0]);
   var rightValue = Blockly.Yail.parseBlock(logicBlock.childBlocks_[1]);
 
-return Blockly.Yail.genJBridgeLogicOperation(leftValue, rightValue, Blockly.Yail.getJBridgeOperator(operator));
+return Blockly.Yail.genJBridgeLogicOperationBlock(leftValue, rightValue, Blockly.Yail.getJBridgeOperator(operator));
 };
 
-Blockly.Yail.genJBridgeLogicOperation = function (leftValue, rightValue, operator){
+Blockly.Yail.genJBridgeLogicOperationBlock = function (leftValue, rightValue, operator){
 
   var code = leftValue
              + " "
@@ -1685,17 +1688,38 @@ Blockly.Yail.genJBridgeComponentComponentBlock = function(name){
   return code;
 };
 
-Blockly.Yail.parseJBridgeMathRandomFloat = function(mathBlock){
+Blockly.Yail.parseJBridgeMathRandomFloatBlock = function(mathBlock){
     var name = "random";
     if(!jBridgeVariableDefinitionMap[name]){
         jBridgeVariableDefinitionMap[name] = "Random";
         jBridgeInitializationList.push("random = new Random();");
         jBridgeImportsMap[name] = "import java.util.Random;";
     }
-    return Blockly.Yail.genJBridgeMathRandomFloat();
+    return Blockly.Yail.genJBridgeMathRandomFloatBlock();
 };
 
-Blockly.Yail.genJBridgeMathRandomFloat = function(){
+Blockly.Yail.genJBridgeMathRandomFloatBlock = function(){
     var code = "(random.nextFloat())"
+    return code;
+};
+
+Blockly.Yail.parseJBridgeTextChangeCaseBlock = function(textBlock){
+    var operator = textBlock.getFieldValue("OP");
+    var op = "toLowerCase()";
+    if(operator == "UPCASE"){
+        op = "toUpperCase()";
+    }
+    var genCode = "";
+    for(var x = 0, childBlock; childBlock = textBlock.childBlocks_[x]; x++){
+          genCode = genCode + Blockly.Yail.parseBlock(childBlock);
+    }    
+    return Blockly.Yail.genJBridgeTextChangeCaseBlock(genCode, op);
+};
+
+Blockly.Yail.genJBridgeTextChangeCaseBlock = function(inputText, changeCase){
+    var code = "String.value("
+              + inputText 
+              + ")."
+              + changeCase;
     return code;
 };
