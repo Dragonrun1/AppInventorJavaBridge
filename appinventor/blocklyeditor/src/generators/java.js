@@ -111,7 +111,7 @@ var jBridgeImportsMap = new Object();
 var jBridgeProceduresMap = new Object();
 var jBridgeIsIndividualBlock = false; // is to Identify if a block is Iduvidal root block or sub-block
 var jBridgeCurrentScreen = "Screen1";
-var JBRIDGE_COMPONENT_TEXT_PROPERTIES = ["text", "picture"];
+var JBRIDGE_COMPONENT_TEXT_PROPERTIES = ["text", "picture", "source"];
 /**
  * Generate the Yail code for this blocks workspace, given its associated form specification.
  * 
@@ -1556,21 +1556,23 @@ Blockly.Yail.genJBridgeTextJoinBlock = function(joinList){
 Blockly.Yail.parseJBridgeListBlocks = function(listBlock){
   var code = "";
   var type = listBlock.type;
-    var name = "ArrayList";
-    jBridgeImportsMap[name] = "import java.util.ArrayList;";
-    if( type == "lists_create_with"){
-      code = Blockly.Yail.parseJBridgeListsCreateWithBlock(listBlock);
+  var name = "ArrayList";
+  jBridgeImportsMap[name] = "import java.util.ArrayList;";
+  if( type == "lists_create_with"){
+    code = Blockly.Yail.parseJBridgeListsCreateWithBlock(listBlock);
   }else if (type == "lists_select_item"){
       code = Blockly.Yail.parseJBridgeListSelectItemBlock(listBlock);
   }else if(type == "lists_length"){
       code = Blockly.Yail.parseJBridgeListLengthBlock(listBlock);
+  }else if(type == "lists_is_list"){
+      code = Blockly.Yail.parseJBridgeListIsListBlock(listBlock);
   }
   return code;
 };
 
 Blockly.Yail.parseJBridgeListsCreateWithBlock = function(listBlock){
    var code = "";
-   var childType;
+   var childType = "String";
    var listName = "[Unknown]";
    if (listBlock.parentBlock_.getFieldValue('NAME') != undefined){
       listName = listBlock.parentBlock_.getFieldValue('NAME').replace("global ", "")
@@ -1618,8 +1620,20 @@ Blockly.Yail.parseJBridgeMathCompare = function (mathBlock){
   var operator = mathBlock.getFieldValue("OP");
   var leftValue = Blockly.Yail.parseBlock(mathBlock.childBlocks_[0]);
   var rightValue = Blockly.Yail.parseBlock(mathBlock.childBlocks_[1]);
+  var op = Blockly.Yail.getJBridgeOperator(operator);
+  if(op == "==" && leftValue.indexOf("String.valueOf(") == 0){
+    return Blockly.Yail.genJBridgeStringEqualsCompare(leftValue, rightValue, op);
+  }
+  return Blockly.Yail.genJBridgeMathCompare(leftValue, rightValue, op);
+};
 
-  return Blockly.Yail.genJBridgeMathCompare(leftValue, rightValue, Blockly.Yail.getJBridgeOperator(operator));
+Blockly.Yail.genJBridgeStringEqualsCompare = function (leftValue, rightValue, operator){
+  var code = "(" 
+             + leftValue
+             + ").equals("
+             + rightValue
+             + ")";
+  return code;
 };
 
 Blockly.Yail.genJBridgeMathCompare = function (leftValue, rightValue, operator){
@@ -1717,9 +1731,26 @@ Blockly.Yail.parseJBridgeTextChangeCaseBlock = function(textBlock){
 };
 
 Blockly.Yail.genJBridgeTextChangeCaseBlock = function(inputText, changeCase){
-    var code = "String.value("
+    var code = "String.valueOf("
               + inputText 
               + ")."
               + changeCase;
     return code;
 };
+
+Blockly.Yail.parseJBridgeListIsListBlock = function(listBlock){
+  var genCode = ""
+  for(var x = 0, childBlock; childBlock = listBlock.childBlocks_[x]; x++){
+          genCode = genCode + Blockly.Yail.parseBlock(childBlock);
+  }
+  return Blockly.Yail.genJBridgeListIsListBlock(genCode);
+};
+
+Blockly.Yail.genJBridgeListIsListBlock = function(genCode){
+  var code = "(("
+            + genCode
+            + ")"
+            + ".instanceof List<?>"
+            + ")"
+  return code;
+}
