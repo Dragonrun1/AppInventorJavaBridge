@@ -1750,7 +1750,7 @@ Blockly.Yail.genJBridgeListIsListBlock = function(genCode){
   var code = "(("
             + genCode
             + ")"
-            + ".instanceof List<?>"
+            + " instanceof ArrayList<?>"
             + ")"
   return code;
 }
