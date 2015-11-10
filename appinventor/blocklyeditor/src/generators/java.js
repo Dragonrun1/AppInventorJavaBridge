@@ -192,7 +192,7 @@ Blockly.Java.getFormJava = function(formJson, packageName, forRepl) {
     // finalCode = code.join('\n').replace(/\\(set-property.*\"\"\\)\\n*/mg, "");
   }
   
-  return javaCode.join('\n');  // Blank line between each section.
+  return Blockly.Java.prityPrintJBridgeCode(javaCode.join('\n'));  // Blank line between each section.
 };
 
 Blockly.Yail.getDeepNames = function(componentJson, componentNames) {
@@ -1753,4 +1753,42 @@ Blockly.Yail.genJBridgeListIsListBlock = function(genCode){
             + ".instanceof List<?>"
             + ")"
   return code;
-}
+};
+
+Blockly.Java.prityPrintJBridgeCode = function(javaCode){
+  var stack=new Array();
+  var lines = javaCode.split('\n');
+  var prityPrint = [];
+  for(var i = 0;i < lines.length;i++){
+    var line = lines[i].trim();
+    if(line == ";" || line.length == 0){
+      continue;
+    }
+    var lastChar = line.slice(-1);
+    var indentation = Blockly.Java.prityPrintIndentationJBridge(stack.length);
+    if(lastChar== "{"){
+      stack.push("{");
+    } else if(lastChar== "}"){
+      stack.pop();
+      indentation = Blockly.Java.prityPrintIndentationJBridge(stack.length);
+    }
+    prityPrint.push(indentation + line);
+    
+  }
+  return prityPrint.join("\n");
+};
+
+Blockly.Java.prityPrintIndentationJBridge = function(indendLength){
+  var indentation = "";
+  for(var j=0; j<indendLength; j++){
+    indentation += "  ";
+  }
+  return indentation;
+};
+
+Blockly.Java.getManifest = function(formJson, packageName, forRepl) {
+    // var jsonObject = JSON.parse(formJson); 
+    // var javaCode = []
+    // javaCode.push(Blockly.Yail.genJBridgeCode(Blockly.mainWorkspace.getTopBlocks(true), jsonObject));
+    // jv
+};
