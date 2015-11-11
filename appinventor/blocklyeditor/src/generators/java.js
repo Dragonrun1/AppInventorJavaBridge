@@ -112,6 +112,13 @@ var jBridgeProceduresMap = new Object();
 var jBridgeIsIndividualBlock = false; // is to Identify if a block is Iduvidal root block or sub-block
 var jBridgeCurrentScreen = "Screen1";
 var JBRIDGE_COMPONENT_TEXT_PROPERTIES = ["text", "picture", "source"];
+
+var jBridgePermissionToAdd = new Object; //this should be a set
+var jBridgeIntentsToAdd = new Object; // this should be a set
+var jBridgeAndroidPermisions = new Object();
+var jBridgeAndroidIntents = new Object();
+var jBridgeMethodAndTypeToPermisions = new Object();
+
 /**
  * Generate the Yail code for this blocks workspace, given its associated form specification.
  * 
@@ -145,6 +152,7 @@ Blockly.Java.getFormJava = function(formJson, packageName, forRepl) {
   code.push("\n######################################\n");
 
   code.push("\n------------------------------------\n");
+  Blockly.Java.initAndroidPermisionAndIntent();
   javaCode.push(Blockly.Yail.genJBridgeCode(Blockly.mainWorkspace.getTopBlocks(true), jsonObject));
   code.push("\n------------------------------------\n");
   if (!forRepl) {
@@ -191,8 +199,9 @@ Blockly.Java.getFormJava = function(formJson, packageName, forRepl) {
     // 
     // finalCode = code.join('\n').replace(/\\(set-property.*\"\"\\)\\n*/mg, "");
   }
-  
-  return Blockly.Java.prityPrintJBridgeCode(javaCode.join('\n'));  // Blank line between each section.
+  prityPrintCode = Blockly.Java.prityPrintJBridgeCode(javaCode.join('\n')); 
+  mainfestCode = Blockly.Java.getMainfest();
+  return prityPrintCode;
 };
 
 Blockly.Yail.getDeepNames = function(componentJson, componentNames) {
@@ -761,6 +770,7 @@ Blockly.Yail.parseComponentDefinition = function(jBridgeVariableDefinitionMap){
       code = code 
              + Blockly.Yail.genComponentDefinition(jBridgeVariableDefinitionMap[key], key)
              +"\n";
+             Blockly.Java.addPermisionsAndIntents(jBridgeVariableDefinitionMap[key]);
   }
   return code;
 };
@@ -1042,6 +1052,7 @@ Blockly.Yail.parseJBridgeComponentBlock = function(componentBlock){
       }
   }else if (componentType == "component_method" ){
     code = Blockly.Yail.parseJBridgeMethodCallBlock(componentBlock);
+    Blockly.Java.addPermisionsAndIntents(componentBlock.methodName);
     //TODO Not sure what is the side effect of commiting below lines
     // var methodname = componentBlock.methodName;
     // if(methodname != undefined && methodname.substring(0,3) != "Get"){
@@ -1820,9 +1831,71 @@ Blockly.Java.prityPrintIndentationJBridge = function(indendLength){
   return indentation;
 };
 
-Blockly.Java.getManifest = function(formJson, packageName, forRepl) {
-    // var jsonObject = JSON.parse(formJson); 
-    // var javaCode = []
-    // javaCode.push(Blockly.Yail.genJBridgeCode(Blockly.mainWorkspace.getTopBlocks(true), jsonObject));
-    // jv
+Blockly.Java.getMainfest = function() {
+    var androidIntents = "";
+    var androidPermisions = "";
+    for (var key in jBridgePermissionToAdd) {
+      androidPermisions += jBridgeAndroidPermisions[key];
+    }
+    for (var key in jBridgeIntentsToAdd) {
+      androidIntents += jBridgeAndroidIntents[key];
+    }
+    return Blockly.Java.genManifestString(androidPermisions, androidIntents);
+    
+};
+
+Blockly.Java.initAndroidPermisionAndIntent = function(){
+    //This includes method Names or Type
+    jBridgeAndroidPermisions["receive_sms"] = "<uses-permission android:name=\"android.permission.RECEIVE_SMS\"/>\r\n\r\n    ";
+    jBridgeAndroidPermisions["send_sms"] = "<uses-permission android:name=\"android.permission.SEND_SMS\"/>\r\n\r\n    ";
+    jBridgeAndroidPermisions["voice_receive_sms"] = "<uses-permission android:name=\"com.google.android.apps.googlevoice.permission.RECEIVE_SMS\" />\r\n\r\n    ";
+    jBridgeAndroidPermisions["voice_send_sms"] = "<uses-permission android:name=\"com.google.android.apps.googlevoice.permission.SEND_SMS\" />\r\n\r\n    ";
+    jBridgeAndroidPermisions["manage_accounts"] = "<uses-permission android:name=\"android.permission.MANAGE_ACCOUNTS\" />\r\n\r\n    ";
+    jBridgeAndroidPermisions["get_accounts"] = "<uses-permission android:name=\"android.permission.GET_ACCOUNTS\" />\r\n\r\n    ";
+    jBridgeAndroidPermisions["use_credentials"] =  "<uses-permission android:name=\"android.permission.USE_CREDENTIALS\" />\r\n\r\n    ";
+    jBridgeAndroidPermisions["vibrate"] = "<uses-permission android:name=\"android.permission.VIBRATE\" />\r\n\r\n    ";
+    jBridgeAndroidPermisions["internet"] = "<uses-permission android:name=\"android.permission.INTERNET\" />\r\n\r\n    ";
+
+    jBridgeMethodAndTypeToPermisions["vibrate"] = ["vibrate"];
+    jBridgeMethodAndTypeToPermisions["tinywebdb"] = ["internet"];
+    jBridgeMethodAndTypeToPermisions["sendmessage"] = ["receive_sms","send_sms", "voice_receive_sms","voice_send_sms", "manage_accounts", "get_accounts","use_credentials"];
+    
+    //This includes method Names or Type
+    jBridgeAndroidIntents["sendmessage"] = "<receiver android:name=\"com.google.appinventor.components.runtime.util.SmsBroadcastReceiver\"\r\n\r\n          android:enabled=\"true\" android:exported=\"true\">\r\n\r\n    "
+                            + "<intent-filter>\r\n\r\n        \r\n\r\n        "
+                            + "<action android:name=\"android.provider.Telephony.SMS_RECEIVED\"/>\r\n\r\n        "
+                            + "<action android:name=\"com.google.android.apps.googlevoice.SMS_RECEIVED\"\r\n\r\n                android:permission=\"com.google.android.apps.googlevoice.permission.RECEIVE_SMS\"/>\r\n\r\n    "
+                            + "</intent-filter>\r\n\r\n"
+                            + "</receiver>\r\n\r\n    ";
+};
+
+Blockly.Java.addPermisionsAndIntents = function(name){
+  name = name.toLowerCase();
+  if(name in jBridgeMethodAndTypeToPermisions){
+    var permissions = jBridgeMethodAndTypeToPermisions[name];
+    for(var i=0; i<permissions.length; i++){
+      jBridgePermissionToAdd[permissions[i]] = true;
+    }   
+  }
+  if(name in jBridgeAndroidIntents){
+    jBridgeIntentsToAdd[name] = true; 
+  }
+};
+
+Blockly.Java.genManifestString = function(androidPermisions, androidIntents){
+  var mainfestString = "<?xml version=\"1.0\" encoding=\"utf-8\"?>\r\n\r\n"
+                            + "<manifest xmlns:android=\"http://schemas.android.com/apk/res/android\"\r\n\r\n    package=\"com.example.redclick\"\r\n\r\n    android:versionCode=\"1\"\r\n\r\n    android:versionName=\"1.0\" >\r\n\r\n"
+                            + "<uses-sdk\r\n\r\n        android:minSdkVersion=\"8\"\r\n\r\n        android:targetSdkVersion=\"21\" />\r\n\r\n    "                  
+                            + androidPermisions
+                            + "<application\r\n\r\n        android:allowBackup=\"true\"\r\n\r\n        android:icon=\"@drawable/ic_launcher\"\r\n\r\n        android:label=\"@string/app_name\"\r\n\r\n        android:theme=\"@style/AppTheme\" >\r\n\r\n        "
+                            + "<activity\r\n\r\n            android:name=\".Screen1\"\r\n\r\n            android:label=\"@string/app_name\" >\r\n\r\n            "
+                            + "<intent-filter>\r\n\r\n                "
+                            + "<action android:name=\"android.intent.action.MAIN\" />\r\n\r\n\r\n\r\n                "
+                            + "<category android:name=\"android.intent.category.LAUNCHER\" />\r\n\r\n            "
+                            + "</intent-filter>\r\n\r\n        "
+                            + androidIntents
+                            + "</activity>\r\n\r\n        "
+                            + "</application>\r\n\r\n\r\n\r\n"
+                            + "</manifest>";
+  return mainfestString;
 };
