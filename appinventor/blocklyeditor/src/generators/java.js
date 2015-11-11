@@ -1295,6 +1295,8 @@ Blockly.Yail.parseJBridgeMathBlocks = function(mathBlock){
     code = Blockly.Yail.parseJBridgeMathDivision(mathBlock);
   }else if(type == "math_compare"){
     code = Blockly.Yail.parseJBridgeMathCompare(mathBlock);
+  }else if(type == "math_atan2"){
+    code = Blockly.Yail.parseJBridgeMathAtan2(mathBlock);
   }
   return code;
 };
@@ -1428,6 +1430,8 @@ var code = "";
       code = Blockly.Yail.parseJBridgeBooleanBlock(logicBlock);
   }else if (componentType == "logic_operation"){
       code = Blockly.Yail.parseJBridgeLogicOperationBlock(logicBlock);
+  }else if (componentType == "logic_false"){
+      code = "false";
   }
   return code;
 };
@@ -1577,6 +1581,21 @@ Blockly.Yail.parseJBridgeListBlocks = function(listBlock){
       code = Blockly.Yail.parseJBridgeListLengthBlock(listBlock);
   }else if(type == "lists_is_list"){
       code = Blockly.Yail.parseJBridgeListIsListBlock(listBlock);
+  }else if(type == "lists_add_items"){
+      code = Blockly.Yail.parseJBridgeListAddItemBlock(listBlock);
+  }
+  return code;
+};
+
+Blockly.Yail.parseJBridgeListAddItemBlock = function(listBlock){
+  var code = "";
+  var listName = Blockly.Yail.parseBlock(listBlock.childBlocks_[0]);
+  var item = Blockly.Yail.parseBlock(listBlock.childBlocks_[1]);
+  code = Blockly.Yail.genJBridgeListsAddItemBlock(listName, item);
+  if(listBlock.childBlocks_.length > 2){
+    for(var x = 2, childBlock; childBlock = listBlock.childBlocks_[x]; x++){
+      code = code + Blockly.Yail.parseBlock(childBlock);
+    }
   }
   return code;
 };
@@ -1636,6 +1655,21 @@ Blockly.Yail.parseJBridgeMathCompare = function (mathBlock){
     return Blockly.Yail.genJBridgeStringEqualsCompare(leftValue, rightValue, op);
   }
   return Blockly.Yail.genJBridgeMathCompare(leftValue, rightValue, op);
+};
+
+Blockly.Yail.parseJBridgeMathAtan2 = function (mathBlock){
+  var leftValue = Blockly.Yail.parseBlock(mathBlock.childBlocks_[0]);
+  var rightValue = Blockly.Yail.parseBlock(mathBlock.childBlocks_[1]);
+  return Blockly.Yail.genJBridgeMathAtan2(leftValue, rightValue);
+};
+
+Blockly.Yail.genJBridgeMathAtan2 = function (leftValue, rightValue){
+  var code = "Math.toDegrees(Math.atan2(" 
+             + leftValue
+             + ", "
+             + rightValue
+             + "))";
+  return code;
 };
 
 Blockly.Yail.genJBridgeStringEqualsCompare = function (leftValue, rightValue, operator){
