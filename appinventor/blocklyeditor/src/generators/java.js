@@ -1570,6 +1570,21 @@ Blockly.Yail.parseJBridgeListBlocks = function(listBlock){
       code = Blockly.Yail.parseJBridgeListLengthBlock(listBlock);
   }else if(type == "lists_is_list"){
       code = Blockly.Yail.parseJBridgeListIsListBlock(listBlock);
+  }else if(type == "lists_add_items"){
+      code = Blockly.Yail.parseJBridgeListAddItemBlock(listBlock);
+  }
+  return code;
+};
+
+Blockly.Yail.parseJBridgeListAddItemBlock = function(listBlock){
+  var code = "";
+  var listName = Blockly.Yail.parseBlock(listBlock.childBlocks_[0]);
+  var item = Blockly.Yail.parseBlock(listBlock.childBlocks_[1]);
+  code = Blockly.Yail.genJBridgeListsAddItemBlock(listName, item);
+  if(listBlock.childBlocks_.length > 2){
+    for(var x = 2, childBlock; childBlock = listBlock.childBlocks_[x]; x++){
+      code = code + Blockly.Yail.parseBlock(childBlock);
+    }
   }
   return code;
 };
@@ -1638,11 +1653,11 @@ Blockly.Yail.parseJBridgeMathAtan2 = function (mathBlock){
 };
 
 Blockly.Yail.genJBridgeMathAtan2 = function (leftValue, rightValue){
-  var code = "Math.atan2(" 
+  var code = "Math.toDegrees(Math.atan2(" 
              + leftValue
              + ", "
              + rightValue
-             + ")";
+             + "))";
   return code;
 };
 
