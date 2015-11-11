@@ -1080,6 +1080,9 @@ Blockly.Yail.parseJBridgeListAddItemBlock = function(listBlock){
   var code = "";
   var listName = Blockly.Yail.parseBlock(listBlock.childBlocks_[0]);
   var item = Blockly.Yail.parseBlock(listBlock.childBlocks_[1]);
+  if (item.slice(-2) == ";\n"){
+    item = item.slice(0, -2);
+  }
   code = Blockly.Yail.genJBridgeListsAddItemBlock(listName, item);
   if(listBlock.childBlocks_.length > 2){
     for(var x = 2, childBlock; childBlock = listBlock.childBlocks_[x]; x++){
@@ -1122,7 +1125,7 @@ Blockly.Yail.parseJBridgeListSelectItemBlock = function(listBlock){
   return Blockly.Yail.genJBridgeListSelectItemBlock(listName, index);  
 };
 Blockly.Yail.genJBridgeListSelectItemBlock = function(listName, index){
-  var code = listName + ".get(" + index + ")";
+  var code = listName + ".get(" + index + " - 1)";
   return code;
 };
 Blockly.Yail.genJBridgeNewList = function(type){
