@@ -370,6 +370,9 @@ Blockly.Yail.parseJBridgeControlBlocks = function(controlBlock){
   if(controlType == "controls_if"){
     code = Blockly.Yail.parseJBridgeControlIfBlock(controlBlock);
     jBridgeIsIndividualBlock = true;
+  }else if(controlType == "controls_forEach"){
+    code = Blockly.Yail.parseJBridgeControlForEachBlock(controlBlock);
+    jBridgeIsIndividualBlock = true;
   }
   return code;
 
@@ -418,13 +421,34 @@ Blockly.Yail.parseJBridgeControlIfBlock = function(controlIfBlock){
   //     return Blockly.Yail.genJBridgeControlIfBlock(conditions, ifStatement, ifElseStatements, elseStatement);
 };
 
+Blockly.Yail.parseJBridgeControlForEachBlock = function(controlForEachBlock){
+  var code = "";
+  var forList = Blockly.Yail.parseBlock(controlForEachBlock.childBlocks_[0]);
+  var forItem = controlForEachBlock.getFieldValue('VAR');
+  var forStatement = Blockly.Yail.parseBlock(controlForEachBlock.childBlocks_[1]);
+  code = Blockly.Yail.genJBridgeControlForEachBlock(forList, forItem, forStatement);
+  return code;
+};
+
+Blockly.Yail.genJBridgeControlForEachBlock = function(forList, forItem, forStatement){
+  var code = "";
+  code = "for(Object "
+       + forItem
+       + " : "
+       + forList
+       + "){ \n"
+       + forStatement
+       + "\n} \n";
+  return code;
+};
+
 Blockly.Yail.genJBridgeControlIfBlock = function(condition, statement){
   var code = "";
   code = "if("
          +condition
          +"){ \n"
          + statement
-         + "\n} \n"
+         + "\n} \n";
 
   return code;
 };
@@ -435,7 +459,7 @@ Blockly.Yail.genJBridgeControlElseIfBlock = function(condition, statement){
          +condition
          +"){ \n"
          + statement
-         + "\n} \n"
+         + "\n} \n";
   return code;
 };
 
@@ -443,7 +467,7 @@ Blockly.Yail.genJBridgeControlElseIfBlock = function(statement){
   var code = "";
   code = "else { \n"
          + statement
-         + "\n} \n"
+         + "\n} \n";
   return code;
 };
 
