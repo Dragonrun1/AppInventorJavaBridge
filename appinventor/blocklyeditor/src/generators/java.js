@@ -106,7 +106,7 @@ var jBridgeVariableDefinitionMap = new Object();
 var jBridgeInitializationList = [];
 var jBridgeComponentMap = new Object();
 var JBRIDGE_COMPONENT_SKIP_PROPERTIES = ["Uuid", "$Version", "TextAlignment"]; //properties to skip when reading Json File
-var JBRIDGE_JSON_TEXT_PROPERTIES = ["Title", "Text", "BackgroundImage", "Image", "Icon", "Source", "Picture", "Hint"]; //Properties that should include the double qoutes "" in the output JBridge Javacode
+var JBRIDGE_JSON_TEXT_PROPERTIES = ["Title", "Text", "BackgroundImage", "Image", "Icon", "Source", "Picture", "Hint", "Action", "ActivityClass", "ActivityPackage"]; //Properties that should include the double qoutes "" in the output JBridge Javacode
 var jBridgeImportsMap = new Object();
 var jBridgeProceduresMap = new Object();
 var jBridgeIsIndividualBlock = false; // is to Identify if a block is Iduvidal root block or sub-block
@@ -685,7 +685,8 @@ Blockly.Yail.genJBridgeGetBlock = function(componentName, property){
 Blockly.Yail.parseJBridgeSetBlock = function(setBlock){
   var componentName = Blockly.Yail.getJBridgeInstanceName(setBlock);
   var property = setBlock.propertyName;
-
+  var ListPicker = "ListPicker";
+  var YailList = "YailList";
   var value = "";
   var code = "";
   for (var x = 0, childBlock; childBlock = setBlock.childBlocks_[x]; x++) {
@@ -698,7 +699,14 @@ Blockly.Yail.parseJBridgeSetBlock = function(setBlock){
   }
 
   if(JBRIDGE_COMPONENT_TEXT_PROPERTIES.indexOf(property.toLowerCase()) > -1){
-    value = "String.valueOf(" +value+")";
+    value = "String.valueOf(" + value + ")";
+  }
+
+  if((componentName.slice(0, ListPicker.length) == ListPicker) && (property == "Elements")){
+    if(!jBridgeImportsMap[YailList]){
+      jBridgeImportsMap[YailList] = "import com.google.appinventor.components.runtime.util.YailList;";
+    }
+    value = "YailList.makeList(" + value + ")";  
   }
   code = Blockly.Yail.genJBridgeSetBlock(componentName, property, value) + "\n" + code;
   return code;
