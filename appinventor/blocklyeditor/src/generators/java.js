@@ -566,11 +566,16 @@ Blockly.Yail.parseJBridgeComponentBlock = function(componentBlock){
   }else if (componentType == "component_method" ){
     code = Blockly.Yail.parseJBridgeMethodCallBlock(componentBlock);
     Blockly.Java.addPermisionsAndIntents(componentBlock.methodName);
-    //TODO Not sure what is the side effect of commiting below lines
-    // var methodname = componentBlock.methodName;
-    // if(methodname != undefined && methodname.substring(0,3) != "Get"){
+    //ParentBlock is set block and the first child block of parent is currentBlock, then this is arg in the parent's block
+    if(componentBlock.parentBlock_.type == "component_set_get" && componentBlock.parentBlock_.setOrGet == "set" && componentBlock.parentBlock_.childBlocks_[0] == componentBlock){
+      jBridgeIsIndividualBlock = false;
+      if(code.slice(-2) == ";\n"){
+        code = code.slice(0, -2);
+      }
+    }
+    else{
       jBridgeIsIndividualBlock = true;
-    // }
+    }
   }else if (componentType == "component_component_block"){
     code = Blockly.Yail.parseJBridgeComponentComponentBlock(componentBlock);
   }else{
