@@ -106,7 +106,7 @@ var jBridgeVariableDefinitionMap = new Object();
 var jBridgeInitializationList = [];
 var jBridgeComponentMap = new Object();
 var JBRIDGE_COMPONENT_SKIP_PROPERTIES = ["Uuid", "$Version", "TextAlignment"]; //properties to skip when reading Json File
-var JBRIDGE_JSON_TEXT_PROPERTIES = ["Title", "Text", "BackgroundImage", "Image", "Icon", "Source", "Picture", "Hint"]; //Properties that should include the double qoutes "" in the output JBridge Javacode
+var JBRIDGE_JSON_TEXT_PROPERTIES = ["Title", "Text", "BackgroundImage", "Image", "Icon", "Source", "Picture", "Hint", "Action", "ActivityClass", "ActivityPackage", "ServiceURL"]; //Properties that should include the double qoutes "" in the output JBridge Javacode
 var jBridgeImportsMap = new Object();
 var jBridgeProceduresMap = new Object();
 var jBridgeIsIndividualBlock = false; // is to Identify if a block is Iduvidal root block or sub-block
@@ -370,6 +370,9 @@ Blockly.Yail.parseJBridgeControlBlocks = function(controlBlock){
   if(controlType == "controls_if"){
     code = Blockly.Yail.parseJBridgeControlIfBlock(controlBlock);
     jBridgeIsIndividualBlock = true;
+  }else if(controlType == "controls_forEach"){
+    code = Blockly.Yail.parseJBridgeControlForEachBlock(controlBlock);
+    jBridgeIsIndividualBlock = true;
   }
   return code;
 
@@ -418,13 +421,34 @@ Blockly.Yail.parseJBridgeControlIfBlock = function(controlIfBlock){
   //     return Blockly.Yail.genJBridgeControlIfBlock(conditions, ifStatement, ifElseStatements, elseStatement);
 };
 
+Blockly.Yail.parseJBridgeControlForEachBlock = function(controlForEachBlock){
+  var code = "";
+  var forList = Blockly.Yail.parseBlock(controlForEachBlock.childBlocks_[0]);
+  var forItem = controlForEachBlock.getFieldValue('VAR');
+  var forStatement = Blockly.Yail.parseBlock(controlForEachBlock.childBlocks_[1]);
+  code = Blockly.Yail.genJBridgeControlForEachBlock(forList, forItem, forStatement);
+  return code;
+};
+
+Blockly.Yail.genJBridgeControlForEachBlock = function(forList, forItem, forStatement){
+  var code = "";
+  code = "for(Object "
+       + forItem
+       + " : "
+       + forList
+       + "){ \n"
+       + forStatement
+       + "\n} \n";
+  return code;
+};
+
 Blockly.Yail.genJBridgeControlIfBlock = function(condition, statement){
   var code = "";
   code = "if("
          +condition
          +"){ \n"
          + statement
-         + "\n} \n"
+         + "\n} \n";
 
   return code;
 };
@@ -435,7 +459,7 @@ Blockly.Yail.genJBridgeControlElseIfBlock = function(condition, statement){
          +condition
          +"){ \n"
          + statement
-         + "\n} \n"
+         + "\n} \n";
   return code;
 };
 
@@ -443,7 +467,7 @@ Blockly.Yail.genJBridgeControlElseIfBlock = function(statement){
   var code = "";
   code = "else { \n"
          + statement
-         + "\n} \n"
+         + "\n} \n";
   return code;
 };
 
@@ -542,11 +566,22 @@ Blockly.Yail.parseJBridgeComponentBlock = function(componentBlock){
   }else if (componentType == "component_method" ){
     code = Blockly.Yail.parseJBridgeMethodCallBlock(componentBlock);
     Blockly.Java.addPermisionsAndIntents(componentBlock.methodName);
+<<<<<<< HEAD
     //TODO Not sure what is the side effect of commiting below lines
     // var methodname = componentBlock.methodName;
     // if(methodname != undefined && methodname.substring(0,3) != "Get"){
+=======
+    //ParentBlock is set block and the first child block of parent is currentBlock, then this is arg in the parent's block
+    if(componentBlock.parentBlock_.type == "component_set_get" && componentBlock.parentBlock_.setOrGet == "set" && componentBlock.parentBlock_.childBlocks_[0] == componentBlock){
+      jBridgeIsIndividualBlock = false;
+      if(code.slice(-2) == ";\n"){
+        code = code.slice(0, -2);
+      }
+    }
+    else{
+>>>>>>> 63999301e1015e0a23a5742fbe1ea3543c640246
       jBridgeIsIndividualBlock = true;
-    // }
+    }
   }else if (componentType == "component_component_block"){
     code = Blockly.Yail.parseJBridgeComponentComponentBlock(componentBlock);
   }else{
@@ -685,7 +720,8 @@ Blockly.Yail.genJBridgeGetBlock = function(componentName, property){
 Blockly.Yail.parseJBridgeSetBlock = function(setBlock){
   var componentName = Blockly.Yail.getJBridgeInstanceName(setBlock);
   var property = setBlock.propertyName;
-
+  var ListPicker = "ListPicker";
+  var YailList = "YailList";
   var value = "";
   var code = "";
   for (var x = 0, childBlock; childBlock = setBlock.childBlocks_[x]; x++) {
@@ -698,7 +734,14 @@ Blockly.Yail.parseJBridgeSetBlock = function(setBlock){
   }
 
   if(JBRIDGE_COMPONENT_TEXT_PROPERTIES.indexOf(property.toLowerCase()) > -1){
-    value = "String.valueOf(" +value+")";
+    value = "String.valueOf(" + value + ")";
+  }
+
+  if((componentName.slice(0, ListPicker.length) == ListPicker) && (property == "Elements")){
+    if(!jBridgeImportsMap[YailList]){
+      jBridgeImportsMap[YailList] = "import com.google.appinventor.components.runtime.util.YailList;";
+    }
+    value = "YailList.makeList(" + value + ")";  
   }
   code = Blockly.Yail.genJBridgeSetBlock(componentName, property, value) + "\n" + code;
   return code;
@@ -1080,6 +1123,9 @@ Blockly.Yail.parseJBridgeListAddItemBlock = function(listBlock){
   var code = "";
   var listName = Blockly.Yail.parseBlock(listBlock.childBlocks_[0]);
   var item = Blockly.Yail.parseBlock(listBlock.childBlocks_[1]);
+  if (item.slice(-2) == ";\n"){
+    item = item.slice(0, -2);
+  }
   code = Blockly.Yail.genJBridgeListsAddItemBlock(listName, item);
   if(listBlock.childBlocks_.length > 2){
     for(var x = 2, childBlock; childBlock = listBlock.childBlocks_[x]; x++){
@@ -1122,7 +1168,7 @@ Blockly.Yail.parseJBridgeListSelectItemBlock = function(listBlock){
   return Blockly.Yail.genJBridgeListSelectItemBlock(listName, index);  
 };
 Blockly.Yail.genJBridgeListSelectItemBlock = function(listName, index){
-  var code = listName + ".get(" + index + ")";
+  var code = listName + ".get(" + index + " - 1)";
   return code;
 };
 Blockly.Yail.genJBridgeNewList = function(type){
