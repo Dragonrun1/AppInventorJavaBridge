@@ -385,14 +385,28 @@ Blockly.Yail.parseJBridgeControlIfBlock = function(controlIfBlock){
   var code = "";
   var elseCount = controlIfBlock.elseCount_;
   var elseIfCount = controlIfBlock.elseifCount_;
-  var ifCondition = Blockly.Yail.parseBlock(controlIfBlock.childBlocks_[0]);
-  var ifStatement = Blockly.Yail.parseBlock(controlIfBlock.childBlocks_[1]);
+  var ifCondition = "";
+  var ifStatement = "";
+  if( controlIfBlock.childBlocks_[0].category == "Logic"){
+    ifCondition = Blockly.Yail.parseBlock(controlIfBlock.childBlocks_[0]);
+    ifStatement = Blockly.Yail.parseBlock(controlIfBlock.childBlocks_[1]);
+  }else{
+    ifCondition = Blockly.Yail.parseBlock(controlIfBlock.childBlocks_[1]);
+    ifStatement = Blockly.Yail.parseBlock(controlIfBlock.childBlocks_[0]);    
+  }
   code =  Blockly.Yail.genJBridgeControlIfBlock(ifCondition, ifStatement);  
   var index = 2 + (elseIfCount * 2);
   if(elseIfCount > 0){
-    for(var i=2; i< index; i=i+2){
-      var elseIfCondition = Blockly.Yail.parseBlock(controlIfBlock.childBlocks_[i]);
-      var elseIfStatement = Blockly.Yail.parseBlock(controlIfBlock.childBlocks_[i+1]);
+    for(var i = 2; i < index; i = i + 2){
+      var elseIfCondition = "";
+      var elseIfStatement = "";
+      if( controlIfBlock.childBlocks_[i].category == "Logic"){
+        elseIfCondition = Blockly.Yail.parseBlock(controlIfBlock.childBlocks_[i]);
+        elseIfStatement = Blockly.Yail.parseBlock(controlIfBlock.childBlocks_[i+1]);
+      }else{
+        elseIfCondition = Blockly.Yail.parseBlock(controlIfBlock.childBlocks_[i+1]);
+        elseIfStatement = Blockly.Yail.parseBlock(controlIfBlock.childBlocks_[i]);    
+      }
       code = code  
              + Blockly.Yail.genJBridgeControlElseIfBlock(elseIfCondition, elseIfStatement);
     }
@@ -964,6 +978,10 @@ var code = "";
       code = Blockly.Yail.parseJBridgeLogicOperationBlock(logicBlock);
   }else if (componentType == "logic_false"){
       code = "false";
+  }else if (componentType == "logic_compare"){
+      code = Blockly.Yail.parseJBridgeLogicCompareBlocks(logicBlock);
+  }else if (componentType == "logic_negate"){
+      code = Blockly.Yail.parseJBridgeLogicNegateBlocks(logicBlock);
   }
   return code;
 };
@@ -973,8 +991,38 @@ Blockly.Yail.parseJBridgeBooleanBlock = function(logicBlock){
   return Blockly.Yail.genJBridgeBooleanBlock(value);
 };
 
+Blockly.Yail.parseJBridgeLogicCompareBlocks = function(logicBlock){
+  var operator = logicBlock.getFieldValue("OP");
+  var leftValue = Blockly.Yail.parseBlock(logicBlock.childBlocks_[0]);
+  var rightValue = Blockly.Yail.parseBlock(logicBlock.childBlocks_[1]);
+  return Blockly.Yail.genJBridgeLogicCompareBlock(leftValue, rightValue, Blockly.Yail.getJBridgeOperator(operator));
+};
+
+Blockly.Yail.parseJBridgeLogicNegateBlocks = function(logicBlock){
+  var value = Blockly.Yail.parseBlock(logicBlock.childBlocks_[0]);
+  return Blockly.Yail.genJBridgeLogicNegateBlock(value);
+};
+
+
 Blockly.Yail.genJBridgeBooleanBlock = function(value){
   return value.toLowerCase();
+};
+
+Blockly.Yail.genJBridgeLogicCompareBlock = function (leftValue, rightValue, operator){
+
+  var code = leftValue
+             + " "
+             + operator
+             + " "
+             + rightValue;
+  return code;
+};
+
+Blockly.Yail.genJBridgeLogicNegateBlock = function (value){
+  var code = "!("
+           + value
+           + ")";
+  return code;
 };
 
 Blockly.Yail.parseJBridgeProceduresBlocks = function(proceduresBlock){
@@ -1238,7 +1286,9 @@ Blockly.Yail.getJBridgeOperator = function(operator){
   }else if(operator == "LTE"){
     op = "<=";
   }else if(operator == 'AND'){
-    op = "&&"
+    op = "&&";
+  }else if (operator == "OR"){
+    op = "||";
   }
 
   return op;
