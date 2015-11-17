@@ -21,7 +21,6 @@ import com.google.appinventor.client.explorer.SourceStructureExplorer;
 import com.google.appinventor.client.explorer.SourceStructureExplorerItem;
 import com.google.appinventor.client.output.OdeLog;
 import com.google.appinventor.client.widgets.dnd.DropTarget;
-import com.google.appinventor.components.common.YaVersion;
 import com.google.appinventor.shared.rpc.project.ChecksumedFileException;
 import com.google.appinventor.shared.rpc.project.ChecksumedLoadFile;
 import com.google.appinventor.shared.rpc.project.FileDescriptorWithContent;
@@ -354,7 +353,11 @@ public final class YaBlocksEditor extends FileEditor
                 blocksArea.getJava(myFormEditor.encodeFormAsJsonString(),
                         packageNameFromPath(getFileId())));
     }
-
+  public FileDescriptorWithContent getManifest() throws YailGenerationException {
+        return new FileDescriptorWithContent(getProjectId(), manifestFileName(),
+                blocksArea.getManifest(myFormEditor.encodeFormAsJsonString(),
+                        packageNameFromPath(getFileId())));
+    }
 
     /**
    * Converts a source file path (e.g.,
@@ -476,6 +479,12 @@ public final class YaBlocksEditor extends FileEditor
         String fileId = getFileId();
         return fileId.replace(YoungAndroidSourceAnalyzer.BLOCKLY_SOURCE_EXTENSION,
                 YoungAndroidSourceAnalyzer.JAVA_FILE_EXTENSION);
+    }
+
+  private String manifestFileName(){
+        String fileId = getFileId();
+        return fileId.replace(YoungAndroidSourceAnalyzer.BLOCKLY_SOURCE_EXTENSION,
+                YoungAndroidSourceAnalyzer.XML_FILE_EXTENSION);
     }
 
   // FormChangeListener implementation
