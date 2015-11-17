@@ -109,6 +109,7 @@ public class ServerLayout {
    */
   public static final String DOWNLOAD_PROJECT_SOURCE = "project-source";
 
+  public static final String DOWNLOAD_ECLIPSE_PROJECT = "eclipse-project";
   /**
    * Relative path within {@link com.google.appinventor.server.DownloadServlet}
    * for downloading all of a user's projects' sources.

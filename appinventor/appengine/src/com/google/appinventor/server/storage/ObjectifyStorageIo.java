@@ -13,37 +13,22 @@ import com.google.appengine.api.blobstore.BlobKey;
 import com.google.appengine.api.blobstore.BlobstoreInputStream;
 import com.google.appengine.api.blobstore.BlobstoreServiceFactory;
 import com.google.appengine.api.memcache.ErrorHandlers;
+import com.google.appengine.api.memcache.Expiration;
 import com.google.appengine.api.memcache.MemcacheService;
 import com.google.appengine.api.memcache.MemcacheServiceFactory;
-import com.google.appengine.api.memcache.Expiration;
-import com.google.appengine.api.memcache.MemcacheService.SetPolicy;
 import com.google.appengine.api.taskqueue.Queue;
 import com.google.appengine.api.taskqueue.QueueFactory;
 import com.google.appengine.api.taskqueue.TaskOptions;
+import com.google.appengine.tools.cloudstorage.*;
 import com.google.apphosting.api.ApiProxy;
 import com.google.appinventor.server.CrashReport;
 import com.google.appinventor.server.FileExporter;
 import com.google.appinventor.server.flags.Flag;
-import com.google.appinventor.server.storage.StoredData.CorruptionRecord;
-import com.google.appinventor.server.storage.StoredData.FeedbackData;
-import com.google.appinventor.server.storage.StoredData.FileData;
-import com.google.appinventor.server.storage.StoredData.MotdData;
-import com.google.appinventor.server.storage.StoredData.NonceData;
-import com.google.appinventor.server.storage.StoredData.ProjectData;
-import com.google.appinventor.server.storage.StoredData.SplashData;
-import com.google.appinventor.server.storage.StoredData.UserData;
-import com.google.appinventor.server.storage.StoredData.UserFileData;
-import com.google.appinventor.server.storage.StoredData.UserProjectData;
-import com.google.appinventor.server.storage.StoredData.RendezvousData;
-import com.google.appinventor.server.storage.StoredData.WhiteListData;
+import com.google.appinventor.server.storage.StoredData.*;
 import com.google.appinventor.shared.rpc.BlocksTruncatedException;
 import com.google.appinventor.shared.rpc.Motd;
 import com.google.appinventor.shared.rpc.Nonce;
-import com.google.appinventor.shared.rpc.project.Project;
-import com.google.appinventor.shared.rpc.project.ProjectSourceZip;
-import com.google.appinventor.shared.rpc.project.RawFile;
-import com.google.appinventor.shared.rpc.project.TextFile;
-import com.google.appinventor.shared.rpc.project.UserProject;
+import com.google.appinventor.shared.rpc.project.*;
 import com.google.appinventor.shared.rpc.project.youngandroid.YoungAndroidProjectNode;
 import com.google.appinventor.shared.rpc.user.SplashConfig;
 import com.google.appinventor.shared.rpc.user.User;
@@ -51,43 +36,22 @@ import com.google.appinventor.shared.storage.StorageUtil;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
-import com.google.common.io.ByteSource;
 import com.google.common.io.ByteStreams;
-
 import com.googlecode.objectify.Key;
 import com.googlecode.objectify.Objectify;
 import com.googlecode.objectify.ObjectifyService;
 import com.googlecode.objectify.Query;
 
-import java.io.ByteArrayOutputStream;
-
-// GCS imports
-import com.google.appengine.tools.cloudstorage.GcsFileOptions;
-import com.google.appengine.tools.cloudstorage.GcsFilename;
-import com.google.appengine.tools.cloudstorage.GcsInputChannel;
-import com.google.appengine.tools.cloudstorage.GcsOutputChannel;
-import com.google.appengine.tools.cloudstorage.GcsService;
-import com.google.appengine.tools.cloudstorage.GcsServiceFactory;
-import com.google.appengine.tools.cloudstorage.RetryParams;
-
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.io.UnsupportedEncodingException;
-import java.nio.channels.Channels;
+import javax.annotation.Nullable;
+import java.io.*;
 import java.nio.ByteBuffer;
-import java.util.ArrayList;
-import java.util.ConcurrentModificationException;
-import java.util.List;
-import java.util.NoSuchElementException;
+import java.util.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
-import java.util.Date;
 
-import javax.annotation.Nullable;
+// GCS imports
 
 /**
  * Implements the StorageIo interface using Objectify as the underlying data
@@ -457,7 +421,6 @@ public class ObjectifyStorageIo implements  StorageIo {
     }
     return name.t;
   }
-
   @Override
   public String getUserLink(final String userId) {
     final Result<String> link = new Result<String>();
@@ -1437,7 +1400,7 @@ public class ObjectifyStorageIo implements  StorageIo {
 
           // <Screen>.yail files are missing when user converts AI1 project to AI2
           // instead of blowing up, just create a <Screen>.yail file
-          if (fd == null && (fileName.endsWith(".yail") || fileName.endsWith(".java"))){
+          if (fd == null && (fileName.endsWith(".yail") || fileName.endsWith(".java")||fileName.endsWith(".xml"))){
             fd = createProjectFile(datastore, projectKey(projectId), FileData.RoleEnum.SOURCE, fileName);
           }
 
@@ -2007,6 +1970,227 @@ public class ObjectifyStorageIo implements  StorageIo {
     projectSourceZip.setMetadata(projectName.t);
     return projectSourceZip;
   }
+
+    /**
+     *  Exports project files as a zip archive
+     * @param userId a user Id (the request is made on behalf of this user)
+     * @param projectId  project ID
+     * @param includeProjectHistory  whether or not to include the project history
+     * @param includeAndroidKeystore  whether or not to include the Android keystore
+     * @param zipName  the name of the zip file, if a specific one is desired
+
+     * @return  project with the content as requested by params.
+     */
+
+    public ProjectSourceZip exportProjectSourceEclipseZip(final String userId, final long projectId,
+                                                   final boolean includeProjectHistory,
+                                                   final boolean includeAndroidKeystore,
+                                                   @Nullable String zipName,
+                                                   final boolean fatalError) throws IOException {
+        validateGCS();
+        final Result<Integer> fileCount = new Result<Integer>();
+        fileCount.t = 0;
+        final Result<String> projectHistory = new Result<String>();
+        projectHistory.t = null;
+        // We collect up all the file data for the project in a transaction but
+        // then we read the data and write the zip file outside of the transaction
+        // to avoid problems reading blobs in a transaction with the wrong
+        // entity group.
+        final List<FileData> fileData = new ArrayList<FileData>();
+        final Result<String> projectName = new Result<String>();
+        projectName.t = null;
+        String fileName = null;
+
+        ByteArrayOutputStream zipFile = new ByteArrayOutputStream();
+        final ZipOutputStream out = new ZipOutputStream(zipFile);
+
+        try {
+            runJobWithRetries(new JobRetryHelper() {
+                @Override
+                public void run(Objectify datastore) {
+                    Key<ProjectData> projectKey = projectKey(projectId);
+                    boolean foundFiles = false;
+                    for (FileData fd : datastore.query(FileData.class).ancestor(projectKey)) {
+                        String fileName = fd.fileName;
+                        if (fd.role.equals(FileData.RoleEnum.SOURCE)) {
+                            if (fileName.equals(FileExporter.REMIX_INFORMATION_FILE_PATH)) {
+                                // Skip legacy remix history files that were previous stored with the project
+                                continue;
+                            }
+                            if(fileName.startsWith("eclipse")) {
+                                fileData.add(fd);
+                                foundFiles = true;
+                            }
+                            else if (fileName.startsWith("assets")){
+                                FileData assets = fd;
+                                assets.fileName = "eclipse/"+fd.fileName;
+                                fileData.add(assets);
+                            }
+                            else if(fileName.endsWith(".java")){
+                                FileData javaFile = fd;
+                                javaFile.fileName = "eclipse/src/org/appinventor/Screen1.java";
+                                fileData.add(javaFile);
+                            }
+                            else if(fileName.endsWith(".xml")){
+                                FileData javaFile = fd;
+                                javaFile.fileName = "eclipse/AndroidManifest.xml";
+                                fileData.add(javaFile);
+                            }
+                        }
+                    }
+                    if (foundFiles) {
+                        ProjectData pd = datastore.find(projectKey);
+                        projectName.t = pd.name;
+                        if (includeProjectHistory && !Strings.isNullOrEmpty(pd.history)) {
+                            projectHistory.t = pd.history;
+                        }
+                    }
+                }
+            }, true);
+
+            // Process the file contents outside of the job since we can't read
+            // blobs in the job.
+            for (FileData fd : fileData) {
+                fileName = fd.fileName;
+                byte[] data = null;
+                if (fd.isBlob) {
+                    try {
+                        if (fd.blobKey == null) {
+                            throw new BlobReadException("blobKey is null");
+                        }
+                        data = getBlobstoreBytes(fd.blobKey);
+                    } catch (BlobReadException e) {
+                        throw CrashReport.createAndLogError(LOG, null,
+                                collectProjectErrorInfo(userId, projectId, fileName), e);
+                    }
+                } else if (fd.isGCS) {
+                    try {
+                        int count;
+                        boolean npfHappened = false;
+                        boolean recovered = false;
+                        for (count = 0; count < 5; count++) {
+                            GcsFilename gcsFileName = new GcsFilename(GCS_BUCKET_NAME, fd.gcsName);
+                            int bytesRead = 0;
+                            int fileSize = 0;
+                            ByteBuffer resultBuffer;
+                            try {
+                                fileSize = (int) gcsService.getMetadata(gcsFileName).getLength();
+                                resultBuffer = ByteBuffer.allocate(fileSize);
+                                GcsInputChannel readChannel = gcsService.openReadChannel(gcsFileName, 0);
+                                try {
+                                    while (bytesRead < fileSize) {
+                                        bytesRead += readChannel.read(resultBuffer);
+                                        if (bytesRead < fileSize) {
+                                            LOG.log(Level.INFO, "readChannel: bytesRead = " + bytesRead + " fileSize = " + fileSize);
+                                        }
+                                    }
+                                    recovered = true;
+                                    data = resultBuffer.array();
+                                    break;        // We got the data, break out of the loop!
+                                } finally {
+                                    readChannel.close();
+                                }
+                            } catch (NullPointerException e) {
+                                // This happens if the object in GCS is non-existent, which would happen
+                                // when people uploaded a zero length object. As of this change, we now
+                                // store zero length objects into GCS, but there are plenty of older objects
+                                // that are missing in GCS.
+                                LOG.log(Level.WARNING, "exportProjectFile: NPF recorded for " + fd.gcsName);
+                                npfHappened = true;
+                                resultBuffer = ByteBuffer.allocate(0);
+                                data = resultBuffer.array();
+                            }
+                        }
+
+                        // report out on how things went above
+                        if (npfHappened) {    // We lost at least once
+                            if (recovered) {
+                                LOG.log(Level.WARNING, "recovered from NPF in exportProjectFile filename = " + fd.gcsName +
+                                        " count = " + count);
+                            } else {
+                                LOG.log(Level.WARNING, "FATAL NPF in exportProjectFile filename = " + fd.gcsName);
+                                if (fatalError) {
+                                    throw new IOException("FATAL Error reading file from GCS filename = " + fd.gcsName);
+                                }
+                            }
+                        }
+                    } catch (IOException e) {
+                        throw CrashReport.createAndLogError(LOG, null,
+                                collectProjectErrorInfo(userId, projectId, fileName), e);
+                    }
+                } else {
+                    data = fd.content;
+                }
+                if (data == null) {     // This happens if file creation is interrupted
+                    data = new byte[0];
+                }
+                out.putNextEntry(new ZipEntry(fileName));
+                out.write(data, 0, data.length);
+                out.closeEntry();
+                fileCount.t++;
+            }
+            if (projectHistory.t != null) {
+                byte[] data = projectHistory.t.getBytes(StorageUtil.DEFAULT_CHARSET);
+                out.putNextEntry(new ZipEntry(FileExporter.REMIX_INFORMATION_FILE_PATH));
+                out.write(data, 0, data.length);
+                out.closeEntry();
+                fileCount.t++;
+            }
+        } catch (ObjectifyException e) {
+            CrashReport.createAndLogError(LOG, null,
+                    collectProjectErrorInfo(userId, projectId, fileName), e);
+            throw new IOException("Reflecting exception for userid " + userId +
+                    " projectId " + projectId + ", original exception " + e.getMessage());
+        } catch (RuntimeException e) {
+            CrashReport.createAndLogError(LOG, null,
+                    collectProjectErrorInfo(userId, projectId, fileName), e);
+            throw new IOException("Reflecting exception for userid " + userId +
+                    " projectId " + projectId + ", original exception " + e.getMessage());
+        }
+
+        if (fileCount.t == 0) {
+            // can't close out since will get a ZipException due to the lack of files
+            throw new IllegalArgumentException("No files to download");
+        }
+
+        if (includeAndroidKeystore) {
+            try {
+                runJobWithRetries(new JobRetryHelper() {
+                    @Override
+                    public void run(Objectify datastore) {
+                        try {
+                            Key<UserData> userKey = userKey(userId);
+                            for (UserFileData ufd : datastore.query(UserFileData.class).ancestor(userKey)) {
+                                if (ufd.fileName.equals(StorageUtil.ANDROID_KEYSTORE_FILENAME) &&
+                                        (ufd.content.length > 0)) {
+                                    out.putNextEntry(new ZipEntry(StorageUtil.ANDROID_KEYSTORE_FILENAME));
+                                    out.write(ufd.content, 0, ufd.content.length);
+                                    out.closeEntry();
+                                    fileCount.t++;
+                                }
+                            }
+                        } catch (IOException e) {
+                            throw CrashReport.createAndLogError(LOG, null,
+                                    collectProjectErrorInfo(userId, projectId,
+                                            StorageUtil.ANDROID_KEYSTORE_FILENAME), e);
+                        }
+                    }
+                }, true);
+            } catch (ObjectifyException e) {
+                throw CrashReport.createAndLogError(LOG, null, collectUserErrorInfo(userId), e);
+            }
+        }
+
+        out.close();
+
+        if (zipName == null) {
+            zipName = projectName.t + ".aia";
+        }
+        ProjectSourceZip projectSourceZip =
+                new ProjectSourceZip(zipName, zipFile.toByteArray(), fileCount.t);
+        projectSourceZip.setMetadata(projectName.t);
+        return projectSourceZip;
+    }
 
   @Override
   public Motd getCurrentMotd() {

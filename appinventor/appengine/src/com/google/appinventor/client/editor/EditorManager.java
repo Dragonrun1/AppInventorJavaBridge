@@ -6,8 +6,6 @@
 
 package com.google.appinventor.client.editor;
 
-import static com.google.appinventor.client.Ode.MESSAGES;
-
 import com.google.appinventor.client.ErrorReporter;
 import com.google.appinventor.client.Ode;
 import com.google.appinventor.client.OdeAsyncCallback;
@@ -23,12 +21,10 @@ import com.google.common.collect.Maps;
 import com.google.gwt.user.client.Command;
 import com.google.gwt.user.client.Timer;
 
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
+
+import static com.google.appinventor.client.Ode.MESSAGES;
 
 /**
  * Manager class for opened project editors.
@@ -352,6 +348,55 @@ public final class EditorManager {
                         YaBlocksEditor yaBlocksEditor = (YaBlocksEditor) fileEditor;
                         try {
                             yailFiles.add(yaBlocksEditor.getJava());
+                        } catch (YailGenerationException e) {
+                            ErrorReporter.reportInfo(MESSAGES.yailGenerationError(e.getFormName(),
+                                    e.getMessage()));
+                            if (failureCommand != null) {
+                                failureCommand.execute();
+                            }
+                            return;
+                        }
+                    }
+                }
+                break;
+            }
+        }
+
+        Ode.getInstance().getProjectService().save(Ode.getInstance().getSessionId(),
+                yailFiles,
+                new OdeAsyncCallback<Long>(MESSAGES.saveErrorMultipleFiles()) {
+                    @Override
+                    public void onSuccess(Long date) {
+                        if (successCommand != null) {
+                            successCommand.execute();
+                        }
+                    }
+
+                    @Override
+                    public void onFailure(Throwable caught) {
+                        super.onFailure(caught);
+                        if (failureCommand != null) {
+                            failureCommand.execute();
+                        }
+                    }
+                });
+    }
+
+    public void generateManifestForBlocksEditors(final Command successCommand,
+                                             final Command failureCommand) {
+        List<FileDescriptorWithContent> yailFiles =  new ArrayList<FileDescriptorWithContent>();
+        long currentProjectId = Ode.getInstance().getCurrentYoungAndroidProjectId();
+        for (long projectId : openProjectEditors.keySet()) {
+            if (projectId == currentProjectId) {
+                // Generate yail for each blocks editor in this project and add it to the list of
+                // yail files. If an error occurs we stop the generation process, report the error,
+                // and return without executing nextCommand.
+                ProjectEditor projectEditor = openProjectEditors.get(projectId);
+                for (FileEditor fileEditor : projectEditor.getOpenFileEditors()) {
+                    if (fileEditor instanceof YaBlocksEditor) {
+                        YaBlocksEditor yaBlocksEditor = (YaBlocksEditor) fileEditor;
+                        try {
+                            yailFiles.add(yaBlocksEditor.getManifest());
                         } catch (YailGenerationException e) {
                             ErrorReporter.reportInfo(MESSAGES.yailGenerationError(e.getFormName(),
                                     e.getMessage()));

@@ -126,6 +126,18 @@ public class DownloadServlet extends OdeServlet {
             projectId, includeProjectHistory, false, zipName, false);
         downloadableFile = zipFile.getRawFile();
 
+      } else if (downloadKind.equals(ServerLayout.DOWNLOAD_ECLIPSE_PROJECT)) {
+          // Download project source files as a zip.
+          long projectId = Long.parseLong(uriComponents[PROJECT_ID_INDEX]);
+          uriComponents = uri.split("/", SPLIT_LIMIT_PROJECT_SOURCE);
+          String projectTitle = (uriComponents.length > PROJECT_TITLE_INDEX) ?
+                  uriComponents[PROJECT_TITLE_INDEX] : null;
+          final boolean includeProjectHistory = true;
+          String zipName = (projectTitle == null) ? null :
+                  StringUtils.normalizeForFilename(projectTitle) + ".zip";
+          ProjectSourceZip zipFile = fileExporter.exportProjectSourceEclipseZip(userId,
+                  projectId, includeProjectHistory, false, zipName, false);
+          downloadableFile = zipFile.getRawFile();
       } else if (downloadKind.equals(ServerLayout.DOWNLOAD_USER_PROJECT_SOURCE)) {
         // Download project source files for the specified user project as a zip.
         uriComponents = uri.split("/", SPLIT_LIMIT_USER_PROJECT_SOURCE);

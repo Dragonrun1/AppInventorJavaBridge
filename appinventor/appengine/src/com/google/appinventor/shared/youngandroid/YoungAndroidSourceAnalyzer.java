@@ -45,6 +45,8 @@ public class YoungAndroidSourceAnalyzer {
 
   public static final String JAVA_FILE_EXTENSION = ".java";
 
+  public static final String XML_FILE_EXTENSION = ".xml";
+
   private static final String FORM_PROPERTIES_PREFIX = "#|\n";
   private static final String FORM_PROPERTIES_SUFFIX = "\n|#";
 

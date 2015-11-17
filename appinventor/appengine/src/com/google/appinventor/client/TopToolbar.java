@@ -163,7 +163,7 @@ public class TopToolbar extends Composite {
     buildItems.add(new DropDownItem(WIDGET_NAME_GENERATEJAVA, MESSAGES.generateJavaItem(),
         new GenerateJavaAction()));
     buildItems.add(new DropDownItem(WIDGET_NAME_EXPORTECLIPSEPROJECT, MESSAGES.exportEclipseProjectMenuItem(),
-        new ExportProjectAction()));
+        new ExportEclipseProjectAction()));
     if (AppInventorFeatures.hasYailGenerationOption() && Ode.getInstance().getUser().getIsAdmin()) {
       buildItems.add(null);
       buildItems.add(new DropDownItem(WIDGET_NAME_BUILD_YAIL, MESSAGES.generateYailMenuItem(),
@@ -852,22 +852,23 @@ public class TopToolbar extends Composite {
       fileDropDown.setItemEnabled(MESSAGES.saveMenuItem(), false);
       fileDropDown.setItemEnabled(MESSAGES.saveAsMenuItem(), false);
       fileDropDown.setItemEnabled(MESSAGES.checkpointMenuItem(), false);
-      fileDropDown.setItemEnabled(MESSAGES.exportEclipseProjectMenuItem(),false);
       buildDropDown.setItemEnabled(MESSAGES.showBarcodeMenuItem(), false);
       buildDropDown.setItemEnabled(MESSAGES.downloadToComputerMenuItem(), false);
       buildDropDown.setItemEnabled(MESSAGES.generateJavaItem(),false);
+      buildDropDown.setItemEnabled(MESSAGES.exportEclipseProjectMenuItem(),false);
     } else { // We have to be in the Designer/Blocks view
       fileDropDown.setItemEnabled(MESSAGES.deleteProjectButton(), true);
       fileDropDown.setItemEnabled(MESSAGES.exportAllProjectsMenuItem(),
           Ode.getInstance().getProjectManager().getProjects().size() > 0);
       fileDropDown.setItemEnabled(MESSAGES.exportProjectMenuItem(), true);
-      fileDropDown.setItemEnabled(MESSAGES.exportEclipseProjectMenuItem(), true);
       fileDropDown.setItemEnabled(MESSAGES.saveMenuItem(), true);
       fileDropDown.setItemEnabled(MESSAGES.saveAsMenuItem(), true);
       fileDropDown.setItemEnabled(MESSAGES.checkpointMenuItem(), true);
       buildDropDown.setItemEnabled(MESSAGES.showBarcodeMenuItem(), true);
       buildDropDown.setItemEnabled(MESSAGES.downloadToComputerMenuItem(), true);
       buildDropDown.setItemEnabled(MESSAGES.generateJavaItem(),true);
+      buildDropDown.setItemEnabled(MESSAGES.exportEclipseProjectMenuItem(), true);
+
     }
     updateKeystoreFileMenuButtons();
   }
@@ -938,6 +939,56 @@ public class TopToolbar extends Composite {
             }
 
 
+
+        }
+    }
+
+    private class ExportEclipseProjectAction implements Command{
+        @Override
+        public void execute() {
+            final long projectId = Ode.getInstance().getCurrentYoungAndroidProjectId();
+            final String sessionId = Ode.getInstance().getSessionId();
+            final ProjectRootNode projectRootNode = Ode.getInstance().getCurrentYoungAndroidProjectRootNode();
+            final String projectName = Ode.getInstance().getCurrentYoungAndroidProjectRootNode().getName();
+            ChainableCommand cmd = new SaveAllEditorsCommand(new GenerateJavaCommand(null));
+            cmd.startExecuteChain(Tracking.PROJECT_ACTION_BUILD_YAIL_YA, projectRootNode,
+                    new Command() {
+                        @Override
+                        public void execute() {
+                            ChainableCommand cmd1 = new SaveAllEditorsCommand(new GenerateManifestCommand(null));
+                            cmd1.startExecuteChain(Tracking.PROJECT_ACTION_BUILD_YAIL_YA, projectRootNode,
+                                    new Command() {
+                                        @Override
+                                        public void execute() {
+                                            Downloader.getInstance().download(ServerLayout.DOWNLOAD_SERVLET_BASE + ServerLayout.DOWNLOAD_ECLIPSE_PROJECT + "/" + Ode.getInstance().getCurrentYoungAndroidProjectId() + "/" + Ode.getInstance().getCurrentYoungAndroidProjectRootNode().getName());
+//                                            Ode.getInstance().getProjectService().deleteFile(sessionId,projectId,"src/appinventor/ai_test/"+projectName+"/Screen1.java",  new OdeAsyncCallback<Long>(MESSAGES.deleteFileError()) {
+//                                                @Override
+//                                                public void onSuccess(Long date) {
+//                                                    Ode.getInstance().getProjectService().deleteFile(sessionId,projectId,"src/appinventor/ai_test/"+projectName+"/Screen1.xml",  new OdeAsyncCallback<Long>(MESSAGES.deleteFileError()) {
+//                                                        @Override
+//                                                        public void onSuccess(Long date) {
+//
+//                                                        }
+//
+//                                                        @Override
+//                                                        public void onFailure(Throwable caught) {
+//
+//                                                        }
+//                                                    });
+//                                                }
+//
+//                                                @Override
+//                                                public void onFailure(Throwable caught) {
+//
+//                                                }
+//                                            });
+
+                                        }
+                                    });
+
+
+                        }
+                    });
 
         }
     }

@@ -1419,7 +1419,8 @@ Blockly.Java.prityPrintIndentationJBridge = function(indendLength){
 
 Blockly.Java.getFormMainfest = function(formJson, packageName, forRepl) {
     Blockly.Java.initAndroidPermisionAndIntent();
-    javaCode.push(Blockly.Yail.genJBridgeCode(Blockly.mainWorkspace.getTopBlocks(true), jsonObject));
+    var jsonObject = JSON.parse(formJson); 
+    Blockly.Yail.genJBridgeCode(Blockly.mainWorkspace.getTopBlocks(true), jsonObject);
     
     var androidIntents = "";
     var androidPermisions = "";

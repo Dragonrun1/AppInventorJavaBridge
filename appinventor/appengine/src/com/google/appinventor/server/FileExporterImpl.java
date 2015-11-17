@@ -6,7 +6,6 @@
 
 package com.google.appinventor.server;
 
-import com.google.common.base.Strings;
 import com.google.appinventor.server.storage.ObjectifyStorageIo;
 import com.google.appinventor.server.storage.StorageIo;
 import com.google.appinventor.server.storage.StorageIoInstanceHolder;
@@ -14,14 +13,13 @@ import com.google.appinventor.shared.rpc.project.ProjectSourceZip;
 import com.google.appinventor.shared.rpc.project.RawFile;
 import com.google.appinventor.shared.storage.StorageUtil;
 
+import javax.annotation.Nullable;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
-
-import javax.annotation.Nullable;
 
 /**
  * Implementation of {@link FileExporter} based on {@link StorageIo}
@@ -71,6 +69,21 @@ public final class FileExporterImpl implements FileExporter {
       throw new IllegalArgumentException("Objectify only");
     }
   }
+
+    @Override
+    public ProjectSourceZip exportProjectSourceEclipseZip(String userId, long projectId,
+                                                   boolean includeProjectHistory,
+                                                   boolean includeAndroidKeystore,
+                                                   @Nullable String zipName,
+                                                   boolean fatalError) throws IOException {
+        // Download project source files as a zip.
+        if (storageIo instanceof ObjectifyStorageIo) {
+            return ((ObjectifyStorageIo)storageIo).exportProjectSourceEclipseZip(userId, projectId,
+                    includeProjectHistory, includeAndroidKeystore, zipName, fatalError);
+        } else {
+            throw new IllegalArgumentException("Objectify only");
+        }
+    }
 
   @Override
   public ProjectSourceZip exportAllProjectsSourceZip(String userId,

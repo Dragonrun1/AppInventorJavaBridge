@@ -9,9 +9,8 @@ package com.google.appinventor.server;
 import com.google.appinventor.shared.rpc.project.ProjectSourceZip;
 import com.google.appinventor.shared.rpc.project.RawFile;
 
-import java.io.IOException;
-
 import javax.annotation.Nullable;
+import java.io.IOException;
 
 /**
  * Methods for exporting project files.
@@ -55,6 +54,29 @@ public interface FileExporter {
                                           boolean includeAndroidKeystore, @Nullable String zipName,
                                           boolean fatalError)
       throws IOException;
+
+
+    /**
+     * Exports the project source files as a zip.
+     *
+     * @param userId the userId
+     * @param projectId the project id belonging to the userId
+     * @param includeProjectHistory indicates whether to include a file
+     *        containing the project's history in the zip
+     * @param includeAndroidKeystore indicates whether to include the user's android.keystore file
+     * @param zipName the desired name for the zip, or null for a name to be generated
+     * @param fatalError set to true to cause missing GCS file to throw exception
+     * @return the zip file, which includes a count of the number of zipped files
+     *         and (indirectly) the name of the file and its contents
+     * @throws IllegalArgumentException if download request cannot be fulfilled
+     *         (no source files)
+     * @throws IOException if files cannot be written
+     */
+    ProjectSourceZip exportProjectSourceEclipseZip(String userId, long projectId,
+                                            boolean includeProjectHistory,
+                                            boolean includeAndroidKeystore, @Nullable String zipName,
+                                            boolean fatalError)
+            throws IOException;
 
   /**
    * Exports all of the user's projects' source files as a zip of zips.
