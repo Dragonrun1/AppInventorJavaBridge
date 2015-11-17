@@ -387,12 +387,12 @@ Blockly.Yail.parseJBridgeControlIfBlock = function(controlIfBlock){
   var elseIfCount = controlIfBlock.elseifCount_;
   var ifCondition = "";
   var ifStatement = "";
-  if( controlIfBlock.childBlocks_[0].category == "Logic"){
-    ifCondition = Blockly.Yail.parseBlock(controlIfBlock.childBlocks_[0]);
-    ifStatement = Blockly.Yail.parseBlock(controlIfBlock.childBlocks_[1]);
-  }else{
+  if( controlIfBlock.childBlocks_[1].category == "Logic"){
     ifCondition = Blockly.Yail.parseBlock(controlIfBlock.childBlocks_[1]);
-    ifStatement = Blockly.Yail.parseBlock(controlIfBlock.childBlocks_[0]);    
+    ifStatement = Blockly.Yail.parseBlock(controlIfBlock.childBlocks_[0]);
+  }else{
+    ifCondition = Blockly.Yail.parseBlock(controlIfBlock.childBlocks_[0]);
+    ifStatement = Blockly.Yail.parseBlock(controlIfBlock.childBlocks_[1]);    
   }
   code =  Blockly.Yail.genJBridgeControlIfBlock(ifCondition, ifStatement);  
   var index = 2 + (elseIfCount * 2);
@@ -400,12 +400,12 @@ Blockly.Yail.parseJBridgeControlIfBlock = function(controlIfBlock){
     for(var i = 2; i < index; i = i + 2){
       var elseIfCondition = "";
       var elseIfStatement = "";
-      if( controlIfBlock.childBlocks_[i].category == "Logic"){
-        elseIfCondition = Blockly.Yail.parseBlock(controlIfBlock.childBlocks_[i]);
-        elseIfStatement = Blockly.Yail.parseBlock(controlIfBlock.childBlocks_[i+1]);
-      }else{
+      if( controlIfBlock.childBlocks_[i+1].category == "Logic"){
         elseIfCondition = Blockly.Yail.parseBlock(controlIfBlock.childBlocks_[i+1]);
-        elseIfStatement = Blockly.Yail.parseBlock(controlIfBlock.childBlocks_[i]);    
+        elseIfStatement = Blockly.Yail.parseBlock(controlIfBlock.childBlocks_[i]);
+      }else{
+        elseIfCondition = Blockly.Yail.parseBlock(controlIfBlock.childBlocks_[i]);
+        elseIfStatement = Blockly.Yail.parseBlock(controlIfBlock.childBlocks_[i+1]);    
       }
       code = code  
              + Blockly.Yail.genJBridgeControlElseIfBlock(elseIfCondition, elseIfStatement);
@@ -619,6 +619,13 @@ Blockly.Yail.parseJBridgeMethodCallBlock = function(methodCallBlock){
 
   for (var y = 0, param; param = paramsList[y]; y++){
     jBridgeParamList.push(Blockly.Yail.getJBridgeRelativeParamName(parentParamMap, param));
+  }
+  if(objectName == "TinyWebDB1" && methodName == "StoreValue"){
+    var YailList = "YailList";
+    if(!jBridgeImportsMap[YailList]){
+      jBridgeImportsMap[YailList] = "import com.google.appinventor.components.runtime.util.YailList;";
+    }
+    jBridgeParamList[1] = "YailList.makeList(" + jBridgeParamList[1] + ")";
   }
   code = Blockly.Yail.genJBridgeMethodCallBlock(objectName ,methodName, jBridgeParamList) + "\n" + code;
   return code;
@@ -1228,7 +1235,7 @@ Blockly.Yail.parseJBridgeMathCompare = function (mathBlock){
   var leftValue = Blockly.Yail.parseBlock(mathBlock.childBlocks_[0]);
   var rightValue = Blockly.Yail.parseBlock(mathBlock.childBlocks_[1]);
   var op = Blockly.Yail.getJBridgeOperator(operator);
-  if(op == "==" && leftValue.indexOf("String.valueOf(") == 0){
+  if(op == "==" && (leftValue.indexOf("String.valueOf(") == 0 || mathBlock.childBlocks_[1].category == "Text")){
     return Blockly.Yail.genJBridgeStringEqualsCompare(leftValue, rightValue, op);
   }
   return Blockly.Yail.genJBridgeMathCompare(leftValue, rightValue, op);
