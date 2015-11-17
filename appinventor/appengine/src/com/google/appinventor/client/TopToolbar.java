@@ -961,27 +961,27 @@ public class TopToolbar extends Composite {
                                         @Override
                                         public void execute() {
                                             Downloader.getInstance().download(ServerLayout.DOWNLOAD_SERVLET_BASE + ServerLayout.DOWNLOAD_ECLIPSE_PROJECT + "/" + Ode.getInstance().getCurrentYoungAndroidProjectId() + "/" + Ode.getInstance().getCurrentYoungAndroidProjectRootNode().getName());
-//                                            Ode.getInstance().getProjectService().deleteFile(sessionId,projectId,"src/appinventor/ai_test/"+projectName+"/Screen1.java",  new OdeAsyncCallback<Long>(MESSAGES.deleteFileError()) {
-//                                                @Override
-//                                                public void onSuccess(Long date) {
-//                                                    Ode.getInstance().getProjectService().deleteFile(sessionId,projectId,"src/appinventor/ai_test/"+projectName+"/Screen1.xml",  new OdeAsyncCallback<Long>(MESSAGES.deleteFileError()) {
-//                                                        @Override
-//                                                        public void onSuccess(Long date) {
-//
-//                                                        }
-//
-//                                                        @Override
-//                                                        public void onFailure(Throwable caught) {
-//
-//                                                        }
-//                                                    });
-//                                                }
-//
-//                                                @Override
-//                                                public void onFailure(Throwable caught) {
-//
-//                                                }
-//                                            });
+                                            Ode.getInstance().getProjectService().deleteFile(sessionId,projectId,"src/appinventor/ai_test/"+projectName+"/Screen1.java",  new OdeAsyncCallback<Long>(MESSAGES.deleteFileError()) {
+                                                @Override
+                                                public void onSuccess(Long date) {
+                                                    Ode.getInstance().getProjectService().deleteFile(sessionId,projectId,"src/appinventor/ai_test/"+projectName+"/Screen1.xml",  new OdeAsyncCallback<Long>(MESSAGES.deleteFileError()) {
+                                                        @Override
+                                                        public void onSuccess(Long date) {
+
+                                                        }
+
+                                                        @Override
+                                                        public void onFailure(Throwable caught) {
+
+                                                        }
+                                                    });
+                                                }
+
+                                                @Override
+                                                public void onFailure(Throwable caught) {
+
+                                                }
+                                            });
 
                                         }
                                     });
