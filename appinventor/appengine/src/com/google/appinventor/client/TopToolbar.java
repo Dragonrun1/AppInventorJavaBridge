@@ -28,6 +28,7 @@ import com.google.appinventor.components.common.YaVersion;
 import com.google.appinventor.shared.rpc.ServerLayout;
 import com.google.appinventor.shared.rpc.project.GallerySettings;
 import com.google.appinventor.shared.rpc.project.ProjectRootNode;
+import com.google.appinventor.shared.rpc.project.ProjectServiceAsync;
 import com.google.appinventor.shared.rpc.project.youngandroid.YoungAndroidProjectNode;
 import com.google.appinventor.shared.rpc.user.Config;
 import com.google.appinventor.shared.storage.StorageUtil;
@@ -950,6 +951,7 @@ public class TopToolbar extends Composite {
             final String sessionId = Ode.getInstance().getSessionId();
             final ProjectRootNode projectRootNode = Ode.getInstance().getCurrentYoungAndroidProjectRootNode();
             final String projectName = Ode.getInstance().getCurrentYoungAndroidProjectRootNode().getName();
+            final ProjectServiceAsync projectService = Ode.getInstance().getProjectService();
             ChainableCommand cmd = new SaveAllEditorsCommand(new GenerateJavaCommand(null));
             cmd.startExecuteChain(Tracking.PROJECT_ACTION_BUILD_YAIL_YA, projectRootNode,
                     new Command() {
@@ -961,29 +963,6 @@ public class TopToolbar extends Composite {
                                         @Override
                                         public void execute() {
                                             Downloader.getInstance().download(ServerLayout.DOWNLOAD_SERVLET_BASE + ServerLayout.DOWNLOAD_ECLIPSE_PROJECT + "/" + Ode.getInstance().getCurrentYoungAndroidProjectId() + "/" + Ode.getInstance().getCurrentYoungAndroidProjectRootNode().getName());
-                                            Ode.getInstance().getProjectService().deleteFile(sessionId,projectId,"src/appinventor/ai_test/"+projectName+"/Screen1.java",  new OdeAsyncCallback<Long>(MESSAGES.deleteFileError()) {
-                                                @Override
-                                                public void onSuccess(Long date) {
-//
-                                                }
-//
-//                                                @Override
-                                                public void onFailure(Throwable caught) {
-//
-                                                }
-                                            });
-                                            Ode.getInstance().getProjectService().deleteFile(sessionId,projectId,"src/appinventor/ai_test/"+projectName+"/Screen1.xml",  new OdeAsyncCallback<Long>(MESSAGES.deleteFileError()) {
-                                                @Override
-                                                public void onSuccess(Long date) {
-
-                                                }
-
-                                                @Override
-                                                public void onFailure(Throwable caught) {
-
-                                                }
-                                            });
-
                                         }
                                     });
 
@@ -991,6 +970,7 @@ public class TopToolbar extends Composite {
 
                         }
                     });
+
 
         }
     }

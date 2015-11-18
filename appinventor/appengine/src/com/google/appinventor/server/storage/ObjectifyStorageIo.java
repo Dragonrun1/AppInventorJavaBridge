@@ -2030,14 +2030,21 @@ public class ObjectifyStorageIo implements  StorageIo {
                                 FileData javaFile = fd;
                                 javaFile.fileName = "eclipse/src/org/appinventor/Screen1.java";
                                 fileData.add(javaFile);
+
+
                             }
                             else if(fileName.endsWith(".xml")){
-                                FileData javaFile = fd;
-                                javaFile.fileName = "eclipse/AndroidManifest.xml";
-                                fileData.add(javaFile);
+                                FileData xmlFile = fd;
+                                xmlFile.fileName = "eclipse/AndroidManifest.xml";
+                                fileData.add(xmlFile);
+
                             }
                         }
                     }
+                    ProjectData pdata = datastore.find(projectKey);
+                    String name = pdata.name;
+                    deleteFile(userId, projectId, "src/appinventor/ai_test/" + name + "/Screen1.java");
+                    deleteFile(userId,projectId,"src/appinventor/ai_test/" + name + "/Screen1.xml");
                     if (foundFiles) {
                         ProjectData pd = datastore.find(projectKey);
                         projectName.t = pd.name;
