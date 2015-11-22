@@ -583,7 +583,7 @@ Blockly.Yail.parseJBridgeComponentBlock = function(componentBlock){
     //ParentBlock is set block and the first child block of parent is currentBlock, then this is arg in the parent's block
     if((componentBlock.parentBlock_.type == "component_set_get" && componentBlock.parentBlock_.setOrGet == "set" && componentBlock.parentBlock_.childBlocks_[0] == componentBlock) 
       || (componentBlock.parentBlock_.type =="text_join") 
-      || (componentBlock.parentBlock_.type =="component_method")
+      || (componentBlock.parentBlock_.type =="component_method" && Blockly.Yail.checkInputName(componentBlock.parentBlock_, "ARG"))
       || (componentBlock.parentBlock_.type =="lexical_variable_set")){
       jBridgeIsIndividualBlock = false;
       if(code.slice(-2) == ";\n"){
@@ -606,7 +606,7 @@ Blockly.Yail.parseJBridgeMethodCallBlock = function(methodCallBlock){
   var objectName = methodCallBlock.instanceName;
   var methodName = methodCallBlock.methodName;
   var parentParamMap = Blockly.Yail.getFieldMap(methodCallBlock.parentBlock_, "PARAMETERS");
-  var test = methodCallBlock.parentBlock_.getFieldValue("PARAMETERS");
+  var test = methodCallBlock.parentBlock_.getFieldValue("ARG0");
   var paramsList = [];
   var code = "";
   //parse all the params Block
@@ -665,6 +665,17 @@ Blockly.Yail.getFieldMap = function(block, fieldName){
     }
   }
   return fieldMap;
+};
+
+Blockly.Yail.checkInputName = function(block, inputName){
+  if(block.inputList != undefined){
+    for (var x = 0, input; input = block.inputList[x]; x++) {
+      if(input.name.slice(0, inputName.length) == inputName){
+          return true;
+      }
+    }
+  }
+  return false;
 };
 
 Blockly.Yail.getFieldList = function(block, fieldName){
