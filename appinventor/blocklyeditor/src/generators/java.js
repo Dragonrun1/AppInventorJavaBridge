@@ -119,6 +119,13 @@ var jBridgeAndroidPermisions = new Object();
 var jBridgeAndroidIntents = new Object();
 var jBridgeMethodAndTypeToPermisions = new Object();
 
+/*** Type cast Map start ***/
+var typeCastMap = new Map();
+typeCastMap.set("BackgroundColor", ["((Float)XXX).intValue()"]);
+typeCastMap.set("DrawLine", ["((Float)XXX).intValue()", "((Float)XXX).intValue()", "((Float)XXX).intValue()", "((Float)XXX).intValue()"]);
+typeCastMap.set("DrawCircle", ["((Float)XXX).intValue()", "((Float)XXX).intValue()", "XXX", "XXX"]);
+
+/*** Type cast Map start ***/
 /**
  * Generate the Yail code for this blocks workspace, given its associated form specification.
  * 
@@ -630,6 +637,9 @@ Blockly.Yail.parseJBridgeMethodCallBlock = function(methodCallBlock){
     }
     jBridgeParamList[1] = "YailList.makeList(" + jBridgeParamList[1] + ")";
   }
+  if(Blockly.Yail.hasTypeCastKey(methodName)){
+    jBridgeParamList = Blockly.Yail.TypeCast(methodName, jBridgeParamList);
+  }
   code = Blockly.Yail.genJBridgeMethodCallBlock(objectName ,methodName, jBridgeParamList) + "\n" + code;
   return code;
 };
@@ -676,6 +686,40 @@ Blockly.Yail.checkInputName = function(block, inputName){
     }
   }
   return false;
+};
+
+Blockly.Yail.hasTypeCastKey = function(key){
+  if(typeCastMap.has(key)){
+  return true;
+  }
+  return false;
+};
+
+Blockly.Yail.getTypeCastValue = function(key){
+  if(typeCastMap.has(key)){
+  return typeCastMap.get(key);
+  }
+  return null;
+};
+
+Blockly.Yail.TypeCast = function(key, paramList){
+  var v = Blockly.Yail.getTypeCastValue(key);
+  var resultList = [];
+  if (v != null && paramList.length > 0){
+    for(var i = 0, param; param = paramList[i]; i++){
+      resultList.push(v[i].replace("XXX", param));
+    }
+  }
+  return resultList;
+};
+
+Blockly.Yail.TypeCastOneValue = function(key, value){
+  var v = Blockly.Yail.getTypeCastValue(key);
+  var result = "";
+  if (v != null){
+      result = v[0].replace("XXX", value);
+  }
+  return result;
 };
 
 Blockly.Yail.getFieldList = function(block, fieldName){
@@ -771,6 +815,9 @@ Blockly.Yail.parseJBridgeSetBlock = function(setBlock){
       jBridgeImportsMap[YailList] = "import com.google.appinventor.components.runtime.util.YailList;";
     }
     value = "YailList.makeList(" + value + ")";  
+  }
+  if(Blockly.Yail.hasTypeCastKey(property)){
+    value = Blockly.Yail.TypeCastOneValue(property, value);
   }
   code = Blockly.Yail.genJBridgeSetBlock(componentName, property, value) + "\n" + code;
   return code;
