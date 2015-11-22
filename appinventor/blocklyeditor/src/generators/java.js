@@ -387,7 +387,7 @@ Blockly.Yail.parseJBridgeControlIfBlock = function(controlIfBlock){
   var elseIfCount = controlIfBlock.elseifCount_;
   var ifCondition = "";
   var ifStatement = "";
-  if( controlIfBlock.childBlocks_[1].category == "Logic"){
+  if( controlIfBlock.childBlocks_[1].category == "Logic" || controlIfBlock.childBlocks_[1].type == "text_compare"){
     ifCondition = Blockly.Yail.parseBlock(controlIfBlock.childBlocks_[1]);
     ifStatement = Blockly.Yail.parseBlock(controlIfBlock.childBlocks_[0]);
   }else{
@@ -400,7 +400,7 @@ Blockly.Yail.parseJBridgeControlIfBlock = function(controlIfBlock){
     for(var i = 2; i < index; i = i + 2){
       var elseIfCondition = "";
       var elseIfStatement = "";
-      if( controlIfBlock.childBlocks_[i+1].category == "Logic"){
+      if( controlIfBlock.childBlocks_[i+1].category == "Logic" || controlIfBlock.childBlocks_[1].type == "text_compare"){
         elseIfCondition = Blockly.Yail.parseBlock(controlIfBlock.childBlocks_[i+1]);
         elseIfStatement = Blockly.Yail.parseBlock(controlIfBlock.childBlocks_[i]);
       }else{
@@ -414,7 +414,7 @@ Blockly.Yail.parseJBridgeControlIfBlock = function(controlIfBlock){
   if(elseCount == 1){
     var elseStatement = Blockly.Yail.parseBlock(controlIfBlock.childBlocks_[index]);
     code = code 
-           + Blockly.Yail.genJBridgeControlElseIfBlock(elseStatement);
+           + Blockly.Yail.genJBridgeControlElseBlock(elseStatement);
   }
   for (var x = index+elseCount ; x < controlIfBlock.childBlocks_.length; x++){
     code = code 
@@ -477,7 +477,7 @@ Blockly.Yail.genJBridgeControlElseIfBlock = function(condition, statement){
   return code;
 };
 
-Blockly.Yail.genJBridgeControlElseIfBlock = function(statement){
+Blockly.Yail.genJBridgeControlElseBlock = function(statement){
   var code = "";
   code = "else { \n"
          + statement
@@ -581,7 +581,10 @@ Blockly.Yail.parseJBridgeComponentBlock = function(componentBlock){
     code = Blockly.Yail.parseJBridgeMethodCallBlock(componentBlock);
     Blockly.Java.addPermisionsAndIntents(componentBlock.methodName);
     //ParentBlock is set block and the first child block of parent is currentBlock, then this is arg in the parent's block
-    if(componentBlock.parentBlock_.type == "component_set_get" && componentBlock.parentBlock_.setOrGet == "set" && componentBlock.parentBlock_.childBlocks_[0] == componentBlock){
+    if((componentBlock.parentBlock_.type == "component_set_get" && componentBlock.parentBlock_.setOrGet == "set" && componentBlock.parentBlock_.childBlocks_[0] == componentBlock) 
+      || (componentBlock.parentBlock_.type =="text_join") 
+      || (componentBlock.parentBlock_.type =="component_method")
+      || (componentBlock.parentBlock_.type =="lexical_variable_set")){
       jBridgeIsIndividualBlock = false;
       if(code.slice(-2) == ";\n"){
         code = code.slice(0, -2);
@@ -1108,6 +1111,8 @@ Blockly.Yail.parseJBridgeTextTypeBlocks = function(textBlock){
     code = Blockly.Yail.parseJBridgeTextJoinBlock(textBlock);
   }else if(type == "text_changeCase"){
     code = Blockly.Yail.parseJBridgeTextChangeCaseBlock(textBlock);
+  }else if(type == "text_compare"){
+    code = Blockly.Yail.parseJBridgeTextCompareBlock(textBlock);
   }
   return code;
 };
@@ -1131,6 +1136,14 @@ Blockly.Yail.parseJBridgeTextJoinBlock = function(textBlock){
   }
 };
 
+Blockly.Yail.parseJBridgeTextCompareBlock = function(textBlock){
+  var operator = textBlock.getFieldValue("OP");
+  var leftValue = Blockly.Yail.parseBlock(textBlock.childBlocks_[0]);
+  var rightValue = Blockly.Yail.parseBlock(textBlock.childBlocks_[1]);
+  var op = Blockly.Yail.getJBridgeOperator(operator) + " 0"; 
+  return Blockly.Yail.getJBridgeTextCompareBlock(leftValue, rightValue, op);
+};
+
 Blockly.Yail.genJBridgeTextBlock = function(text){
   var code = "\""+text+"\"";
   return code;
@@ -1149,6 +1162,17 @@ Blockly.Yail.genJBridgeTextJoinBlock = function(joinList){
   return code;
 };
 
+Blockly.Yail.getJBridgeTextCompareBlock = function(leftValue, rightValue, op){
+  var code = "(String.valueOf("
+           + leftValue
+           + ").compareTo(String.valueOf("
+           + rightValue
+           + ")) "
+           + op
+           + ")";
+  return code;
+};
+
 Blockly.Yail.parseJBridgeListBlocks = function(listBlock){
   var code = "";
   var type = listBlock.type;
@@ -1164,6 +1188,8 @@ Blockly.Yail.parseJBridgeListBlocks = function(listBlock){
       code = Blockly.Yail.parseJBridgeListIsListBlock(listBlock);
   }else if(type == "lists_add_items"){
       code = Blockly.Yail.parseJBridgeListAddItemBlock(listBlock);
+  }else if (type == "lists_is_in"){
+      code = Blockly.Yail.parseJBridgeListContainsBlock(listBlock);
   }
   return code;
 };
@@ -1204,10 +1230,15 @@ Blockly.Yail.parseJBridgeListsCreateWithBlock = function(listBlock){
      code = code 
             + Blockly.Yail.genJBridgeListsAddItemBlock(listName, addItemData);
    }
+   if(listBlock.parentBlock_.type == "component_method"){
+    var newList = Blockly.Yail.genJBridgeNewList(childType);
+    newList = newList.slice(0,-2);
+    code = newList + code;
+   }else{
     code = Blockly.Yail.genJBridgeNewList(childType)
           +"\n"
           + code;
-
+   }
    return code;
 };
 
@@ -1216,18 +1247,36 @@ Blockly.Yail.parseJBridgeListSelectItemBlock = function(listBlock){
   var index = Blockly.Yail.parseBlock(listBlock.childBlocks_[1]);
   return Blockly.Yail.genJBridgeListSelectItemBlock(listName, index);  
 };
+
+Blockly.Yail.parseJBridgeListContainsBlock = function(listBlock){
+  var object = Blockly.Yail.parseBlock(listBlock.childBlocks_[0]);
+  var listName = Blockly.Yail.parseBlock(listBlock.childBlocks_[1]);
+  return Blockly.Yail.getJBridgeListContainsBlock(object, listName);
+};
+
 Blockly.Yail.genJBridgeListSelectItemBlock = function(listName, index){
   var code = listName + ".get(" + index + " - 1)";
   return code;
 };
 Blockly.Yail.genJBridgeNewList = function(type){
-  var code = "new ArrayList<"+type+">(); \n";
+  var code = "new ArrayList<"+type+">();\n";
   return code;
 };
 
 Blockly.Yail.genJBridgeListsAddItemBlock = function(listName, addItem){
-   var code = listName+".add("+addItem+"); \n";
+   var code = listName
+            + ".add(" 
+            + addItem
+            +"); \n";
    return code;
+};
+
+Blockly.Yail.getJBridgeListContainsBlock = function(object, listName){
+  var code = listName 
+           + ".contains("
+           + object
+           + ")";
+  return code; 
 };
 
 Blockly.Yail.parseJBridgeMathCompare = function (mathBlock){
@@ -1278,7 +1327,7 @@ Blockly.Yail.getJBridgeOperator = function(operator){
     op = ">";
   }else if(operator == "LT"){
     op = "<";
-  }else if(operator == "EQ"){
+  }else if(operator == "EQ" || operator == "EQUAL"){
     op = "==";
   }else if(operator == "NEQ"){
     op = "!=";
