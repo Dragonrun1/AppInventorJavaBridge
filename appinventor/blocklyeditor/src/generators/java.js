@@ -530,6 +530,9 @@ Blockly.Yail.parseJBridgeVariableGetBlock = function(variableGetBlock){
     //Check if the variable is global or fuction param
     paramsMap = Blockly.Yail.getJBridgeParentBlockFieldMap(variableGetBlock.parentBlock_, "component_event", "PARAMETERS");
     paramName = Blockly.Yail.getJBridgeRelativeParamName(paramsMap, paramName);
+    if(variableGetBlock.parentBlock_.type == "controls_if" && variableGetBlock.childBlocks_.length == 0 && variableGetBlock.parentBlock_.childBlocks_[0] == variableGetBlock){
+      paramName = "((Boolean) " + paramName + ").booleanValue()";
+    }
     return Blockly.Yail.genJBridgeVariableGetBlock(paramName);
   };
 
@@ -917,7 +920,13 @@ Blockly.Yail.parseJBridgeMathNumberBlock = function(mathBlock){
 
 Blockly.Yail.parseJBridgeMathAdd = function(mathBlock){
     var leftValue = Blockly.Yail.parseBlock(mathBlock.childBlocks_[0]);
+    if(leftValue.slice(-7) == ".Text()"){
+      leftValue = "Integer.parseInt(" + leftValue + ")";
+    }
     var rightValue = Blockly.Yail.parseBlock(mathBlock.childBlocks_[1]);
+    if(rightValue.slice(-7) == ".Text()"){
+      rightValue = "Integer.parseInt(" + rightValue + ")";
+    }
     return Blockly.Yail.genJBridgeMathOperation(leftValue, rightValue, "+");
 };
 
