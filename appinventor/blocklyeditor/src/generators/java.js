@@ -120,10 +120,14 @@ var jBridgeAndroidIntents = new Object();
 var jBridgeMethodAndTypeToPermisions = new Object();
 
 /*** Type cast Map start ***/
-var typeCastMap = new Map();
-typeCastMap.set("BackgroundColor", ["((Float)XXX).intValue()"]);
-typeCastMap.set("DrawLine", ["((Float)XXX).intValue()", "((Float)XXX).intValue()", "((Float)XXX).intValue()", "((Float)XXX).intValue()"]);
-typeCastMap.set("DrawCircle", ["((Float)XXX).intValue()", "((Float)XXX).intValue()", "XXX", "XXX"]);
+var paramTypeCastMap = new Map();
+paramTypeCastMap.set("BackgroundColor", ["((Float)XXX).intValue()"]);
+paramTypeCastMap.set("DrawLine", ["((Float)XXX).intValue()", "((Float)XXX).intValue()", "((Float)XXX).intValue()", "((Float)XXX).intValue()"]);
+paramTypeCastMap.set("DrawCircle", ["((Float)XXX).intValue()", "((Float)XXX).intValue()", "XXX", "XXX"]);
+paramTypeCastMap.set("PhoneNumber", ["String.valueOf(XXX)"]);
+
+var returnTypeCastMap = new Map();
+returnTypeCastMap.set("TinyDB1.GetValue", ["String.valueOf(XXX)"]);
 
 /*** Type cast Map start ***/
 /**
@@ -568,6 +572,12 @@ Blockly.Yail.parseJBridgeVariableSetBlock = function(variableSetBlock){
         if (jBridgeIsIndividualBlock){
            code = code + "\n" + data;
         }else {
+          if(childBlock.type == "component_method"){
+            var method = childBlock.instanceName + "." + childBlock.methodName;
+            if(Blockly.Yail.hasTypeCastKey(method, returnTypeCastMap)){
+              rightValue = Blockly.Yail.TypeCastOneValue(method, rightValue, returnTypeCastMap);
+            }
+          }
           code = code + Blockly.Yail.genJBridgeVariableIntializationBlock(leftValue, rightValue);
         }
     }
@@ -640,8 +650,8 @@ Blockly.Yail.parseJBridgeMethodCallBlock = function(methodCallBlock){
     }
     jBridgeParamList[1] = "YailList.makeList(" + jBridgeParamList[1] + ")";
   }
-  if(Blockly.Yail.hasTypeCastKey(methodName)){
-    jBridgeParamList = Blockly.Yail.TypeCast(methodName, jBridgeParamList);
+  if(Blockly.Yail.hasTypeCastKey(methodName, paramTypeCastMap)){
+    jBridgeParamList = Blockly.Yail.TypeCast(methodName, jBridgeParamList, paramTypeCastMap);
   }
   code = Blockly.Yail.genJBridgeMethodCallBlock(objectName ,methodName, jBridgeParamList) + "\n" + code;
   return code;
@@ -691,22 +701,22 @@ Blockly.Yail.checkInputName = function(block, inputName){
   return false;
 };
 
-Blockly.Yail.hasTypeCastKey = function(key){
+Blockly.Yail.hasTypeCastKey = function(key, typeCastMap){
   if(typeCastMap.has(key)){
   return true;
   }
   return false;
 };
 
-Blockly.Yail.getTypeCastValue = function(key){
+Blockly.Yail.getTypeCastValue = function(key, typeCastMap){
   if(typeCastMap.has(key)){
   return typeCastMap.get(key);
   }
   return null;
 };
 
-Blockly.Yail.TypeCast = function(key, paramList){
-  var v = Blockly.Yail.getTypeCastValue(key);
+Blockly.Yail.TypeCast = function(key, paramList, typeCastMap){
+  var v = Blockly.Yail.getTypeCastValue(key, typeCastMap);
   var resultList = [];
   if (v != null && paramList.length > 0){
     for(var i = 0, param; param = paramList[i]; i++){
@@ -716,8 +726,8 @@ Blockly.Yail.TypeCast = function(key, paramList){
   return resultList;
 };
 
-Blockly.Yail.TypeCastOneValue = function(key, value){
-  var v = Blockly.Yail.getTypeCastValue(key);
+Blockly.Yail.TypeCastOneValue = function(key, value, typeCastMap){
+  var v = Blockly.Yail.getTypeCastValue(key, typeCastMap);
   var result = "";
   if (v != null){
       result = v[0].replace("XXX", value);
@@ -819,8 +829,8 @@ Blockly.Yail.parseJBridgeSetBlock = function(setBlock){
     }
     value = "YailList.makeList(" + value + ")";  
   }
-  if(Blockly.Yail.hasTypeCastKey(property)){
-    value = Blockly.Yail.TypeCastOneValue(property, value);
+  if(Blockly.Yail.hasTypeCastKey(property, paramTypeCastMap)){
+    value = Blockly.Yail.TypeCastOneValue(property, value, paramTypeCastMap);
   }
   code = Blockly.Yail.genJBridgeSetBlock(componentName, property, value) + "\n" + code;
   return code;
