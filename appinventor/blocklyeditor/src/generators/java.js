@@ -121,10 +121,12 @@ var jBridgeMethodAndTypeToPermisions = new Object();
 
 /*** Type cast Map start ***/
 var paramTypeCastMap = new Map();
-paramTypeCastMap.set("BackgroundColor", ["((Float)XXX).intValue()"]);
+paramTypeCastMap.set("BackgroundColor", ["((Float.valueOf(XXX)).intValue()"]);
 paramTypeCastMap.set("DrawLine", ["((Float)XXX).intValue()", "((Float)XXX).intValue()", "((Float)XXX).intValue()", "((Float)XXX).intValue()"]);
 paramTypeCastMap.set("DrawCircle", ["((Float)XXX).intValue()", "((Float)XXX).intValue()", "XXX", "XXX"]);
 paramTypeCastMap.set("PhoneNumber", ["String.valueOf(XXX)"]);
+paramTypeCastMap.set("PaintColor", ["Integer.parseInt(String.valueOf(XXX))"]);
+
 
 var returnTypeCastMap = new Map();
 returnTypeCastMap.set("TinyDB1.GetValue", ["String.valueOf(XXX)"]);
@@ -603,7 +605,7 @@ Blockly.Yail.parseJBridgeComponentBlock = function(componentBlock){
     //ParentBlock is set block and the first child block of parent is currentBlock, then this is arg in the parent's block
     if((componentBlock.parentBlock_.type == "component_set_get" && componentBlock.parentBlock_.setOrGet == "set" && componentBlock.parentBlock_.childBlocks_[0] == componentBlock) 
       || (componentBlock.parentBlock_.type =="text_join") 
-      || (componentBlock.parentBlock_.type =="component_method" && Blockly.Yail.checkInputName(componentBlock.parentBlock_, "ARG"))
+      || (componentBlock.parentBlock_.type =="component_method" && Blockly.Yail.checkInputName(componentBlock.parentBlock_, "ARG") && componentBlock.parentBlock_.childBlocks_[0] == componentBlock)
       || (componentBlock.parentBlock_.type =="lexical_variable_set")){
       jBridgeIsIndividualBlock = false;
       if(code.slice(-2) == ";\n"){
@@ -720,7 +722,11 @@ Blockly.Yail.TypeCast = function(key, paramList, typeCastMap){
   var resultList = [];
   if (v != null && paramList.length > 0){
     for(var i = 0, param; param = paramList[i]; i++){
-      resultList.push(v[i].replace("XXX", param));
+      if(Blockly.Yail.isNumber(param)){
+        resultList.push(param);
+      }else{
+        resultList.push(v[i].replace("XXX", param));
+      }
     }
   }
   return resultList;
@@ -730,7 +736,11 @@ Blockly.Yail.TypeCastOneValue = function(key, value, typeCastMap){
   var v = Blockly.Yail.getTypeCastValue(key, typeCastMap);
   var result = "";
   if (v != null){
+    if(Blockly.Yail.isNumber(value)){
+      result = value;
+    }else{
       result = v[0].replace("XXX", value);
+    }
   }
   return result;
 };
@@ -1025,6 +1035,11 @@ Blockly.Yail.parseJBridgeGlobalIntializationBlock = function(globalBlock){
   
   return "";
 };
+
+Blockly.Yail.isNumber = function(value){
+  return !isNaN(value);
+};
+
 Blockly.Yail.getValueType = function(childType, value){
   var variableType = "String";
   if (childType == "Math"){
