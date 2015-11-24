@@ -126,6 +126,7 @@ paramTypeCastMap.set("DrawLine", ["((Float)XXX).intValue()", "((Float)XXX).intVa
 paramTypeCastMap.set("DrawCircle", ["((Float)XXX).intValue()", "((Float)XXX).intValue()", "XXX", "XXX"]);
 paramTypeCastMap.set("PhoneNumber", ["String.valueOf(XXX)"]);
 paramTypeCastMap.set("PaintColor", ["Integer.parseInt(String.valueOf(XXX))"]);
+paramTypeCastMap.set("GoToUrl", ["String.valueOf(XXX)"]);
 
 
 var returnTypeCastMap = new Map();
