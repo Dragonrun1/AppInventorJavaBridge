@@ -2004,6 +2004,7 @@ public class ObjectifyStorageIo implements  StorageIo {
         ByteArrayOutputStream zipFile = new ByteArrayOutputStream();
         final ZipOutputStream out = new ZipOutputStream(zipFile);
 
+
         try {
             runJobWithRetries(new JobRetryHelper() {
                 @Override
@@ -2030,21 +2031,55 @@ public class ObjectifyStorageIo implements  StorageIo {
                                 FileData javaFile = fd;
                                 javaFile.fileName = "eclipse/src/org/appinventor/Screen1.java";
                                 fileData.add(javaFile);
-
-
                             }
                             else if(fileName.endsWith(".xml")){
                                 FileData xmlFile = fd;
                                 xmlFile.fileName = "eclipse/AndroidManifest.xml";
                                 fileData.add(xmlFile);
-
                             }
+
                         }
                     }
                     ProjectData pdata = datastore.find(projectKey);
                     String name = pdata.name;
                     deleteFile(userId, projectId, "src/appinventor/ai_test/" + name + "/Screen1.java");
-                    deleteFile(userId,projectId,"src/appinventor/ai_test/" + name + "/Screen1.xml");
+                    deleteFile(userId, projectId, "src/appinventor/ai_test/" + name + "/Screen1.xml");
+
+                    InputStream javaBridge = getClass().getResourceAsStream("resources/AIBridge.jar");
+                    try {
+                        byte[] fileContent = new byte[javaBridge.available()];
+                        javaBridge.read(fileContent);
+                        FileData fd = new FileData();
+                        fd.fileName = "eclipse/lib/AIBridge.jar";
+                        fd.content = fileContent;
+                        fileData.add(fd);
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                    //save icon and JavaBridge in storage.
+                    InputStream android = getClass().getResourceAsStream("resources/android-support-v4.jar");
+                    try {
+                        byte[] fileContent = new byte[android.available()];
+                        javaBridge.read(fileContent);
+                        FileData fd = new FileData();
+                        fd.fileName = "eclipse/lib/android-support-v4.jar";
+                        fd.content = fileContent;
+                        fileData.add(fd);
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                    InputStream icon = getClass().getResourceAsStream("resources/ic_launcher.png");
+                    try {
+                        byte[] fileContent = new byte[icon.available()];
+                        javaBridge.read(fileContent);
+                        FileData fd = new FileData();
+                        fd.fileName = "eclipse/res/drawable/ic_launcher.png";
+                        fd.content = fileContent;
+                        fileData.add(fd);
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+
                     if (foundFiles) {
                         ProjectData pd = datastore.find(projectKey);
                         projectName.t = pd.name;
