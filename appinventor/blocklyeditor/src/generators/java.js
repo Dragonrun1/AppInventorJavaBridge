@@ -121,7 +121,7 @@ var jBridgeMethodAndTypeToPermisions = new Object();
 
 /*** Type cast Map start ***/
 var paramTypeCastMap = new Map();
-paramTypeCastMap.set("BackgroundColor", ["((Float.valueOf(XXX)).intValue()"]);
+paramTypeCastMap.set("BackgroundColor", ["((Float)XXX).intValue()"]);
 paramTypeCastMap.set("DrawLine", ["((Float)XXX).intValue()", "((Float)XXX).intValue()", "((Float)XXX).intValue()", "((Float)XXX).intValue()"]);
 paramTypeCastMap.set("DrawCircle", ["((Float)XXX).intValue()", "((Float)XXX).intValue()", "XXX", "XXX"]);
 paramTypeCastMap.set("PhoneNumber", ["String.valueOf(XXX)"]);
