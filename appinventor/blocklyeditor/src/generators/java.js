@@ -127,6 +127,8 @@ paramTypeCastMap.set("DrawCircle", ["((Float)XXX).intValue()", "((Float)XXX).int
 paramTypeCastMap.set("PhoneNumber", ["String.valueOf(XXX)"]);
 paramTypeCastMap.set("PaintColor", ["Integer.parseInt(String.valueOf(XXX))"]);
 paramTypeCastMap.set("GoToUrl", ["String.valueOf(XXX)"]);
+paramTypeCastMap.set("Duration", ["((Calendar)XXX)", "((Calendar)XXX)"]);
+paramTypeCastMap.set("TimerInterval", ["Integer.parseInt(String.valueOf(XXX))"]);
 
 
 var returnTypeCastMap = new Map();
@@ -720,6 +722,9 @@ Blockly.Yail.getTypeCastValue = function(key, typeCastMap){
 
 Blockly.Yail.TypeCast = function(key, paramList, typeCastMap){
   var v = Blockly.Yail.getTypeCastValue(key, typeCastMap);
+  if(key == "Duration"){
+    jBridgeImportsMap[key] = "import java.util.Calendar;";
+  }
   var resultList = [];
   if (v != null && paramList.length > 0){
     for(var i = 0, param; param = paramList[i]; i++){
