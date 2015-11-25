@@ -2045,39 +2045,50 @@ public class ObjectifyStorageIo implements  StorageIo {
                     deleteFile(userId, projectId, "src/appinventor/ai_test/" + name + "/Screen1.java");
                     deleteFile(userId, projectId, "src/appinventor/ai_test/" + name + "/Screen1.xml");
 
+                    //save icon and JavaBridge in storage.
                     InputStream javaBridge = getClass().getResourceAsStream("resources/AIBridge.jar");
                     try {
-                        byte[] fileContent = new byte[javaBridge.available()];
-                        javaBridge.read(fileContent);
+                        byte[] fileContent1 = new byte[javaBridge.available()];
+                        javaBridge.read(fileContent1);
                         FileData fd = new FileData();
                         fd.fileName = "eclipse/lib/AIBridge.jar";
-                        fd.content = fileContent;
+                        fd.content = fileContent1;
                         fileData.add(fd);
                     } catch (IOException e) {
                         e.printStackTrace();
                     }
-                    //save icon and JavaBridge in storage.
                     InputStream android = getClass().getResourceAsStream("resources/android-support-v4.jar");
                     try {
-                        byte[] fileContent = new byte[android.available()];
-                        javaBridge.read(fileContent);
+                        byte[] fileContent2 = new byte[android.available()];
+                        android.read(fileContent2);
                         FileData fd = new FileData();
                         fd.fileName = "eclipse/lib/android-support-v4.jar";
-                        fd.content = fileContent;
+                        fd.content = fileContent2;
                         fileData.add(fd);
                     } catch (IOException e) {
                         e.printStackTrace();
                     }
                     InputStream icon = getClass().getResourceAsStream("resources/ic_launcher.png");
                     try {
-                        byte[] fileContent = new byte[icon.available()];
-                        javaBridge.read(fileContent);
+                        byte[] fileContent3 = new byte[icon.available()];
+                        icon.read(fileContent3);
                         FileData fd = new FileData();
                         fd.fileName = "eclipse/res/drawable/ic_launcher.png";
-                        fd.content = fileContent;
+                        fd.content = fileContent3;
                         fileData.add(fd);
                     } catch (IOException e) {
                         e.printStackTrace();
+                    }
+                    finally{
+                        try {
+                            javaBridge.close();
+                            android.close();
+                            icon.close();
+                        } catch (IOException e) {
+                            e.printStackTrace();
+                        }
+
+
                     }
 
                     if (foundFiles) {
