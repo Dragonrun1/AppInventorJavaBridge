@@ -1621,11 +1621,11 @@ Blockly.Java.addPermisionsAndIntents = function(name){
 
 Blockly.Java.genManifestString = function(androidPermisions, androidIntents){
   var mainfestString = "<?xml version=\"1.0\" encoding=\"utf-8\"?>\r\n\r\n"
-                            + "<manifest xmlns:android=\"http://schemas.android.com/apk/res/android\"\r\n\r\n    package=\"com.example.redclick\"\r\n\r\n    android:versionCode=\"1\"\r\n\r\n    android:versionName=\"1.0\" >\r\n\r\n"
+                            + "<manifest xmlns:android=\"http://schemas.android.com/apk/res/android\"\r\n\r\n    package=\"org.appinventor\"\r\n\r\n    android:versionCode=\"1\"\r\n\r\n    android:versionName=\"1.0\" >\r\n\r\n"
                             + "<uses-sdk\r\n\r\n        android:minSdkVersion=\"8\"\r\n\r\n        android:targetSdkVersion=\"21\" />\r\n\r\n    "                  
                             + androidPermisions
-                            + "<application\r\n\r\n        android:allowBackup=\"true\"\r\n\r\n        android:icon=\"@drawable/ic_launcher\"\r\n\r\n        android:label=\"@string/app_name\"\r\n\r\n        android:theme=\"@style/AppTheme\" >\r\n\r\n        "
-                            + "<activity\r\n\r\n            android:name=\".Screen1\"\r\n\r\n            android:label=\"@string/app_name\" >\r\n\r\n            "
+                            + "<application\r\n\r\n        android:allowBackup=\"true\"\r\n\r\n        android:icon=\"@drawable/ic_launcher\"\r\n\r\n        android:label=\"Screen1\">\r\n\r\n        "
+                            + "<activity\r\n\r\n            android:name=\".Screen1\"\r\n\r\n            android:label=\"Screen1\" >\r\n\r\n            "
                             + "<intent-filter>\r\n\r\n                "
                             + "<action android:name=\"android.intent.action.MAIN\" />\r\n\r\n\r\n\r\n                "
                             + "<category android:name=\"android.intent.category.LAUNCHER\" />\r\n\r\n            "
