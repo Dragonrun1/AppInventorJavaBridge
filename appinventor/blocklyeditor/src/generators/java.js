@@ -94,7 +94,7 @@ Blockly.Yail.FLONUM_REGEXP = "^[\\s]*[-+]?([0-9]*)((\\.[0-9]+)|[0-9]\\.)[\\s]*$"
 
 
 Blockly.Yail.JBRIDGE_BASE_IMPORTS = "import com.google.appinventor.components.runtime.HandlesEventDispatching; \nimport com.google.appinventor.components.runtime.EventDispatcher; \nimport com.google.appinventor.components.runtime.Form; \nimport com.google.appinventor.components.runtime.Component; \n";
-Blockly.Yail.JBRIDGE_PACKAGE_NAME = "\npackage org.appinventor.Screen1; \n";
+Blockly.Yail.JBRIDGE_PACKAGE_NAME = "\npackage org.appinventor; \n";
 
 // Blockly.Yail.JBRIDGE_DECLARE = [];
 // Blockly.Yail.JBRIDGE_DEFINE = [];
