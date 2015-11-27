@@ -138,7 +138,13 @@ returnTypeCastMap.set("TinyDB1.GetValue,members", ["(ArrayList<?>)XXX"]);
 returnTypeCastMap.set("QuestionList", ["((ArrayList<?>)XXX)"]);
 returnTypeCastMap.set("AnswerList", ["((ArrayList<?>)XXX)"]);
 returnTypeCastMap.set("answer", ["String.valueOf(XXX)"]);
+returnTypeCastMap.set("resultsList", ["(ArrayList<?>)XXX"]);
+returnTypeCastMap.set("title", ["String.valueOf(XXX)"]);
+returnTypeCastMap.set("cost", ["String.valueOf(XXX)"]);
+returnTypeCastMap.set("isbn", ["String.valueOf(XXX)"]);
 
+var listTypeCastMap = new Map();
+listTypeCastMap.set("bookItem", ["((ArrayList<?>)XXX)"]);
 /*** Type cast Map end ***/
 /**
  * Generate the Yail code for this blocks workspace, given its associated form specification.
@@ -1356,6 +1362,9 @@ Blockly.Yail.parseJBridgeListsCreateWithBlock = function(listBlock){
 
 Blockly.Yail.parseJBridgeListSelectItemBlock = function(listBlock){
   var listName = Blockly.Yail.parseBlock(listBlock.childBlocks_[0]);
+  if(Blockly.Yail.hasTypeCastKey(listName, listTypeCastMap)){
+     listName = Blockly.Yail.TypeCastOneValue(listName, listName, listTypeCastMap);
+  }
   var index = Blockly.Yail.parseBlock(listBlock.childBlocks_[1]);
   return Blockly.Yail.genJBridgeListSelectItemBlock(listName, index);  
 };
