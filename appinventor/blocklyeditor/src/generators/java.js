@@ -133,8 +133,11 @@ paramTypeCastMap.set("TimerInterval", ["Integer.parseInt(String.valueOf(XXX))"])
 
 var returnTypeCastMap = new Map();
 returnTypeCastMap.set("TinyDB1.GetValue", ["String.valueOf(XXX)"]);
+returnTypeCastMap.set("QuestionList", ["((ArrayList<?>)XXX)"]);
+returnTypeCastMap.set("AnswerList", ["((ArrayList<?>)XXX)"]);
+returnTypeCastMap.set("answer", ["String.valueOf(XXX)"]);
 
-/*** Type cast Map start ***/
+/*** Type cast Map end ***/
 /**
  * Generate the Yail code for this blocks workspace, given its associated form specification.
  * 
@@ -582,6 +585,8 @@ Blockly.Yail.parseJBridgeVariableSetBlock = function(variableSetBlock){
             if(Blockly.Yail.hasTypeCastKey(method, returnTypeCastMap)){
               rightValue = Blockly.Yail.TypeCastOneValue(method, rightValue, returnTypeCastMap);
             }
+          }else if(Blockly.Yail.hasTypeCastKey(leftValue, returnTypeCastMap)){
+              rightValue = Blockly.Yail.TypeCastOneValue(leftValue, rightValue, returnTypeCastMap);
           }
           code = code + Blockly.Yail.genJBridgeVariableIntializationBlock(leftValue, rightValue);
         }
