@@ -125,6 +125,7 @@ paramTypeCastMap.set("BackgroundColor", ["((Float)XXX).intValue()"]);
 paramTypeCastMap.set("DrawLine", ["((Float)XXX).intValue()", "((Float)XXX).intValue()", "((Float)XXX).intValue()", "((Float)XXX).intValue()"]);
 paramTypeCastMap.set("DrawCircle", ["((Float)XXX).intValue()", "((Float)XXX).intValue()", "XXX", "XXX"]);
 paramTypeCastMap.set("PhoneNumber", ["String.valueOf(XXX)"]);
+paramTypeCastMap.set("Message", ["String.valueOf(XXX)"]);
 paramTypeCastMap.set("PaintColor", ["Integer.parseInt(String.valueOf(XXX))"]);
 paramTypeCastMap.set("GoToUrl", ["String.valueOf(XXX)"]);
 paramTypeCastMap.set("Duration", ["((Calendar)XXX)", "((Calendar)XXX)"]);
@@ -132,7 +133,8 @@ paramTypeCastMap.set("TimerInterval", ["Integer.parseInt(String.valueOf(XXX))"])
 
 
 var returnTypeCastMap = new Map();
-returnTypeCastMap.set("TinyDB1.GetValue", ["String.valueOf(XXX)"]);
+returnTypeCastMap.set("TinyDB1.GetValue,responseMessage", ["String.valueOf(XXX)"]);
+returnTypeCastMap.set("TinyDB1.GetValue,members", ["(ArrayList<?>)XXX"]);
 returnTypeCastMap.set("QuestionList", ["((ArrayList<?>)XXX)"]);
 returnTypeCastMap.set("AnswerList", ["((ArrayList<?>)XXX)"]);
 returnTypeCastMap.set("answer", ["String.valueOf(XXX)"]);
@@ -582,6 +584,13 @@ Blockly.Yail.parseJBridgeVariableSetBlock = function(variableSetBlock){
         }else {
           if(childBlock.type == "component_method"){
             var method = childBlock.instanceName + "." + childBlock.methodName;
+            if(childBlock.childBlocks_.length > 0){
+              var param1 = Blockly.Yail.parseBlock(childBlock.childBlocks_[0]);
+              if(param1.slice(0,1) == "\"" && param1.slice(-1) == "\""){
+                param1 = param1.slice(1,-1);
+              }
+              method = method + "," + param1; 
+            }
             if(Blockly.Yail.hasTypeCastKey(method, returnTypeCastMap)){
               rightValue = Blockly.Yail.TypeCastOneValue(method, rightValue, returnTypeCastMap);
             }
