@@ -122,7 +122,7 @@ var jBridgeMethodAndTypeToPermisions = new Object();
 /*** Type cast Map start ***/
 var paramTypeCastMap = new Map();
 paramTypeCastMap.set("BackgroundColor", ["((Float)XXX).intValue()"]);
-paramTypeCastMap.set("DrawLine", ["((Float)XXX).intValue()", "((Float)XXX).intValue()", "((Float)XXX).intValue()", "((Float)XXX).intValue()"]);
+paramTypeCastMap.set("DrawLine", ["(XXX instanceof Integer)? Integer.parseInt(String.valueOf(XXX)) : ((Float)XXX).intValue()", "(XXX instanceof Integer)? Integer.parseInt(String.valueOf(XXX)) : ((Float)XXX).intValue()", "(XXX instanceof Integer)? Integer.parseInt(String.valueOf(XXX)) : ((Float)XXX).intValue()", "(XXX instanceof Integer)? Integer.parseInt(String.valueOf(XXX)) : ((Float)XXX).intValue()"]);
 paramTypeCastMap.set("DrawCircle", ["((Float)XXX).intValue()", "((Float)XXX).intValue()", "XXX", "XXX"]);
 paramTypeCastMap.set("PhoneNumber", ["String.valueOf(XXX)"]);
 paramTypeCastMap.set("Message", ["String.valueOf(XXX)"]);
@@ -751,7 +751,7 @@ Blockly.Yail.TypeCast = function(key, paramList, typeCastMap){
       if(Blockly.Yail.isNumber(param)){
         resultList.push(param);
       }else{
-        resultList.push(v[i].replace("XXX", param));
+        resultList.push(v[i].replace(/XXX/g, param));
       }
     }
   }
