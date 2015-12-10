@@ -923,18 +923,19 @@ public class TopToolbar extends Composite {
                             public void execute() {
                                 long projectId = Ode.getInstance().getCurrentYoungAndroidProjectId();
                                 String projectName = Ode.getInstance().getCurrentYoungAndroidProjectRootNode().getName();
-                                Downloader.getInstance().download(ServerLayout.DOWNLOAD_SERVLET_BASE + ServerLayout.DOWNLOAD_FILE + "/" + projectId+"/eclipse/src/org/appinventor/Screen1.java");
-//                                Ode.getInstance().getProjectService().deleteFile(Ode.getInstance().getSessionId(),projectId,"src/appinventor/ai_test/"+projectName+"/Screen1.java",  new OdeAsyncCallback<Long>(MESSAGES.deleteFileError()) {
-//                                    @Override
-//                                    public void onSuccess(Long date) {
-//
-//                                    }
-//
-//                                    @Override
-//                                    public void onFailure(Throwable caught) {
-//
-//                                    }
-//                                });
+//                                Downloader.getInstance().download(ServerLayout.DOWNLOAD_SERVLET_BASE + ServerLayout.DOWNLOAD_FILE + "/" + projectId+"/eclipse/src/org/appinventor/Screen1.java");
+                                Downloader.getInstance().download(ServerLayout.DOWNLOAD_SERVLET_BASE + ServerLayout.DOWNLOAD_FILE + "/" + projectId+"/src/appinventor/ai_" + Ode.getInstance().getUser().getUserName()+"/"+projectName+"/Screen1.java");
+                                Ode.getInstance().getProjectService().deleteFile(Ode.getInstance().getSessionId(), projectId, "src/appinventor/ai_" + Ode.getInstance().getUser().getUserName()+"/" + projectName + "/Screen1.java", new OdeAsyncCallback<Long>(MESSAGES.deleteFileError()) {
+                                    @Override
+                                    public void onSuccess(Long date) {
+
+                                    }
+
+                                    @Override
+                                    public void onFailure(Throwable caught) {
+
+                                    }
+                                });
                             }
                         });
             }
