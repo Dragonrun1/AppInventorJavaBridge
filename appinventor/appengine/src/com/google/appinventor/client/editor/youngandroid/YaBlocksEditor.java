@@ -351,12 +351,12 @@ public final class YaBlocksEditor extends FileEditor
 
   public FileDescriptorWithContent getJava() throws YailGenerationException {
         return new FileDescriptorWithContent(getProjectId(), javaFileName(),
-                blocksArea.getJava(myFormEditor.encodeFormAsJsonString(),
+                blocksArea.getJava(myFormEditor.encodeFormAsJsonString(false),
                         packageNameFromPath(getFileId())));
     }
   public FileDescriptorWithContent getManifest() throws YailGenerationException {
         return new FileDescriptorWithContent(getProjectId(), manifestFileName(),
-                blocksArea.getManifest(myFormEditor.encodeFormAsJsonString(),
+                blocksArea.getManifest(myFormEditor.encodeFormAsJsonString(false),
                         packageNameFromPath(getFileId())));
     }
 
