@@ -79,6 +79,7 @@ public class TopToolbar extends Composite {
   private static final String WIDGET_NAME_FORUMS = "Forums";
   private static final String WIDGET_NAME_FEEDBACK = "ReportIssue";
   private static final String WIDGET_NAME_COMPANIONINFO = "CompanionInformation";
+  private static final String WIDGET_NAME_COMPANIONUPDATE = "CompanionUpdate";
   private static final String WIDGET_NAME_IMPORTPROJECT = "ImportProject";
   private static final String WIDGET_NAME_IMPORTTEMPLATE = "ImportTemplate";
   private static final String WIDGET_NAME_EXPORTALLPROJECTS = "ExportAllProjects";
@@ -87,14 +88,19 @@ public class TopToolbar extends Composite {
   private static final String WIDGET_NAME_EXPORTECLIPSEPROJECT = "ExportEclipseProject";
     
   private static final String WIDGET_NAME_ADMIN = "Admin";
+  private static final String WIDGET_NAME_USER_ADMIN = "UserAdmin";
   private static final String WIDGET_NAME_DOWNLOAD_USER_SOURCE = "DownloadUserSource";
   private static final String WIDGET_NAME_SWITCH_TO_DEBUG = "SwitchToDebugPane";
+  private static final String WINDOW_OPEN_FEATURES = "menubar=yes,location=yes,resizable=yes,scrollbars=yes,status=yes";
+  private static final String WINDOW_OPEN_LOCATION = "_ai2";
 
   public DropDownButton fileDropDown;
   public DropDownButton connectDropDown;
   public DropDownButton buildDropDown;
   public DropDownButton helpDropDown;
   public DropDownButton adminDropDown;
+
+  private boolean isReadOnly;
 
   public TopToolbar() {
     /*
@@ -111,37 +117,46 @@ public class TopToolbar extends Composite {
     List<DropDownItem> buildItems = Lists.newArrayList();
     List<DropDownItem> helpItems = Lists.newArrayList();
 
+    // Should the UI be in read only mode?
+    isReadOnly = Ode.getInstance().isReadOnly();
+
     // File -> {New Project; Save; Save As; Checkpoint; |; Delete this Project; My Projects;}
     fileItems.add(new DropDownItem(WIDGET_NAME_MY_PROJECTS, MESSAGES.projectMenuItem(),
         new SwitchToProjectAction()));
     fileItems.add(null);
-    fileItems.add(new DropDownItem(WIDGET_NAME_NEW, MESSAGES.newProjectMenuItem(),
-        new NewAction()));
-    fileItems.add(new DropDownItem(WIDGET_NAME_IMPORTPROJECT, MESSAGES.importProjectMenuItem(),
-        new ImportProjectAction()));
-    fileItems.add(new DropDownItem(WIDGET_NAME_IMPORTTEMPLATE, MESSAGES.importTemplateButton(),
+    if (!isReadOnly) {
+      fileItems.add(new DropDownItem(WIDGET_NAME_NEW, MESSAGES.newProjectMenuItem(),
+          new NewAction()));
+      fileItems.add(new DropDownItem(WIDGET_NAME_IMPORTPROJECT, MESSAGES.importProjectMenuItem(),
+          new ImportProjectAction()));
+      fileItems.add(new DropDownItem(WIDGET_NAME_IMPORTTEMPLATE, MESSAGES.importTemplateButton(),
         new ImportTemplateAction()));
-    fileItems.add(new DropDownItem(WIDGET_NAME_DELETE, MESSAGES.deleteProjectButton(),
-        new DeleteAction()));
-    fileItems.add(null);
-    fileItems.add(new DropDownItem(WIDGET_NAME_SAVE, MESSAGES.saveMenuItem(),
-        new SaveAction()));
-    fileItems.add(new DropDownItem(WIDGET_NAME_SAVE_AS, MESSAGES.saveAsMenuItem(),
-        new SaveAsAction()));
-    fileItems.add(new DropDownItem(WIDGET_NAME_CHECKPOINT, MESSAGES.checkpointMenuItem(),
-        new CheckpointAction()));
-    fileItems.add(null);
+      fileItems.add(new DropDownItem(WIDGET_NAME_DELETE, MESSAGES.deleteProjectButton(),
+          new DeleteAction()));
+      fileItems.add(null);
+      fileItems.add(new DropDownItem(WIDGET_NAME_SAVE, MESSAGES.saveMenuItem(),
+          new SaveAction()));
+      fileItems.add(new DropDownItem(WIDGET_NAME_SAVE_AS, MESSAGES.saveAsMenuItem(),
+          new SaveAsAction()));
+      fileItems.add(new DropDownItem(WIDGET_NAME_CHECKPOINT, MESSAGES.checkpointMenuItem(),
+          new CheckpointAction()));
+      fileItems.add(null);
+    }
     fileItems.add(new DropDownItem(WIDGET_NAME_EXPORTPROJECT, MESSAGES.exportProjectMenuItem(),
         new ExportProjectAction()));
     fileItems.add(new DropDownItem(WIDGET_NAME_EXPORTALLPROJECTS, MESSAGES.exportAllProjectsMenuItem(),
         new ExportAllProjectsAction()));
     fileItems.add(null);
-    fileItems.add(new DropDownItem(WIDGET_NAME_UPLOAD_KEYSTORE, MESSAGES.uploadKeystoreMenuItem(),
-        new UploadKeystoreAction()));
+    if (!isReadOnly) {
+      fileItems.add(new DropDownItem(WIDGET_NAME_UPLOAD_KEYSTORE, MESSAGES.uploadKeystoreMenuItem(),
+          new UploadKeystoreAction()));
+    }
     fileItems.add(new DropDownItem(WIDGET_NAME_DOWNLOAD_KEYSTORE, MESSAGES.downloadKeystoreMenuItem(),
         new DownloadKeystoreAction()));
-    fileItems.add(new DropDownItem(WIDGET_NAME_DELETE_KEYSTORE, MESSAGES.deleteKeystoreMenuItem(),
-        new DeleteKeystoreAction()));
+    if (!isReadOnly) {
+      fileItems.add(new DropDownItem(WIDGET_NAME_DELETE_KEYSTORE, MESSAGES.deleteKeystoreMenuItem(),
+          new DeleteKeystoreAction()));
+    }
 
     // Connect -> {Connect to Companion; Connect to Emulator; Connect to USB; Reset Connections}
     connectItems.add(new DropDownItem(WIDGET_NAME_WIRELESS_BUTTON,
@@ -180,37 +195,39 @@ public class TopToolbar extends Composite {
     String libraryUrl = config.getLibraryUrl();
     if (!Strings.isNullOrEmpty(libraryUrl)) {
       helpItems.add(new DropDownItem(WIDGET_NAME_LIBRARY, MESSAGES.libraryMenuItem(),
-          new WindowOpenAction(libraryUrl, "_ai2", "scrollbars=1")));
+          new WindowOpenAction(libraryUrl)));
     }
     String getStartedUrl = config.getGetStartedUrl();
     if (!Strings.isNullOrEmpty(getStartedUrl)) {
       helpItems.add(new DropDownItem(WIDGET_NAME_GETSTARTED, MESSAGES.getStartedMenuItem(),
-          new WindowOpenAction(getStartedUrl, "_ai2", "scrollbars=1")));
+          new WindowOpenAction(getStartedUrl)));
     }
     String tutorialsUrl = config.getTutorialsUrl();
     if (!Strings.isNullOrEmpty(tutorialsUrl)) {
       helpItems.add(new DropDownItem(WIDGET_NAME_TUTORIALS, MESSAGES.tutorialsMenuItem(),
-          new WindowOpenAction(tutorialsUrl, "_ai2", "scrollbars=1")));
+          new WindowOpenAction(tutorialsUrl)));
     }
     String troubleshootingUrl = config.getTroubleshootingUrl();
     if (!Strings.isNullOrEmpty(troubleshootingUrl)) {
       helpItems.add(new DropDownItem(WIDGET_NAME_TROUBLESHOOTING, MESSAGES.troubleshootingMenuItem(),
-          new WindowOpenAction(troubleshootingUrl, "_ai2", "scrollbars=1")));
+          new WindowOpenAction(troubleshootingUrl)));
     }
     String forumsUrl = config.getForumsUrl();
     if (!Strings.isNullOrEmpty(forumsUrl)) {
       helpItems.add(new DropDownItem(WIDGET_NAME_FORUMS, MESSAGES.forumsMenuItem(),
-          new WindowOpenAction(forumsUrl, "_ai2", "scrollbars=1")));
+          new WindowOpenAction(forumsUrl)));
     }
     helpItems.add(null);
     String feedbackUrl = config.getFeedbackUrl();
     if (!Strings.isNullOrEmpty(feedbackUrl)) {
       helpItems.add(new DropDownItem(WIDGET_NAME_FEEDBACK, MESSAGES.feedbackMenuItem(),
-          new WindowOpenAction(feedbackUrl, "_blank", "scrollbars=1")));
+          new WindowOpenAction(feedbackUrl)));
       helpItems.add(null);
     }
     helpItems.add(new DropDownItem(WIDGET_NAME_COMPANIONINFO, MESSAGES.companionInformation(),
         new AboutCompanionAction()));
+    helpItems.add(new DropDownItem(WIDGET_NAME_COMPANIONUPDATE, MESSAGES.companionUpdate(),
+        new CompanionUpdateAction()));
     helpItems.add(new DropDownItem(WIDGET_NAME_SHOWSPLASH, MESSAGES.showSplashMenuItem(),
         new ShowSplashAction()));
 
@@ -245,6 +262,8 @@ public class TopToolbar extends Composite {
           MESSAGES.downloadUserSourceMenuItem(), new DownloadUserSourceAction()));
       adminItems.add(new DropDownItem(WIDGET_NAME_SWITCH_TO_DEBUG,
           MESSAGES.switchToDebugMenuItem(), new SwitchToDebugAction()));
+      adminItems.add(new DropDownItem(WIDGET_NAME_USER_ADMIN,
+          "User Admin", new SwitchToUserAdminAction()));
       adminDropDown = new DropDownButton(WIDGET_NAME_ADMIN, MESSAGES.adminTabName(), adminItems,
           false);
       adminDropDown.setStyleName("ode-TopPanelButton");
@@ -262,7 +281,7 @@ public class TopToolbar extends Composite {
   private static class NewAction implements Command {
     @Override
     public void execute() {
-      new NewYoungAndroidProjectWizard().center();
+      new NewYoungAndroidProjectWizard(null).center();
       // The wizard will switch to the design view when the new
       // project is created.
     }
@@ -747,6 +766,19 @@ public class TopToolbar extends Composite {
     }
   }
 
+  private static class CompanionUpdateAction implements Command {
+    @Override
+    public void execute() {
+      DesignToolbar.DesignProject currentProject = Ode.getInstance().getDesignToolbar().getCurrentProject();
+      if (currentProject == null) {
+        Window.alert(MESSAGES.companionUpdateMustHaveProject());
+        return;
+      }
+      DesignToolbar.Screen screen = currentProject.screens.get(currentProject.currentScreen);
+      screen.blocksEditor.updateCompanion();
+    }
+  }
+
   private static class ShowSplashAction implements Command {
     @Override
     public void execute() {
@@ -756,18 +788,14 @@ public class TopToolbar extends Composite {
 
   private static class WindowOpenAction implements Command {
     private final String url;
-    private final String name;
-    private final String features;
 
-    WindowOpenAction(String url, String name, String features) {
+    WindowOpenAction(String url) {
       this.url = url;
-      this.name = name;
-      this.features = features;
     }
 
     @Override
     public void execute() {
-      Window.open(url, name, features);
+      Window.open(url, WINDOW_OPEN_LOCATION, WINDOW_OPEN_FEATURES);
     }
   }
 
@@ -843,6 +871,10 @@ public class TopToolbar extends Composite {
    * of "Delete" and "Download Source").
    */
   public void updateFileMenuButtons(int view) {
+    if (isReadOnly) {
+      // This may be too simple
+      return;
+    }
     if (view == 0) {  // We are in the Projects view
       fileDropDown.setItemEnabled(MESSAGES.deleteProjectButton(), false);
       fileDropDown.setItemEnabled(MESSAGES.deleteProjectMenuItem(),
@@ -975,5 +1007,12 @@ public class TopToolbar extends Composite {
 
         }
     }
+
+  private static class SwitchToUserAdminAction implements Command {
+    @Override
+    public void execute() {
+      Ode.getInstance().switchToUserAdminPanel();
+    }
+  }
 
 }

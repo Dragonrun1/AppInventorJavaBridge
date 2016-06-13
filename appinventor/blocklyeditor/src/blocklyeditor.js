@@ -30,6 +30,7 @@ Blockly.BlocklyEditor.startup = function(documentBody, formName) {
     collapse : true,
     hasScrollbars: true,
     hasTrashcan: true,
+    hasBackpack: true,
     comments: true,
     disable: true,
     configForTypeBlock: typeblock_config
@@ -142,7 +143,7 @@ Blockly.BlocklyEditor.startup = function(documentBody, formName) {
         if (window.parent.BlocklyPanel_blocklyWorkspaceChanged){
           window.parent.BlocklyPanel_blocklyWorkspaceChanged(Blockly.BlocklyEditor.formName);
         }
-        // [lyn 12/31/2103] Check for duplicate component event handlers before
+        // [lyn 12/31/2013] Check for duplicate component event handlers before
         // running any error handlers to avoid quadratic time behavior.
         Blockly.WarningHandler.determineDuplicateComponentEventHandlers();
   });
@@ -152,6 +153,7 @@ Blockly.BlocklyEditor.render = function() {
   var start = new Date().getTime();
   Blockly.Instrument.initializeStats("Blockly.BlocklyEditor.render");
   Blockly.mainWorkspace.render();
+  Blockly.WarningHandler.checkAllBlocksForWarningsAndErrors();
   var stop = new Date().getTime();
   var timeDiff = stop - start;
   Blockly.Instrument.stats.totalTime = timeDiff;

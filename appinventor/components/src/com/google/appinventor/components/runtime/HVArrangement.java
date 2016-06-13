@@ -8,6 +8,8 @@ package com.google.appinventor.components.runtime;
 
 import android.app.Activity;
 import android.os.Handler;
+import android.graphics.drawable.Drawable;
+import android.util.Log;
 import android.view.View;
 
 import com.google.appinventor.components.annotations.DesignerProperty;
@@ -18,13 +20,17 @@ import com.google.appinventor.components.common.ComponentConstants;
 import com.google.appinventor.components.common.PropertyTypeConstants;
 import com.google.appinventor.components.runtime.util.AlignmentUtil;
 import com.google.appinventor.components.runtime.util.ErrorMessages;
+import com.google.appinventor.components.runtime.util.MediaUtil;
 import com.google.appinventor.components.runtime.util.ViewUtil;
+
+import java.io.IOException;
 
 /**
  * A container for components that arranges them linearly, either
  * horizontally or vertically.
  *
  * @author sharon@google.com (Sharon Perl)
+ * @author kkashi01@gmail.com (Hossein Amerkashi) (added Image and BackgroundColors)
  */
 
 @SimpleObject
@@ -41,6 +47,15 @@ public class HVArrangement extends AndroidViewComponent implements Component, Co
   // the alignment for this component's LinearLayout
   private int horizontalAlignment;
   private int verticalAlignment;
+    // Backing for background color
+    private int backgroundColor;
+    // This is the Drawable corresponding to the Image property.
+    // If an Image has never been set or if the most recent Image could not be loaded, this is null.
+    private Drawable backgroundImageDrawable;
+    // Image path
+    private String imagePath = "";
+
+  private Drawable defaultButtonDrawable;
 
   private final Handler androidUIHandler = new Handler();
 
@@ -68,7 +83,12 @@ public class HVArrangement extends AndroidViewComponent implements Component, Co
     alignmentSetter.setHorizontalAlignment(horizontalAlignment);
     alignmentSetter.setVerticalAlignment(verticalAlignment);
 
+      // Save the default values in case the user wants them back later.
+      defaultButtonDrawable = getView().getBackground();
+
     container.$add(this);
+
+    BackgroundColor(Component.COLOR_DEFAULT);
   }
 
   // ComponentContainer implementation
@@ -158,13 +178,13 @@ public class HVArrangement extends AndroidViewComponent implements Component, Co
 
   /**
    * Returns a number that encodes how contents of the arrangement are aligned horizontally.
-   * The choices are: 1 = left aligned, 2 = horizontally centered, 3 = right aligned
+   * The choices are: 1 = left aligned, 2 = right aligned, 3 = horizontally centered
    */
   @SimpleProperty(
       category = PropertyCategory.APPEARANCE,
       description = "A number that encodes how contents of the arrangement are aligned " +
-          " horizontally. The choices are: 1 = left aligned, 2 = horizontally centered, " +
-          " 3 = right aligned.  Alignment has no effect if the arrangement's width is " +
+          " horizontally. The choices are: 1 = left aligned, 2 = right aligned, " +
+          " 3 = horizontally centered.  Alignment has no effect if the arrangement's width is " +
           "automatic.")
   public int AlignHorizontal() {
     return horizontalAlignment;
@@ -198,8 +218,8 @@ public class HVArrangement extends AndroidViewComponent implements Component, Co
    @SimpleProperty(
       category = PropertyCategory.APPEARANCE,
       description = "A number that encodes how the contents of the arrangement are aligned " +
-          " vertically. The choices are: 1 = aligned at the top, 2 = vertically centered, " +
-          "3 = aligned at the bottom.  Alignment has no effect if the arrangement's height " +
+          " vertically. The choices are: 1 = aligned at the top, 2 = aligned at the bottom, " +
+          "3 = vertically centered.  Alignment has no effect if the arrangement's height " +
           "is automatic.")
   public int AlignVertical() {
     return verticalAlignment;
@@ -225,4 +245,102 @@ public class HVArrangement extends AndroidViewComponent implements Component, Co
     }
   }
 
+    /**
+     * Returns the component's background color as an alpha-red-green-blue
+     * integer.
+     *
+     * @return  background RGB color with alpha
+     */
+    @SimpleProperty(category = PropertyCategory.APPEARANCE,
+            description = "Returns the component's background color")
+    public int BackgroundColor() {
+        return backgroundColor;
+    }
+
+    /**
+     * Specifies the button's background color as an alpha-red-green-blue
+     * integer.  If the parameter is {@link Component#COLOR_DEFAULT}, the
+     * original beveling is restored.  If an Image has been set, the color
+     * change will not be visible until the Image is removed.
+     *
+     * @param argb background RGB color with alpha
+     */
+    @DesignerProperty(editorType = PropertyTypeConstants.PROPERTY_TYPE_COLOR,
+            defaultValue = Component.DEFAULT_VALUE_COLOR_DEFAULT)
+    @SimpleProperty(description = "Specifies the component's background color. " +
+            "The background color will not be visible if an Image is being displayed.")
+    public void BackgroundColor(int argb) {
+        backgroundColor = argb;
+//        getView().setBackgroundColor(argb);
+        updateAppearance();
+
+    }
+
+    /**
+     * Returns the path of the button's image.
+     *
+     * @return  the path of the button's image
+     */
+    @SimpleProperty(
+            category = PropertyCategory.APPEARANCE)
+    public String Image() {
+        return imagePath;
+    }
+
+    /**
+     * Specifies the path of the button's image.
+     *
+     * <p/>See {@link com.google.appinventor.components.runtime.util.MediaUtil#determineMediaSource} for information about what
+     * a path can be.
+     *
+     * @param path  the path of the button's image
+     */
+    @DesignerProperty(editorType = PropertyTypeConstants.PROPERTY_TYPE_ASSET, defaultValue = "")
+    @SimpleProperty(description = "Specifies the path of the component's image.  " +
+            "If there is both an Image and a BackgroundColor, only the Image will be visible.")
+    public void Image(String path) {
+        // If it's the same as on the prior call and the prior load was successful,
+        // do nothing.
+        if (path.equals(imagePath) && backgroundImageDrawable != null) {
+            return;
+        }
+
+        imagePath = (path == null) ? "" : path;
+
+        // Clear the prior background image.
+        backgroundImageDrawable = null;
+
+        // Load image from file.
+        if (imagePath.length() > 0) {
+            try {
+                backgroundImageDrawable = MediaUtil.getBitmapDrawable(container.$form(), imagePath);
+            } catch (IOException ioe) {
+                // Fall through with a value of null for backgroundImageDrawable.
+            }
+        }
+
+        // Update the appearance based on the new value of backgroundImageDrawable.
+        updateAppearance();
+    }
+
+    // Update appearance based on values of backgroundImageDrawable, backgroundColor and shape.
+    // Images take precedence over background colors.
+    private void updateAppearance() {
+        // If there is no background image,
+        // the appearance depends solely on the background color and shape.
+        if (backgroundImageDrawable == null) {
+                if (backgroundColor == Component.COLOR_DEFAULT) {
+                    // If there is no background image and color is default,
+                    // restore original 3D bevel appearance.
+                    ViewUtil.setBackgroundDrawable(getView(), defaultButtonDrawable);
+                } else {
+                    // Clear the background image.
+                    ViewUtil.setBackgroundDrawable(getView(), null);
+                    getView().setBackgroundColor(backgroundColor);
+                }
+        } else {
+            // If there is a background image
+            ViewUtil.setBackgroundImage(getView(), backgroundImageDrawable);
+        }
+    }
 }

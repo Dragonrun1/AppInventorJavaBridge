@@ -180,7 +180,8 @@ public final class YoungAndroidProjectService extends CommonProjectService {
     // this will be perfectly acceptable.  Until that happens, choosing 0 is just as safe as
     // allowing a random number to be chosen when the MockComponent is first created.
     return "#|\n$JSON\n" +
-        "{\"YaVersion\":\"" + YaVersion.YOUNG_ANDROID_VERSION + "\",\"Source\":\"Form\"," +
+        "{\"authURL\":[]," +
+        "\"YaVersion\":\"" + YaVersion.YOUNG_ANDROID_VERSION + "\",\"Source\":\"Form\"," +
         "\"Properties\":{\"$Name\":\"" + formName + "\",\"$Type\":\"Form\"," +
         "\"$Version\":\"" + YaVersion.FORM_COMPONENT_VERSION + "\",\"Uuid\":\"" + 0 + "\"," +
         "\"Title\":\"" + formName + "\",\"AppName\":\"" + packageName +"\"}}\n|#";
@@ -551,7 +552,7 @@ public final class YoungAndroidProjectService extends CommonProjectService {
       FileExporter fileExporter = new FileExporterImpl();
       zipFile = fileExporter.exportProjectSourceZip(userId, projectId, false,
           /* includeAndroidKeystore */ true,
-          projectName + ".aia", true);
+          projectName + ".aia", true, true);
       bufferedOutputStream.write(zipFile.getContent());
       bufferedOutputStream.flush();
       bufferedOutputStream.close();
@@ -598,7 +599,7 @@ public final class YoungAndroidProjectService extends CommonProjectService {
     } catch (IOException e) {
       // As of App Engine 1.9.0 we get these when UrlFetch is asked to send too much data
       Throwable wrappedException = e;
-      int zipFileLength = zipFile.getContent().length;
+      int zipFileLength = zipFile == null ? -1 : zipFile.getContent().length;
       if (zipFileLength >= (5 * 1024 * 1024) /* 5 MB */) {
         String lengthMbs = format((zipFileLength * 1.0)/(1024*1024));
         wrappedException = new IllegalArgumentException(
