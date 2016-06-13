@@ -109,6 +109,7 @@ var JBRIDGE_COMPONENT_SKIP_PROPERTIES = ["Uuid", "$Version", "TextAlignment"]; /
 var JBRIDGE_JSON_TEXT_PROPERTIES = ["Title", "Text", "BackgroundImage", "Image", "Icon", "Source", "Picture", "Hint", "Action", "ActivityClass", "ActivityPackage", "ServiceURL"]; //Properties that should include the double qoutes "" in the output JBridge Javacode
 var jBridgeImportsMap = new Object();
 var jBridgeProceduresMap = new Object();
+var jBridgeEventMethodsList = [];
 var jBridgeIsIndividualBlock = false; // is to Identify if a block is Iduvidal root block or sub-block
 var jBridgeCurrentScreen = "Screen1";
 var JBRIDGE_COMPONENT_TEXT_PROPERTIES = ["text", "picture", "source"];
@@ -187,7 +188,7 @@ Blockly.Yail.initAllVariables = function(){
     jBridgeComponentMap = new Object();
     jBridgeImportsMap = new Object();
     jBridgeProceduresMap = new Object();
-
+    jBridgeEventMethodsList = [];
 };
 
 Blockly.Yail.parseJBridgeJsonData = function(jsonObject){
@@ -315,6 +316,7 @@ Blockly.Yail.genJBridgeClass =  function (topBlocks){
     + Blockly.Yail.parseComponentDefinition(jBridgeVariableDefinitionMap)
     + Blockly.Yail.genJBridgeDefineMethod()
     + Blockly.Yail.genJBridgeDispatchEvent()
+    + Blockly.Yail.genJBridgeEventMethods()
     + Blockly.Yail.genJBridgeDefineProcedure(jBridgeProceduresMap)
     +"\n}\n";
   return code;
@@ -345,6 +347,16 @@ Blockly.Yail.genJBridgeDispatchEvent = function(){
 
   return code;
 };
+
+Blockly.Yail.genJBridgeEventMethods = function(){
+  var code;
+  if (jBridgeEventMethodsList.length > 0){
+    code = "\n//Event Methods\n"
+        + jBridgeEventMethodsList.join("\n")
+        +"\n";
+  }
+  return code;
+}
 
 Blockly.Yail.genJBridgeDefineProcedure = function(jBridgeProceduresMap){
   var code = "";
@@ -921,13 +933,21 @@ Blockly.Yail.parseJBridgeEventBlock = function(eventBlock, isChildBlock){
 
 //Event Blocks are actualy the "When Blocks"
 Blockly.Yail.genJBridgeEventBlock = function(componentName, eventName, body){
+  var eventMethodName = componentName + eventName;
   var code = "\nif( component.equals("+componentName+") && eventName.equals(\""+eventName+"\") ){\n"
-    + body + "\n"
+    + eventMethodName + "();\n" //create event method
     +"return true;\n"
     +"}";
-
+  Blockly.Yail.addComponentEventMethod(eventMethodName, body);
   return code;
-}; 
+};
+
+Blockly.Yail.addComponentEventMethod = function(eventMethodName, body){
+  var code = "\npublic void " + eventMethodName + "(){\n"
+    + body
+    + "\n}"
+  jBridgeEventMethodsList.push(code);
+}
 
 Blockly.Yail.genJBridgeEventDispatcher = function(eventName){
   return "EventDispatcher.registerEventForDelegation( this, \"" + eventName +"Event\", \""+ eventName +"\" );";
