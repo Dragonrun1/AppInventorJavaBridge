@@ -161,7 +161,7 @@ Blockly.Java.getFormJava = function(formJson, packageName, forRepl) {
   var javaCode = [];
   javaCode.push(Blockly.Yail.genJBridgeCode(Blockly.mainWorkspace.getTopBlocks(true), jsonObject));
   
-  prityPrintCode = Blockly.Java.prityPrintJBridgeCode(javaCode.join('\n')); 
+  var prityPrintCode = Blockly.Java.prityPrintJBridgeCode(javaCode.join('\n'));
   return prityPrintCode;
 };
 
