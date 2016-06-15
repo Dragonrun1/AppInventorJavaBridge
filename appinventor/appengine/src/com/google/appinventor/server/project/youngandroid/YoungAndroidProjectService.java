@@ -26,6 +26,25 @@ import com.google.appinventor.shared.rpc.RpcResult;
 import com.google.appinventor.shared.rpc.ServerLayout;
 import com.google.appinventor.shared.rpc.project.*;
 import com.google.appinventor.shared.rpc.project.youngandroid.*;
+import com.google.appinventor.shared.rpc.project.NewProjectParameters;
+import com.google.appinventor.shared.rpc.project.Project;
+import com.google.appinventor.shared.rpc.project.ProjectNode;
+import com.google.appinventor.shared.rpc.project.ProjectRootNode;
+import com.google.appinventor.shared.rpc.project.ProjectSourceZip;
+import com.google.appinventor.shared.rpc.project.RawFile;
+import com.google.appinventor.shared.rpc.project.TextFile;
+import com.google.appinventor.shared.rpc.project.youngandroid.NewYoungAndroidProjectParameters;
+import com.google.appinventor.shared.rpc.project.youngandroid.YoungAndroidAssetNode;
+import com.google.appinventor.shared.rpc.project.youngandroid.YoungAndroidAssetsFolder;
+import com.google.appinventor.shared.rpc.project.youngandroid.YoungAndroidBlocksNode;
+import com.google.appinventor.shared.rpc.project.youngandroid.YoungAndroidComponentNode;
+import com.google.appinventor.shared.rpc.project.youngandroid.YoungAndroidComponentsFolder;
+import com.google.appinventor.shared.rpc.project.youngandroid.YoungAndroidFormNode;
+import com.google.appinventor.shared.rpc.project.youngandroid.YoungAndroidPackageNode;
+import com.google.appinventor.shared.rpc.project.youngandroid.YoungAndroidProjectNode;
+import com.google.appinventor.shared.rpc.project.youngandroid.YoungAndroidSourceFolderNode;
+import com.google.appinventor.shared.rpc.project.youngandroid.YoungAndroidSourceNode;
+import com.google.appinventor.shared.rpc.project.youngandroid.YoungAndroidYailNode;
 import com.google.appinventor.shared.rpc.user.User;
 import com.google.appinventor.shared.settings.Settings;
 import com.google.appinventor.shared.settings.SettingsConstants;
@@ -67,6 +86,7 @@ public final class YoungAndroidProjectService extends CommonProjectService {
   // Project folder prefixes
   public static final String SRC_FOLDER = YoungAndroidSourceAnalyzer.SRC_FOLDER;
   protected static final String ASSETS_FOLDER = "assets";
+  private static final String EXTERNAL_COMPS_FOLDER = "assets/external_comps";
   static final String PROJECT_DIRECTORY = "youngandroidproject";
 
   // TODO(user) Source these from a common constants library.
@@ -212,23 +232,23 @@ public final class YoungAndroidProjectService extends CommonProjectService {
     // Extract the new icon from the projectSettings parameter.
     Settings settings = new Settings(JSON_PARSER, projectSettings);
     String newIcon = Strings.nullToEmpty(settings.getSetting(
-        SettingsConstants.PROJECT_YOUNG_ANDROID_SETTINGS,
-        SettingsConstants.YOUNG_ANDROID_SETTINGS_ICON));
+          SettingsConstants.PROJECT_YOUNG_ANDROID_SETTINGS,
+          SettingsConstants.YOUNG_ANDROID_SETTINGS_ICON));
     String newVCode = Strings.nullToEmpty(settings.getSetting(
-        SettingsConstants.PROJECT_YOUNG_ANDROID_SETTINGS,
-        SettingsConstants.YOUNG_ANDROID_SETTINGS_VERSION_CODE));
+          SettingsConstants.PROJECT_YOUNG_ANDROID_SETTINGS,
+          SettingsConstants.YOUNG_ANDROID_SETTINGS_VERSION_CODE));
     String newVName = Strings.nullToEmpty(settings.getSetting(
-        SettingsConstants.PROJECT_YOUNG_ANDROID_SETTINGS,
-        SettingsConstants.YOUNG_ANDROID_SETTINGS_VERSION_NAME));
+          SettingsConstants.PROJECT_YOUNG_ANDROID_SETTINGS,
+          SettingsConstants.YOUNG_ANDROID_SETTINGS_VERSION_NAME));
     String newUsesLocation = Strings.nullToEmpty(settings.getSetting(
-        SettingsConstants.PROJECT_YOUNG_ANDROID_SETTINGS,
-        SettingsConstants.YOUNG_ANDROID_SETTINGS_USES_LOCATION));
+          SettingsConstants.PROJECT_YOUNG_ANDROID_SETTINGS,
+          SettingsConstants.YOUNG_ANDROID_SETTINGS_USES_LOCATION));
     String newSizing = Strings.nullToEmpty(settings.getSetting(
-        SettingsConstants.PROJECT_YOUNG_ANDROID_SETTINGS,
-        SettingsConstants.YOUNG_ANDROID_SETTINGS_SIZING));
+          SettingsConstants.PROJECT_YOUNG_ANDROID_SETTINGS,
+          SettingsConstants.YOUNG_ANDROID_SETTINGS_SIZING));
     String newAName = Strings.nullToEmpty(settings.getSetting(
-        SettingsConstants.PROJECT_YOUNG_ANDROID_SETTINGS,
-        SettingsConstants.YOUNG_ANDROID_SETTINGS_APP_NAME));
+          SettingsConstants.PROJECT_YOUNG_ANDROID_SETTINGS,
+          SettingsConstants.YOUNG_ANDROID_SETTINGS_APP_NAME));
 
     // Extract the old icon from the project.properties file from storageIo.
     String projectProperties = storageIo.downloadFile(userId, projectId,
@@ -281,7 +301,7 @@ public final class YoungAndroidProjectService extends CommonProjectService {
 
     String blocklyFileName = YoungAndroidBlocksNode.getBlocklyFileId(qualifiedFormName);
     String blocklyFileContents = getInitialBlocklySourceFileContents(qualifiedFormName);
-    
+
     String yailFileName = YoungAndroidYailNode.getYailFileId(qualifiedFormName);
     String yailFileContents = "";
 
@@ -375,9 +395,11 @@ public final class YoungAndroidProjectService extends CommonProjectService {
                                     projectId);
     ProjectNode assetsNode = new YoungAndroidAssetsFolder(ASSETS_FOLDER);
     ProjectNode sourcesNode = new YoungAndroidSourceFolderNode(SRC_FOLDER);
+    ProjectNode compsNode = new YoungAndroidComponentsFolder(EXTERNAL_COMPS_FOLDER);
 
     rootNode.addChild(assetsNode);
     rootNode.addChild(sourcesNode);
+    rootNode.addChild(compsNode);
 
     // Sources contains nested folders that are interpreted as packages
     Map<String, ProjectNode> packagesMap = Maps.newHashMap();
@@ -386,9 +408,12 @@ public final class YoungAndroidProjectService extends CommonProjectService {
     List<String> sourceFiles = storageIo.getProjectSourceFiles(userId, projectId);
     for (String fileId : sourceFiles) {
       if (fileId.startsWith(ASSETS_FOLDER + '/')) {
-        // Assets is a flat folder
-        assetsNode.addChild(new YoungAndroidAssetNode(StorageUtil.basename(fileId), fileId));
-
+        if (fileId.startsWith(EXTERNAL_COMPS_FOLDER + '/')) {
+          compsNode.addChild(new YoungAndroidComponentNode(StorageUtil.basename(fileId), fileId));
+        }
+        else {
+          assetsNode.addChild(new YoungAndroidAssetNode(StorageUtil.basename(fileId), fileId));
+        }
       } else if (fileId.startsWith(SRC_FOLDER + '/')) {
         // We send form (.scm), blocks (.blk), and yail (.yail) nodes to the ODE client.
         YoungAndroidSourceNode sourceNode = null;
@@ -397,8 +422,8 @@ public final class YoungAndroidProjectService extends CommonProjectService {
         } else if (fileId.endsWith(BLOCKLY_SOURCE_EXTENSION)) {
           sourceNode = new YoungAndroidBlocksNode(fileId);
         } else if (fileId.endsWith(CODEBLOCKS_SOURCE_EXTENSION)) {
-          String blocklyFileName = 
-              fileId.substring(0, fileId.lastIndexOf(CODEBLOCKS_SOURCE_EXTENSION)) 
+          String blocklyFileName =
+              fileId.substring(0, fileId.lastIndexOf(CODEBLOCKS_SOURCE_EXTENSION))
               + BLOCKLY_SOURCE_EXTENSION;
           if (!sourceFiles.contains(blocklyFileName)) {
             // This is an old project that hasn't been converted yet. Convert
@@ -432,12 +457,12 @@ public final class YoungAndroidProjectService extends CommonProjectService {
 
     return rootNode;
   }
-  
+
   /*
    * Convert the contents of the codeblocks file named codeblocksFileId
    * to blockly format and return the blockly contents.
    */
-  private String convertCodeblocksToBlockly(String userId, long projectId, 
+  private String convertCodeblocksToBlockly(String userId, long projectId,
       String codeblocksFileId) {
     // TODO(sharon): implement this!
     return "";
@@ -552,7 +577,7 @@ public final class YoungAndroidProjectService extends CommonProjectService {
       FileExporter fileExporter = new FileExporterImpl();
       zipFile = fileExporter.exportProjectSourceZip(userId, projectId, false,
           /* includeAndroidKeystore */ true,
-          projectName + ".aia", true, true);
+        projectName + ".aia", true, true, false);
       bufferedOutputStream.write(zipFile.getContent());
       bufferedOutputStream.flush();
       bufferedOutputStream.close();
@@ -780,4 +805,3 @@ public final class YoungAndroidProjectService extends CommonProjectService {
     return formatter.format(input);
   }
 }
-
