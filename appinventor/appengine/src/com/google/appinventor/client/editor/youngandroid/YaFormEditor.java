@@ -645,6 +645,7 @@ public final class YaFormEditor extends SimpleEditor implements FormChangeListen
     sb.append("\"Properties\":");
     encodeComponentProperties(form, sb, forYail);
     sb.append("}");
+    OdeLog.log("JSON ENCODING" + sb.toString());
     return sb.toString();
   }
 

@@ -587,6 +587,7 @@ public class BlocklyPanel extends HTMLPanel implements ComponentDatabaseChangeLi
         try {
             return doGetJava(formName, formJson, packageName);
         } catch (JavaScriptException e) {
+            OdeLog.log("Javascript generation exception");
             throw new YailGenerationException(e.getDescription(), formName);
         }
     }
