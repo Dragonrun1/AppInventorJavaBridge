@@ -87,8 +87,7 @@ public class TopToolbar extends Composite {
   private static final String WIDGET_NAME_IMPORTTEMPLATE = "ImportTemplate";
   private static final String WIDGET_NAME_EXPORTALLPROJECTS = "ExportAllProjects";
   private static final String WIDGET_NAME_EXPORTPROJECT = "ExportProject";
-  private static final String WIDGET_NAME_GENERATEJAVA = "GenerateJava";
-  private static final String WIDGET_NAME_EXPORTECLIPSEPROJECT = "ExportEclipseProject";
+  private static final String WIDGET_NAME_EXPORTECLIPSEPROJECT = "ExportJavaProject";
   private static final String WIDGET_NAME_COMPONENTS = "Components";
   private static final String WIDGET_NAME_MY_COMPONENTS = "MyComponents";
   private static final String WIDGET_NAME_START_NEW_COMPONENT = "StartNewComponent";
@@ -186,8 +185,6 @@ public class TopToolbar extends Composite {
         new BarcodeAction()));
     buildItems.add(new DropDownItem(WIDGET_NAME_BUILD_DOWNLOAD, MESSAGES.downloadToComputerMenuItem(),
         new DownloadAction()));
-    buildItems.add(new DropDownItem(WIDGET_NAME_GENERATEJAVA, MESSAGES.generateJavaItem(),
-        new GenerateJavaAction()));
     buildItems.add(new DropDownItem(WIDGET_NAME_EXPORTECLIPSEPROJECT, MESSAGES.exportEclipseProjectMenuItem(),
         new ExportEclipseProjectAction()));
     if (AppInventorFeatures.hasYailGenerationOption() && Ode.getInstance().getUser().getIsAdmin()) {

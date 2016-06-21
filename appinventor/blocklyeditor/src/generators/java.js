@@ -160,7 +160,6 @@ Blockly.Java.getFormJava = function(formJson, packageName, forRepl) {
   var jsonObject = JSON.parse(formJson); 
   var javaCode = [];
   javaCode.push(Blockly.Yail.genJBridgeCode(Blockly.mainWorkspace.getTopBlocks(true), jsonObject));
-  
   var prityPrintCode = Blockly.Java.prityPrintJBridgeCode(javaCode.join('\n'));
   return prityPrintCode;
 };
@@ -202,10 +201,7 @@ Blockly.Yail.parseJBridgeJsonData = function(jsonObject){
   }
   for(var i=0;i<property.$Components.length;i++){
     Blockly.Yail.parseJBridgeJsonComopnents(property.$Components[i], "this");
-  } 
-
-   
-
+  }
 };
 
 Blockly.Yail.parseJBridgeJsonComopnents = function (componentJson, rootName){
@@ -248,6 +244,10 @@ Blockly.Yail.parseJBridgeJsonComopnents = function (componentJson, rootName){
         //Convert color code & lower case for boolean value
         var valueOfLowerCase =componentJson[key].toLowerCase();
         var printableValue =componentJson[key];
+        //Java Bridge requires integers
+        if (Blockly.Yail.isNumber(printableValue)){
+            printableValue = Math.round(printableValue);
+        }
         if(componentJson[key].substring(0,2) == "&H" && componentJson[key].length == 10){
           printableValue ="0x"+componentJson[key].substring(2);
         }
@@ -761,7 +761,7 @@ Blockly.Yail.TypeCast = function(key, paramList, typeCastMap){
   if (v != null && paramList.length > 0){
     for(var i = 0, param; param = paramList[i]; i++){
       if(Blockly.Yail.isNumber(param)){
-        resultList.push(param);
+        resultList.push(Math.round(param));
       }else{
         resultList.push(v[i].replace(/XXX/g, param));
       }
@@ -770,12 +770,20 @@ Blockly.Yail.TypeCast = function(key, paramList, typeCastMap){
   return resultList;
 };
 
+/**
+ * Will cast the value if the key is contained in the typeCastMap
+ * @param key The key in the cast map
+ * @param value The value to be casted
+ * @param typeCastMap The type cast map
+ * @return The casted value
+ * */
 Blockly.Yail.TypeCastOneValue = function(key, value, typeCastMap){
   var v = Blockly.Yail.getTypeCastValue(key, typeCastMap);
   var result = "";
   if (v != null){
     if(Blockly.Yail.isNumber(value)){
-      result = value;
+      //Java bridge library requires ints over floats
+      result = Math.round(value);
     }else{
       result = v[0].replace("XXX", value);
     }
@@ -821,9 +829,10 @@ var args = Array.prototype.splice.call(arguments, 2);
 code = objectName
        + "."
        +methodName
-       +" ("
+       +"("
        + paramsList.join(", ")
-       +");"  
+       +");"
+
 return code;
 };
 
@@ -877,8 +886,12 @@ Blockly.Yail.parseJBridgeSetBlock = function(setBlock){
     }
     value = "YailList.makeList(" + value + ")";  
   }
+  //will cast floats to whole integers and cast types in paramTypeCastMap
   if(Blockly.Yail.hasTypeCastKey(property, paramTypeCastMap)){
-    value = Blockly.Yail.TypeCastOneValue(property, value, paramTypeCastMap);
+      value = Blockly.Yail.TypeCastOneValue(property, value, paramTypeCastMap);
+  }else if (Blockly.Yail.isNumber(value)){
+      //Java Bridge requires integers, floating point numbers will throw an exception
+      value = Math.round(value);
   }
   code = Blockly.Yail.genJBridgeSetBlock(componentName, property, value) + "\n" + code;
   return code;
@@ -951,7 +964,7 @@ Blockly.Yail.addComponentEventMethod = function(eventMethodName, body){
 }
 
 Blockly.Yail.genJBridgeEventDispatcher = function(eventName){
-  return "EventDispatcher.registerEventForDelegation( this, \"" + eventName +"Event\", \""+ eventName +"\" );";
+  return "EventDispatcher.registerEventForDelegation(this, \"" + eventName +"Event\", \""+ eventName +"\" );";
 };
 
 Blockly.Yail.parseJBridgeMathBlocks = function(mathBlock){
@@ -1083,6 +1096,11 @@ Blockly.Yail.parseJBridgeGlobalIntializationBlock = function(globalBlock){
   return "";
 };
 
+/**
+ * Returns whether the given value is a number or not
+ * @param value The value to check
+ * @return whether it is an int or not
+ * */
 Blockly.Yail.isNumber = function(value){
   return !isNaN(value);
 };
