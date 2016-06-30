@@ -193,12 +193,13 @@ Blockly.Yail.initAllVariables = function(){
 Blockly.Yail.parseJBridgeJsonData = function(jsonObject){
   var property = jsonObject.Properties;
   var title = property.Title;
-  var icon = property.Icon;
   if (title != undefined){
+    var icon = property.Icon;
     jBridgeInitializationList.push("this.Title(\""+title +"\");");
   }if(icon != undefined){
     jBridgeInitializationList.push("this.Icon(\""+icon +"\");");
   }
+  //parsing the lower level components (not including the "Screen" component)
   for(var i=0;i<property.$Components.length;i++){
     Blockly.Yail.parseJBridgeJsonComopnents(property.$Components[i], "this");
   }
@@ -208,9 +209,9 @@ Blockly.Yail.parseJBridgeJsonComopnents = function (componentJson, rootName){
   var name = componentJson.$Name;
 
   //Not sure y there are component with undefined name.
-  // Assuiming if a component has no name, its not a valid component 
+  // Assuiming if a component has no name, its not a valid component
   if(name == undefined){
-    return;
+    name = "this";
   }
   jBridgeComponentMap[name] = [];
   jBridgeComponentMap[name].push({"rootName":rootName});
@@ -224,6 +225,7 @@ Blockly.Yail.parseJBridgeJsonComopnents = function (componentJson, rootName){
                +"("
                +rootName
                +");";
+
   jBridgeInitializationList.push(newObj);  
   if(componentJson.$Type.toLowerCase() == "imagesprite"){
     jBridgeInitializationList.push(name +".Initialize();");  
