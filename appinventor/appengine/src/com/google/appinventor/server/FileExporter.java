@@ -50,11 +50,10 @@ public interface FileExporter {
    * @throws IOException if files cannot be written
    */
   ProjectSourceZip exportProjectSourceZip(String userId, long projectId,
-                                          boolean includeProjectHistory,
-                                          boolean includeAndroidKeystore, @Nullable String zipName,
-                                          boolean includeYail,
-                                          boolean fatalError)
-      throws IOException;
+    boolean includeProjectHistory,
+    boolean includeAndroidKeystore, @Nullable String zipName,
+    boolean includeYail,
+    boolean fatalError, boolean forGallery) throws IOException;
 
 
     /**
