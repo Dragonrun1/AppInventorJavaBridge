@@ -949,8 +949,9 @@ Blockly.Yail.parseJBridgeEventBlock = function(eventBlock, isChildBlock){
 //Event Blocks are actualy the "When Blocks"
 Blockly.Yail.genJBridgeEventBlock = function(componentName, eventName, body){
   var eventMethodName = componentName + eventName;
+  var calledMethodParams = Blockly.Yail.createCalledMethodParameterString(body);
   var code = "\nif( component.equals("+componentName+") && eventName.equals(\""+eventName+"\") ){\n"
-    + eventMethodName + "();\n" //create event method
+    + eventMethodName + "(" + calledMethodParams + ");\n" //create event method
     +"return true;\n"
     +"}";
   Blockly.Yail.addComponentEventMethod(eventMethodName, body);
@@ -959,10 +960,61 @@ Blockly.Yail.genJBridgeEventBlock = function(componentName, eventName, body){
 
 //adds even methods to list of methods that will be added to code at the end of block parsing
 Blockly.Yail.addComponentEventMethod = function(eventMethodName, body){
-  var code = "\npublic void " + eventMethodName + "(){\n"
+  var stringParam = Blockly.Yail.createMethodParameterString(body);
+  var code = "\npublic void " + eventMethodName + "("+ stringParam +"){\n"
     + body
     + "\n}";
   jBridgeEventMethodsList.push(code);
+}
+
+Blockly.Yail.createMethodParameterString = function (body) {
+    var parameters = [];
+    if (body.search("component") >= 0) {
+        parameters.push("Component component");
+    }
+    if (body.search("componentName") >= 0) {
+        parameters.push("String componentName");
+    }
+    if (body.search("eventName") >= 0) {
+        parameters.push("String eventName");
+    }
+    if (body.search("params") >= 0) {
+        parameters.push("Object[] params");
+    }
+    var stringParam = "";
+    for (var i = 0; i < parameters.length; i++) {
+        stringParam += parameters[i];
+        //skip the comma at the end
+        if (i !== parameters.length-1) {
+            stringParam += ", ";
+        }
+    }
+    return stringParam;
+}
+
+Blockly.Yail.createCalledMethodParameterString = function (body) {
+    var parameters = [];
+    if (body.search("component") >= 0) {
+        parameters.push("component");
+    }
+    if (body.search("componentName") >= 0) {
+        parameters.push("componentName");
+    }
+    if (body.search("eventName") >= 0) {
+        parameters.push("eventName");
+    }
+    if (body.search("params") >= 0) {
+        parameters.push("params");
+    }
+    var stringParam = "";
+    for (var i = 0; i < parameters.length; i++) {
+        stringParam += parameters[i];
+        //skip the comma at the end
+        if (i !== parameters.length-1) {
+            stringParam += ", ";
+        }
+    }
+    return stringParam;
 }
 
 Blockly.Yail.genJBridgeEventDispatcher = function(eventName){
