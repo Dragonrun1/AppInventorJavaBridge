@@ -353,11 +353,9 @@ Blockly.Yail.genJBridgeDispatchEvent = function(){
 };
 
 Blockly.Yail.genJBridgeEventMethods = function(){
-  var code;
-  if (jBridgeEventMethodsList.length > 0) {
-      code = "\n//Event Methods\n"
-          + jBridgeEventMethodsList.join("\n")
-          + "\n";
+  var code = "";
+  if (jBridgeEventMethodsList !== undefined){
+      code =jBridgeEventMethodsList.join("\n") + "\n";
   }
   return code;
 }
