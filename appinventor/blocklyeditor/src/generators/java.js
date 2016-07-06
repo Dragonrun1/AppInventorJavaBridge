@@ -132,7 +132,8 @@ paramTypeCastMap.set("PaintColor", ["Integer.parseInt(String.valueOf(XXX))"]);
 paramTypeCastMap.set("GoToUrl", ["String.valueOf(XXX)"]);
 paramTypeCastMap.set("Duration", ["((Calendar)XXX)", "((Calendar)XXX)"]);
 paramTypeCastMap.set("TimerInterval", ["Integer.parseInt(String.valueOf(XXX))"]);
-
+paramTypeCastMap.set("MoveTo", ["(double) XXX", "XXX"]);
+paramTypeCastMap.set("Bounce", ["(int) XXX"]);
 
 var returnTypeCastMap = new Map();
 returnTypeCastMap.set("TinyDB1.GetValue,responseMessage", ["String.valueOf(XXX)"]);
