@@ -101,6 +101,7 @@ Blockly.Yail.JBRIDGE_PACKAGE_NAME = "\npackage org.appinventor; \n";
 // Blockly.Yail.JBRIDGE_IMPORTS = [];
 var jBridgeTopBlockCodesList = [];
 var jBridgeRegisterEventMap = new Object();
+var eventMethodParamListings = new Object();
 var jBridgeEventsList = [];
 var jBridgeVariableDefinitionMap = new Object();
 var jBridgeInitializationList = [];
@@ -577,7 +578,7 @@ Blockly.Yail.genJBridgeVariableGetBlock = function(paramName){
 
 //It itertates through all the parent to find the specific blockType and loads fieldName map
 Blockly.Yail.getJBridgeParentBlockFieldMap = function (block, blockType, fieldName){
-  if(block != undefined && block != null && block.type == blockType){
+  if(block != undefined && block != null && block.type == blockType){ 
       return Blockly.Yail.getFieldMap(block, fieldName);  
   }
   if(block == null || block == undefined){
@@ -699,7 +700,7 @@ Blockly.Yail.parseJBridgeMethodCallBlock = function(methodCallBlock){
 //This function identifies if the param is a global variable or functional variable 
 //and returns the appropriate name
 Blockly.Yail.getJBridgeRelativeParamName = function(paramsMap, paramName){
-  var paramIndex = paramsMap[paramName];
+    var paramIndex = paramsMap[paramName];
     if ( paramIndex == undefined ){
       //check for "global " keyword in param name and remove it
       if( paramName.substring(0,7) == "global "){
@@ -707,9 +708,15 @@ Blockly.Yail.getJBridgeRelativeParamName = function(paramsMap, paramName){
       }
       return paramName;
     }
-    return "params[" + paramIndex+"]";
+    return paramName;
 };
 
+/**
+ * Populates a map in which the "keys" are the fieldName given by the 
+ * block, and the "values" are the index of those fieldName values in the params[] java object.
+ * @param block The block containing the paramters
+ * @param fieldName the field name from the block
+ * */
 Blockly.Yail.getFieldMap = function(block, fieldName){
   var fieldMap = new Object();
   if(block.inputList != undefined){
@@ -719,6 +726,7 @@ Blockly.Yail.getFieldMap = function(block, fieldName){
         for (var y = 0, field; field = input.fieldRow[y]; y++){
           var fieldName = field.getText();
           if (fieldName.replace(/ /g,'').length > 0){
+              eventMethodParamListings[fieldName] = fieldIndex;
               fieldMap[fieldName] = fieldIndex;
               fieldIndex ++;
           }
@@ -929,6 +937,8 @@ Blockly.Yail.parseJBridgeEventBlock = function(eventBlock, isChildBlock){
   var componentName = eventBlock.instanceName;
   var eventName = eventBlock.eventName;
   var body = "";
+  //reset the event method params from the last event method generation
+  eventMethodParamListings = new Object();
   for (var x = 0, childBlock; childBlock = eventBlock.childBlocks_[x]; x++) {
       body = body 
              + "\n"
@@ -967,6 +977,12 @@ Blockly.Yail.addComponentEventMethod = function(eventMethodName, body){
   jBridgeEventMethodsList.push(code);
 }
 
+/**
+ * This method searches the body of the generated method for the dispatch event
+ * parameters. If any parameters are used within the method then they must be passed in
+ * as the method's parameter for use in the local scope
+ * @param body The body of the generated event method
+ * */
 Blockly.Yail.createMethodParameterString = function (body) {
     var parameters = [];
     if (body.search("component") >= 0) {
@@ -978,8 +994,10 @@ Blockly.Yail.createMethodParameterString = function (body) {
     if (body.search("eventName") >= 0) {
         parameters.push("String eventName");
     }
-    if (body.search("params") >= 0) {
-        parameters.push("Object[] params");
+    for (var paramName in eventMethodParamListings){
+        if (body.search(paramName) >= 0){
+            parameters.push("Object " + paramName);
+        }
     }
     var stringParam = "";
     for (var i = 0; i < parameters.length; i++) {
@@ -1003,8 +1021,10 @@ Blockly.Yail.createCalledMethodParameterString = function (body) {
     if (body.search("eventName") >= 0) {
         parameters.push("eventName");
     }
-    if (body.search("params") >= 0) {
-        parameters.push("params");
+    for (var paramName in eventMethodParamListings){
+        if (body.search(paramName) >= 0){
+            parameters.push("params[" + eventMethodParamListings[paramName] + "]");
+        }
     }
     var stringParam = "";
     for (var i = 0; i < parameters.length; i++) {
