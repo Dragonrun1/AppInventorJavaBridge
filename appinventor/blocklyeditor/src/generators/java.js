@@ -291,7 +291,7 @@ Blockly.Yail.parseJBridgeJsonComopnents = function (componentJson, rootName){
         }
         //for properties that require qoutes ""
         if(JBRIDGE_JSON_TEXT_PROPERTIES.indexOf(key) > -1){
-          printableValue = "\""+ printableValue +"\"";
+          printableValue = "\""+ printableValue.replace(/"/gi, "\'") +"\"";
         }
         jBridgeInitializationList.push(Blockly.Yail.genJBridgeJsonComopnents(name, printableKey, printableValue));
       }
@@ -1506,7 +1506,7 @@ Blockly.Yail.parseJBridgeTextCompareBlock = function(textBlock){
 };
 
 Blockly.Yail.genJBridgeTextBlock = function(text){
-  var code = "\""+text+"\"";
+  var code = "\""+text.replace(/"/gi, "\'")+"\"";
   return code;
 };
 
