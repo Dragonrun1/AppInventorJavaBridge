@@ -135,6 +135,18 @@ paramTypeCastMap.set("TimerInterval", ["Integer.parseInt(String.valueOf(XXX))"])
 paramTypeCastMap.set("MoveTo", ["(double) XXX", "XXX"]);
 paramTypeCastMap.set("Bounce", ["(int) XXX"]);
 
+//Map of accepted Screen Properties and castings
+var screenPropertyCastMap = new Map();
+screenPropertyCastMap.set("Title", ["\"XXX\""]);
+screenPropertyCastMap.set("AboutScreen", ["\"XXX\""]);
+screenPropertyCastMap.set("AlignHorizontal", ["XXX"]);
+screenPropertyCastMap.set("AlignVertical", ["XXX"]);
+screenPropertyCastMap.set("AppName", ["\"XXX\""]);
+screenPropertyCastMap.set("BackgroundColor", ["Integer.parseInt(\"XXX\", 16)"]);
+screenPropertyCastMap.set("BackgroundImage", ["\"XXX\""]);
+screenPropertyCastMap.set("Icon", ["\"XXX\""]);
+screenPropertyCastMap.set("Scrollable", ["XXX"]);
+
 var returnTypeCastMap = new Map();
 returnTypeCastMap.set("TinyDB1.GetValue,responseMessage", ["String.valueOf(XXX)"]);
 returnTypeCastMap.set("TinyDB1.GetValue,members", ["(ArrayList<?>)XXX"]);
@@ -193,17 +205,19 @@ Blockly.Yail.initAllVariables = function(){
 };
 
 Blockly.Yail.parseJBridgeJsonData = function(jsonObject){
-  var property = jsonObject.Properties;
-  var title = property.Title;
-  if (title != undefined){
-    var icon = property.Icon;
-    jBridgeInitializationList.push("this.Title(\""+title +"\");");
-  }if(icon != undefined){
-    jBridgeInitializationList.push("this.Icon(\""+icon +"\");");
+  var jsonProperties = jsonObject.Properties;
+  //iterating over the screen component properties
+  for (var prop in jsonProperties){
+    if (jsonProperties[prop] !== undefined){
+      if (Blockly.Yail.hasTypeCastKey(prop, screenPropertyCastMap)){
+        var castedValue = Blockly.Yail.TypeCastOneValue(prop, jsonProperties[prop] ,screenPropertyCastMap);
+        jBridgeInitializationList.push("this." + prop  + "(" + castedValue +");");
+      }
+    }
   }
   //parsing the lower level components (not including the "Screen" component)
-  for(var i=0;i<property.$Components.length;i++){
-    Blockly.Yail.parseJBridgeJsonComopnents(property.$Components[i], "this");
+  for(var i=0;i<jsonProperties.$Components.length;i++){
+    Blockly.Yail.parseJBridgeJsonComopnents(jsonProperties.$Components[i], "this");
   }
 };
 
@@ -252,6 +266,7 @@ Blockly.Yail.parseJBridgeJsonComopnents = function (componentJson, rootName){
         if (Blockly.Yail.isNumber(printableValue)){
             printableValue = Math.round(printableValue);
         }
+        //casting the color to HEX
         if(componentJson[key].substring(0,2) == "&H" && componentJson[key].length == 10){
           printableValue ="0x"+componentJson[key].substring(2);
         }
@@ -749,7 +764,7 @@ Blockly.Yail.checkInputName = function(block, inputName){
 
 Blockly.Yail.hasTypeCastKey = function(key, typeCastMap){
   if(typeCastMap.has(key)){
-  return true;
+    return true;
   }
   return false;
 };
@@ -791,11 +806,18 @@ Blockly.Yail.TypeCastOneValue = function(key, value, typeCastMap){
   var result = "";
   if (v != null){
     if(Blockly.Yail.isNumber(value)){
-      //Java bridge library requires ints over floats
+      //Java bridge library requires ints/doubles over floats
       result = Math.round(value);
     }else{
+      if (value === "True" || value == "False"){
+          value = value.toLowerCase();
+      }
       result = v[0].replace("XXX", value);
     }
+  }
+  //casting the color to HEX
+  if(value.substring(0,2) === "&H" && value.length === 10){
+    result = "0x" + value.substring(2);
   }
   return result;
 };
