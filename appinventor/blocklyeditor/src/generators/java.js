@@ -161,6 +161,7 @@ returnTypeCastMap.set("isbn", ["String.valueOf(XXX)"]);
 var listTypeCastMap = new Map();
 listTypeCastMap.set("bookItem", ["((ArrayList<?>)XXX)"]);
 /*** Type cast Map end ***/
+
 /**
  * Generate the Yail code for this blocks workspace, given its associated form specification.
  * 
@@ -178,7 +179,13 @@ Blockly.Java.getFormJava = function(formJson, packageName, forRepl) {
   return prityPrintCode;
 };
 
-
+/**
+ * Retrieves JSON string and imports for project.
+ *
+ * @param {Sting} JSON topBlocks from the Blockly mainWorkspace
+ * @param {String} jsonObject
+ * @returns {String} the generated code
+ */
 Blockly.Yail.genJBridgeCode = function(topBlocks, jsonObject){
   Blockly.Yail.initAllVariables();
   Blockly.Yail.parseJBridgeJsonData(jsonObject);
@@ -192,6 +199,9 @@ Blockly.Yail.genJBridgeCode = function(topBlocks, jsonObject){
   return code;  
 };
 
+/**
+ * Instantiates variables needed for current java generation.
+ */
 Blockly.Yail.initAllVariables = function(){
     jBridgeTopBlockCodesList = [];
     jBridgeRegisterEventMap = new Object();
@@ -204,6 +214,11 @@ Blockly.Yail.initAllVariables = function(){
     jBridgeEventMethodsList = [];
 };
 
+/**
+ * Retrieves JSON string and imports for project.
+ *
+ * @param {String} JSON Object that contains app inventor blocks
+ */
 Blockly.Yail.parseJBridgeJsonData = function(jsonObject){
   var jsonProperties = jsonObject.Properties;
   //iterating over the screen component properties
@@ -299,7 +314,8 @@ var code = componentName
            +");"
 return code;
 };
-
+/*
+*/
 Blockly.Yail.parseComponentDefinition = function(jBridgeVariableDefinitionMap){
   var code = "";
   for (var key in jBridgeVariableDefinitionMap) {
@@ -311,6 +327,12 @@ Blockly.Yail.parseComponentDefinition = function(jBridgeVariableDefinitionMap){
   return code;
 };
 
+ /**
+  *  Generates the corresponding code for each component as "private [type] [name] ;
+  *
+  * @params{String}
+  * @params{String}
+  */
 Blockly.Yail.genComponentDefinition = function(type, name){
   var code = "private "
              + type
@@ -319,6 +341,7 @@ Blockly.Yail.genComponentDefinition = function(type, name){
              +";";
   return code;
 };
+
 
 Blockly.Yail.genComponentImport = function(jBridgeImportsMap){
   var code = "";
@@ -330,6 +353,13 @@ Blockly.Yail.genComponentImport = function(jBridgeImportsMap){
   return code;
 };
 
+/**
+ * Generates public class declarations, event handlers, and their corresponding public methods.
+ *
+ * @param {String} topBlocks JSON string describing the contents of the form. This is the JSON
+ * content from the ".scm" file for this form.
+ * @returns {String} the generated code if there were no errors.
+ */
 Blockly.Yail.genJBridgeClass =  function (topBlocks){
   var code = "\npublic class Screen1 extends Form implements HandlesEventDispatching { \n"
     + Blockly.Yail.parseComponentDefinition(jBridgeVariableDefinitionMap)
@@ -341,6 +371,14 @@ Blockly.Yail.genJBridgeClass =  function (topBlocks){
   return code;
 };
 
+/**
+ * Generates public class declarations, event handlers, and their corresponding public methods.
+ *
+ * @param {String} topBlocks JSON string describing the contents of the form. This is the JSON
+ * content from the ".scm" file for this form.
+ * @returns {String} the generated code if there were no errors.
+ */
+
 Blockly.Yail.genJBridgeEventsRegister = function(jBridgeRegisterEventMap){
   var registeredEvents = []
   for(var key in jBridgeRegisterEventMap){
@@ -349,6 +387,11 @@ Blockly.Yail.genJBridgeEventsRegister = function(jBridgeRegisterEventMap){
   return registeredEvents.join("\n");
 };
 
+/**
+ * Generates protected void $define method
+ *
+ * @returns {String} the generated code if there were no errors.
+ */
 Blockly.Yail.genJBridgeDefineMethod =  function (){
  var code =  "\nprotected void $define() { \n"
   + jBridgeInitializationList.join("\n")
@@ -358,6 +401,12 @@ Blockly.Yail.genJBridgeDefineMethod =  function (){
     return code;
 };
 
+
+/**
+ * Generates parameters for each method in project
+ *
+ * @returns {String} the generated code if there were no errors.
+ */
 Blockly.Yail.genJBridgeDispatchEvent = function(){
   var code = "\npublic boolean dispatchEvent(Component component, String componentName, String eventName, Object[] params){\n"
   + jBridgeTopBlockCodesList.join("\n")
@@ -395,6 +444,15 @@ Blockly.Yail.getJBridgeInstanceName = function(block){
   return block.instanceName;
 };
 
+/**
+ * Parses the event block and calls another parse method that corresponds to their block
+ * category (i.e. Colors, Variables, etc.)
+ *
+ * @param {String} topBlocks JSON string describing the contents of the form. This is the JSON
+ * content from the ".scm" file for this form.
+ * @returns {String} the generated code if there were no errors.
+ */
+
 Blockly.Yail.parseBlock = function (block){
   jBridgeIsIndividualBlock = false;
   var code = "";
@@ -420,6 +478,7 @@ Blockly.Yail.parseBlock = function (block){
   }
   return code;
 }
+
 Blockly.Yail.parseJBridgeControlBlocks = function(controlBlock){
   var code = "";
   var controlType = controlBlock.type;
@@ -511,6 +570,7 @@ Blockly.Yail.genJBridgeControlForEachBlock = function(forList, forItem, forState
        + "\n} \n";
   return code;
 };
+
 
 Blockly.Yail.genJBridgeControlIfBlock = function(condition, statement){
   var code = "";
@@ -711,8 +771,17 @@ Blockly.Yail.parseJBridgeMethodCallBlock = function(methodCallBlock){
   return code;
 };
 
-//This function identifies if the param is a global variable or functional variable 
-//and returns the appropriate name
+
+
+
+/**
+ *This function identifies if the param is a global variable or functional variable
+ *and returns the appropriate name
+ *
+ * @param {String} paramsMap
+ * @param {String} paramName is the name of the parameter
+ * @returns {String} params[index]
+ */
 Blockly.Yail.getJBridgeRelativeParamName = function(paramsMap, paramName){
     var paramIndex = paramsMap[paramName];
     if ( paramIndex == undefined ){
@@ -906,10 +975,14 @@ Blockly.Yail.parseJBridgeSetBlock = function(setBlock){
         value = value + genCode;
       }
   }
-
+  //If value is not already a string, apply String.valueOf(value)
   if(JBRIDGE_COMPONENT_TEXT_PROPERTIES.indexOf(property.toLowerCase()) > -1){
-    value = "String.valueOf(" + value + ")";
+   //isChildBlock = typeof isChildBlock !== 'undefined' ? isChildBlock : false;
+    if (typeof value !== 'string'){
+        value = "String.valueOf(" + value + ")";
+        }
   }
+
 
   if((componentName.slice(0, ListPicker.length) == ListPicker) && (property == "Elements")){
     if(!jBridgeImportsMap[YailList]){
@@ -952,6 +1025,13 @@ Blockly.Yail.genJBridgeSetBlock = function(componentName, property, value){
 // };
 
 
+/**
+ * Parses each event block
+ *
+ * @param {String} topBlocks JSON string describing the contents of the form. This is the JSON
+ * content from the ".scm" file for this form.
+ * @returns {String} the generated code if there were no errors.
+ */
 Blockly.Yail.parseJBridgeEventBlock = function(eventBlock, isChildBlock){
   var code = "";
   isChildBlock = typeof isChildBlock !== 'undefined' ? isChildBlock : false;
@@ -977,6 +1057,15 @@ Blockly.Yail.parseJBridgeEventBlock = function(eventBlock, isChildBlock){
   return code;
 };
 
+/**
+ * Generates the listener within the dispatchEvent method for each component that is used and
+ * their corresponding parameters.
+ *
+ * @param {String} componentName is the name of the component passed in
+ * @param {String} eventName is the name of the event being currently handled
+ * @param {String} body
+ * @returns {String} the generated code if there were no errors.
+ */
 //Event Blocks are actualy the "When Blocks"
 Blockly.Yail.genJBridgeEventBlock = function(componentName, eventName, body){
   var eventMethodName = componentName + eventName;
@@ -989,7 +1078,13 @@ Blockly.Yail.genJBridgeEventBlock = function(componentName, eventName, body){
   return code;
 };
 
-//adds even methods to list of methods that will be added to code at the end of block parsing
+/**
+ * Adds method names to list of methods that will be added to code at the end of block parsing
+ *
+ * @param {String} eventMethodName is the event that is being passed in
+ * @param {String} body represents the entire code body within the project
+ * @returns {String} the generated code if there were no errors.
+ */
 Blockly.Yail.addComponentEventMethod = function(eventMethodName, body){
   var stringParam = Blockly.Yail.createMethodParameterString(body);
   var code = "\npublic void " + eventMethodName + "("+ stringParam +"){\n"
@@ -998,11 +1093,13 @@ Blockly.Yail.addComponentEventMethod = function(eventMethodName, body){
   jBridgeEventMethodsList.push(code);
 }
 
+
 /**
  * This method searches the body of the generated method for the dispatch event
  * parameters. If any parameters are used within the method then they must be passed in
  * as the method's parameter for use in the local scope
  * @param body The body of the generated event method
+ * @return .....
  * */
 Blockly.Yail.createMethodParameterString = function (body) {
     var parameters = [];
@@ -1031,6 +1128,12 @@ Blockly.Yail.createMethodParameterString = function (body) {
     return stringParam;
 }
 
+/**
+ * Generates parameters for each method name within dispatchEvent
+ *
+ * @param {String} body that contains the entire code generation
+ * @returns {String} the generated code if there were no errors.
+ */
 Blockly.Yail.createCalledMethodParameterString = function (body) {
     var parameters = [];
     if (body.search("component") >= 0) {
@@ -1310,6 +1413,13 @@ Blockly.Yail.parseJBridgeProcDefNoReturn = function(proceduresBlock){
   return code;
 };
 
+/**
+ * Generates parameters for each method
+ *
+ * @param {String} topBlocks JSON string describing the contents of the form. This is the JSON
+ * content from the ".scm" file for this form.
+ * @returns {String} the generated code if there were no errors.
+ */
 Blockly.Yail.genJBridgeProcDefNoReturn = function (procedureName, procedureParams, body){
   var code = "\npublic void " 
        + procedureName
@@ -1403,12 +1513,24 @@ Blockly.Yail.genJBridgeTextBlock = function(text){
 
 Blockly.Yail.genJBridgeTextJoinBlock = function(joinList){
   var code = "";
+
   for (var x = 0; x < joinList.length; x++){
+    //if its the last item of joinList
     if(x == (joinList.length - 1)){
-      code = code + "(" + joinList[x] + ")" + ".toString()";
+        if(typeof x !== 'string'){
+            code = code + "(String.valueOf(" + joinList[x] + "))";
+        }
+        else{
+            code = code + joinList[x]+")";
+          }
     }
     else{
-      code = code + "(" + joinList[x] + ")" + ".toString()" + " + ";
+        if(typeof x !== 'string'){
+            code = code + "(String.valueOf(" + joinList[x] + "))" + "+";
+         }
+        else{
+            code = code + joinList[x] + " + ";
+          }
     }
   }
   return code;
@@ -1462,6 +1584,7 @@ Blockly.Yail.parseJBridgeListAddItemBlock = function(listBlock){
   return code;
 };
 
+
 Blockly.Yail.parseJBridgeListsCreateWithBlock = function(listBlock){
    var code = "";
    var childType = "String";
@@ -1494,6 +1617,13 @@ Blockly.Yail.parseJBridgeListsCreateWithBlock = function(listBlock){
    return code;
 };
 
+/**
+  * Parses blocks to retrieve items from list
+  * in .genJBridgeListSelectItemBlock
+  *
+  * @params {String} listBlock
+  * @returns {String} code generated if no errors from .genJBridgeListSelectItemBlock
+  */
 Blockly.Yail.parseJBridgeListSelectItemBlock = function(listBlock){
   var listName = Blockly.Yail.parseBlock(listBlock.childBlocks_[0]);
   if(Blockly.Yail.hasTypeCastKey(listName, listTypeCastMap)){
@@ -1503,21 +1633,49 @@ Blockly.Yail.parseJBridgeListSelectItemBlock = function(listBlock){
   return Blockly.Yail.genJBridgeListSelectItemBlock(listName, index);  
 };
 
+/**
+  * Parses blocks to then generate java code list.contains(object)
+  * in .getJBridgeListContainsBlock
+  *
+  * @params {String} listBlock
+  * @returns {String} code generated if no errors from .getJBridgeListContainsBlock
+  */
 Blockly.Yail.parseJBridgeListContainsBlock = function(listBlock){
   var object = Blockly.Yail.parseBlock(listBlock.childBlocks_[0]);
   var listName = Blockly.Yail.parseBlock(listBlock.childBlocks_[1]);
   return Blockly.Yail.getJBridgeListContainsBlock(object, listName);
 };
 
+/**
+  * Generates java code list.get(index-1) from parsed blocks
+  *
+  * @params {String} listName
+  * @params {String} index
+  * @returns {String} code generated if no errors
+  */
 Blockly.Yail.genJBridgeListSelectItemBlock = function(listName, index){
   var code = listName + ".get(" + index + " - 1)";
   return code;
 };
+
+/**
+  * Generates java code for a new ArrayList
+  *
+  * @params {String} type of ArrayList instantiated
+  * @returns {String} code generated if no errors
+  */
 Blockly.Yail.genJBridgeNewList = function(type){
   var code = "new ArrayList<"+type+">();\n";
   return code;
 };
 
+/**
+  *  Generates java code list.add(object) from parsed blocks
+  *
+  * @params {String} listName
+  * @params {String} addItem
+  * @returns {String} code generated if no errors
+  */
 Blockly.Yail.genJBridgeListsAddItemBlock = function(listName, addItem){
    var code = listName
             + ".add(" 
@@ -1526,6 +1684,13 @@ Blockly.Yail.genJBridgeListsAddItemBlock = function(listName, addItem){
    return code;
 };
 
+/**
+  *  Generates java code list.contains(object) from parsed blocks
+  *
+  * @params {String} object
+  * @params {String} listName
+  * @returns {String} code generated if no errors
+  */
 Blockly.Yail.getJBridgeListContainsBlock = function(object, listName){
   var code = listName 
            + ".contains("
@@ -1534,6 +1699,12 @@ Blockly.Yail.getJBridgeListContainsBlock = function(object, listName){
   return code; 
 };
 
+/**
+  *  Parses math blocks and determines string or number comparison
+  *
+  * @params {String} mathBlock
+  * @returns {String} code generated if no errors, as a reult of .genJBridgeMathCompare
+  */
 Blockly.Yail.parseJBridgeMathCompare = function (mathBlock){
   var operator = mathBlock.getFieldValue("OP");
   var leftValue = Blockly.Yail.parseBlock(mathBlock.childBlocks_[0]);
@@ -1545,12 +1716,25 @@ Blockly.Yail.parseJBridgeMathCompare = function (mathBlock){
   return Blockly.Yail.genJBridgeMathCompare(leftValue, rightValue, op);
 };
 
+/**
+  *  Parses math blocks for genJBridgeMathAtan2 function
+  *
+  * @params {String} mathBlock
+  * @returns {String} code generated if no errors, as a reult of .genJBridgeMathAtan2
+  */
 Blockly.Yail.parseJBridgeMathAtan2 = function (mathBlock){
   var leftValue = Blockly.Yail.parseBlock(mathBlock.childBlocks_[0]);
   var rightValue = Blockly.Yail.parseBlock(mathBlock.childBlocks_[1]);
   return Blockly.Yail.genJBridgeMathAtan2(leftValue, rightValue);
 };
 
+/**
+  *  Generates java code for tan function
+  *
+  * @params {String} leftValue
+  * @params {String} rightValue
+  * @returns {String} code generated if no errors
+  */
 Blockly.Yail.genJBridgeMathAtan2 = function (leftValue, rightValue){
   var code = "Math.toDegrees(Math.atan2(" 
              + leftValue
@@ -1560,6 +1744,14 @@ Blockly.Yail.genJBridgeMathAtan2 = function (leftValue, rightValue){
   return code;
 };
 
+/**
+  *  Generates java code for comparing 2 strings' values
+  *
+  * @params {String} leftValue
+  * @params {String} rightValue
+  * @params {String} operator
+  * @returns {String} code generated if no errors
+  */
 Blockly.Yail.genJBridgeStringEqualsCompare = function (leftValue, rightValue, operator){
   var code = "(" 
              + leftValue
@@ -1569,6 +1761,14 @@ Blockly.Yail.genJBridgeStringEqualsCompare = function (leftValue, rightValue, op
   return code;
 };
 
+/**
+  *  Generates java code for comparing 2 number values
+  *
+  * @params {String} leftValue
+  * @params {String} rightValue
+  * @params {String} operator
+  * @returns {String} code generated if no errors
+  */
 Blockly.Yail.genJBridgeMathCompare = function (leftValue, rightValue, operator){
   var code = leftValue
              + operator
@@ -1576,6 +1776,12 @@ Blockly.Yail.genJBridgeMathCompare = function (leftValue, rightValue, operator){
   return code;
 };
 
+/**
+  *  Translates JBridge math operator from parsed blocks
+  *
+  * @params {String} operator
+  * @returns {String} returns java-translated version of desired operator
+  */
 Blockly.Yail.getJBridgeOperator = function(operator){
   var op = operator;
   if(operator == "GT"){
@@ -1599,16 +1805,34 @@ Blockly.Yail.getJBridgeOperator = function(operator){
   return op;
 };
 
+ /**
+  *  Parses the List Length Block later generate listName.size()
+  *
+  * @params {String} listName
+  * @returns {String} code generated if no errors, as a result of .genJBridgeListLengthBlock
+  */
 Blockly.Yail.parseJBridgeListLengthBlock = function(listBlock){
   var listName = Blockly.Yail.parseBlock(listBlock.childBlocks_[0]);
   return Blockly.Yail.genJBridgeListLengthBlock(listName);
 };
 
+ /**
+  *  Generates code list.size()
+  *
+  * @params {String} listName
+  * @returns {String} code generated if no errors
+  */
 Blockly.Yail.genJBridgeListLengthBlock = function(listName){
   var code = listName + ".size()"
   return code;
 };
 
+ /**
+  *  Parses math logic block and conducts an evaluation using left
+  *
+  * @params {String} logicBlock from blocks
+  * @returns {String} code generated if no errors, called from .genJBridgeLogicOperationBlock
+  */
 Blockly.Yail.parseJBridgeLogicOperationBlock = function(logicBlock){
   var operator = logicBlock.getFieldValue("OP");
   var leftValue = Blockly.Yail.parseBlock(logicBlock.childBlocks_[0]);
@@ -1617,6 +1841,14 @@ Blockly.Yail.parseJBridgeLogicOperationBlock = function(logicBlock){
 return Blockly.Yail.genJBridgeLogicOperationBlock(leftValue, rightValue, Blockly.Yail.getJBridgeOperator(operator));
 };
 
+/**
+ * Applies appropriate operator (i.e. addition, subtraction, etc.) to two values in java
+ *
+ * @params{String} leftValue
+ * @params{String} rightValue
+ * @params{String} operator
+ * @return{String} code that is generated
+ */
 Blockly.Yail.genJBridgeLogicOperationBlock = function (leftValue, rightValue, operator){
 
   var code = leftValue
@@ -1637,6 +1869,13 @@ Blockly.Yail.genJBridgeComponentComponentBlock = function(name){
   return code;
 };
 
+ /**
+  *  Parses math random block and checks for correct imports. If none
+  *  exist, they are added
+  *
+  * @params {String} mathBlock to parse
+  * @returns {String} code generated if no errors
+  */
 Blockly.Yail.parseJBridgeMathRandomFloatBlock = function(mathBlock){
     var name = "random";
     if(!jBridgeVariableDefinitionMap[name]){
@@ -1647,11 +1886,23 @@ Blockly.Yail.parseJBridgeMathRandomFloatBlock = function(mathBlock){
     return Blockly.Yail.genJBridgeMathRandomFloatBlock();
 };
 
+ /**
+  *  Generates the random.nextFloat components in JBridge format
+  *
+  * @returns {String} code generated if no errors
+  */
 Blockly.Yail.genJBridgeMathRandomFloatBlock = function(){
     var code = "(random.nextFloat())"
     return code;
 };
 
+
+ /**
+  *  Parses Java Bridge Text Blocks and changes their case according to corresponding operator
+  *
+  * @param {String} textBlock
+  * @returns {String} code generated if no errors, as a result of genJBridgeTextChangeCaseBlock
+  */
 Blockly.Yail.parseJBridgeTextChangeCaseBlock = function(textBlock){
     var operator = textBlock.getFieldValue("OP");
     var op = "toLowerCase()";
@@ -1665,6 +1916,13 @@ Blockly.Yail.parseJBridgeTextChangeCaseBlock = function(textBlock){
     return Blockly.Yail.genJBridgeTextChangeCaseBlock(genCode, op);
 };
 
+ /**
+  *  Generates JBridgeText for changing the case of text
+  *
+  * @param {String} inputText
+  * @params{String} changeCase
+  * @return{String} code generated if no errors
+  */
 Blockly.Yail.genJBridgeTextChangeCaseBlock = function(inputText, changeCase){
     var code = "String.valueOf("
               + inputText 
@@ -1673,6 +1931,15 @@ Blockly.Yail.genJBridgeTextChangeCaseBlock = function(inputText, changeCase){
     return code;
 };
 
+ /**
+  *  Adds the permissions and intents to the AndroidManifest.xml file
+  *
+  * @param {String} formJson JSON string describing the contents of the form. This is the JSON
+  *    content from the ".scm" file for this form.
+  * @params{String} packageName the name of the package (to put in the define-form call)
+  * @params{String} forRepl  true if the code is being generated for the REPL, false if for an apk
+  * @return{String} code generated if no errors
+  */
 Blockly.Yail.parseJBridgeListIsListBlock = function(listBlock){
   var genCode = ""
   for(var x = 0, childBlock; childBlock = listBlock.childBlocks_[x]; x++){
@@ -1690,6 +1957,12 @@ Blockly.Yail.genJBridgeListIsListBlock = function(genCode){
   return code;
 };
 
+ /**
+  *  Allows more readable JBridge code using indentation using
+  * curly brackets as indentation queues
+  * @param {String} javaCode generated
+  * @return{String} Prity code generated if no errors
+  */
 Blockly.Java.prityPrintJBridgeCode = function(javaCode){
   var stack=new Array();
   var lines = javaCode.split('\n');
@@ -1713,14 +1986,30 @@ Blockly.Java.prityPrintJBridgeCode = function(javaCode){
   return prityPrint.join("\n");
 };
 
-Blockly.Java.prityPrintIndentationJBridge = function(indendLength){
+
+ /**
+  *  Adds the permissions and intents to the AndroidManifest.xml file
+  *
+  * @param {String} indentLength
+  * @return{String} indentation for corresponding method structure
+  */
+Blockly.Java.prityPrintIndentationJBridge = function(indentLength){
   var indentation = "";
-  for(var j=0; j<indendLength; j++){
+  for(var j=0; j<indentLength; j++){
     indentation += "  ";
   }
   return indentation;
 };
 
+ /**
+  *  Adds the permissions and intents to the AndroidManifest.xml file
+  *
+  * @param {String} formJson JSON string describing the contents of the form. This is the JSON
+  *    content from the ".scm" file for this form.
+  * @params{String} packageName the name of the package (to put in the define-form call)
+  * @params{String} forRepl  true if the code is being generated for the REPL, false if for an apk
+  * @return{String} code generated if no errors
+  */
 Blockly.Java.getFormMainfest = function(formJson, packageName, forRepl) {
     Blockly.Java.initAndroidPermisionAndIntent();
     var jsonObject = JSON.parse(formJson); 
@@ -1738,6 +2027,10 @@ Blockly.Java.getFormMainfest = function(formJson, packageName, forRepl) {
     
 };
 
+ /**
+  *  Defines the permissions and intents strings
+  *
+  */
 Blockly.Java.initAndroidPermisionAndIntent = function(){
     //This includes method Names or Type
     jBridgeAndroidPermisions["receive_sms"] = "<uses-permission android:name=\"android.permission.RECEIVE_SMS\"/>\r\n\r\n    ";
@@ -1763,6 +2056,11 @@ Blockly.Java.initAndroidPermisionAndIntent = function(){
                             + "</receiver>\r\n\r\n    ";
 };
 
+ /**
+  *  Adds the permissions and intents to the AndroidManifest.xml file
+  *
+  * @params name
+  */
 Blockly.Java.addPermisionsAndIntents = function(name){
   name = name.toLowerCase();
   if(name in jBridgeMethodAndTypeToPermisions){
@@ -1776,6 +2074,13 @@ Blockly.Java.addPermisionsAndIntents = function(name){
   }
 };
 
+/**
+ * Generates android manifest string from android permissions and android intents
+ *
+ * @params{String} androidPermissions
+ * @params{String} androidIntents
+ * @return{String} code that is generated
+ */
 Blockly.Java.genManifestString = function(androidPermisions, androidIntents){
   var mainfestString = "<?xml version=\"1.0\" encoding=\"utf-8\"?>\r\n\r\n"
                             + "<manifest xmlns:android=\"http://schemas.android.com/apk/res/android\"\r\n\r\n    package=\"org.appinventor\"\r\n\r\n    android:versionCode=\"1\"\r\n\r\n    android:versionName=\"1.0\" >\r\n\r\n"
