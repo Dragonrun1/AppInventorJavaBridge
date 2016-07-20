@@ -101,6 +101,7 @@ Blockly.Yail.JBRIDGE_PACKAGE_NAME = "\npackage org.appinventor; \n";
 // Blockly.Yail.JBRIDGE_IMPORTS = [];
 var jBridgeTopBlockCodesList = [];
 var jBridgeRegisterEventMap = new Object();
+var eventMethodParamListings = new Object();
 var jBridgeEventsList = [];
 var jBridgeVariableDefinitionMap = new Object();
 var jBridgeInitializationList = [];
@@ -131,7 +132,20 @@ paramTypeCastMap.set("PaintColor", ["Integer.parseInt(String.valueOf(XXX))"]);
 paramTypeCastMap.set("GoToUrl", ["String.valueOf(XXX)"]);
 paramTypeCastMap.set("Duration", ["((Calendar)XXX)", "((Calendar)XXX)"]);
 paramTypeCastMap.set("TimerInterval", ["Integer.parseInt(String.valueOf(XXX))"]);
+paramTypeCastMap.set("MoveTo", ["(double) XXX", "XXX"]);
+paramTypeCastMap.set("Bounce", ["(int) XXX"]);
 
+//Map of accepted Screen Properties and castings
+var screenPropertyCastMap = new Map();
+screenPropertyCastMap.set("Title", ["\"XXX\""]);
+screenPropertyCastMap.set("AboutScreen", ["\"XXX\""]);
+screenPropertyCastMap.set("AlignHorizontal", ["XXX"]);
+screenPropertyCastMap.set("AlignVertical", ["XXX"]);
+screenPropertyCastMap.set("AppName", ["\"XXX\""]);
+screenPropertyCastMap.set("BackgroundColor", ["Integer.parseInt(\"XXX\", 16)"]);
+screenPropertyCastMap.set("BackgroundImage", ["\"XXX\""]);
+screenPropertyCastMap.set("Icon", ["\"XXX\""]);
+screenPropertyCastMap.set("Scrollable", ["XXX"]);
 
 var returnTypeCastMap = new Map();
 returnTypeCastMap.set("TinyDB1.GetValue,responseMessage", ["String.valueOf(XXX)"]);
@@ -206,17 +220,19 @@ Blockly.Yail.initAllVariables = function(){
  * @param {String} JSON Object that contains app inventor blocks
  */
 Blockly.Yail.parseJBridgeJsonData = function(jsonObject){
-  var property = jsonObject.Properties;
-  var title = property.Title;
-  if (title != undefined){
-    var icon = property.Icon;
-    jBridgeInitializationList.push("this.Title(\""+title +"\");");
-  }if(icon != undefined){
-    jBridgeInitializationList.push("this.Icon(\""+icon +"\");");
+  var jsonProperties = jsonObject.Properties;
+  //iterating over the screen component properties
+  for (var prop in jsonProperties){
+    if (jsonProperties[prop] !== undefined){
+      if (Blockly.Yail.hasTypeCastKey(prop, screenPropertyCastMap)){
+        var castedValue = Blockly.Yail.TypeCastOneValue(prop, jsonProperties[prop] ,screenPropertyCastMap);
+        jBridgeInitializationList.push("this." + prop  + "(" + castedValue +");");
+      }
+    }
   }
   //parsing the lower level components (not including the "Screen" component)
-  for(var i=0;i<property.$Components.length;i++){
-    Blockly.Yail.parseJBridgeJsonComopnents(property.$Components[i], "this");
+  for(var i=0;i<jsonProperties.$Components.length;i++){
+    Blockly.Yail.parseJBridgeJsonComopnents(jsonProperties.$Components[i], "this");
   }
 };
 
@@ -265,6 +281,7 @@ Blockly.Yail.parseJBridgeJsonComopnents = function (componentJson, rootName){
         if (Blockly.Yail.isNumber(printableValue)){
             printableValue = Math.round(printableValue);
         }
+        //casting the color to HEX
         if(componentJson[key].substring(0,2) == "&H" && componentJson[key].length == 10){
           printableValue ="0x"+componentJson[key].substring(2);
         }
@@ -400,11 +417,9 @@ Blockly.Yail.genJBridgeDispatchEvent = function(){
 };
 
 Blockly.Yail.genJBridgeEventMethods = function(){
-  var code;
-  if (jBridgeEventMethodsList.length > 0) {
-      code = "\n//Event Methods\n"
-          + jBridgeEventMethodsList.join("\n")
-          + "\n";
+  var code = "";
+  if (jBridgeEventMethodsList !== undefined){
+      code =jBridgeEventMethodsList.join("\n") + "\n";
   }
   return code;
 }
@@ -637,7 +652,7 @@ Blockly.Yail.genJBridgeVariableGetBlock = function(paramName){
 
 //It itertates through all the parent to find the specific blockType and loads fieldName map
 Blockly.Yail.getJBridgeParentBlockFieldMap = function (block, blockType, fieldName){
-  if(block != undefined && block != null && block.type == blockType){
+  if(block != undefined && block != null && block.type == blockType){ 
       return Blockly.Yail.getFieldMap(block, fieldName);  
   }
   if(block == null || block == undefined){
@@ -768,7 +783,7 @@ Blockly.Yail.parseJBridgeMethodCallBlock = function(methodCallBlock){
  * @returns {String} params[index]
  */
 Blockly.Yail.getJBridgeRelativeParamName = function(paramsMap, paramName){
-  var paramIndex = paramsMap[paramName];
+    var paramIndex = paramsMap[paramName];
     if ( paramIndex == undefined ){
       //check for "global " keyword in param name and remove it
       if( paramName.substring(0,7) == "global "){
@@ -776,9 +791,15 @@ Blockly.Yail.getJBridgeRelativeParamName = function(paramsMap, paramName){
       }
       return paramName;
     }
-    return "params[" + paramIndex+"]";
+    return paramName;
 };
 
+/**
+ * Populates a map in which the "keys" are the fieldName given by the 
+ * block, and the "values" are the index of those fieldName values in the params[] java object.
+ * @param block The block containing the paramters
+ * @param fieldName the field name from the block
+ * */
 Blockly.Yail.getFieldMap = function(block, fieldName){
   var fieldMap = new Object();
   if(block.inputList != undefined){
@@ -788,6 +809,7 @@ Blockly.Yail.getFieldMap = function(block, fieldName){
         for (var y = 0, field; field = input.fieldRow[y]; y++){
           var fieldName = field.getText();
           if (fieldName.replace(/ /g,'').length > 0){
+              eventMethodParamListings[fieldName] = fieldIndex;
               fieldMap[fieldName] = fieldIndex;
               fieldIndex ++;
           }
@@ -811,7 +833,7 @@ Blockly.Yail.checkInputName = function(block, inputName){
 
 Blockly.Yail.hasTypeCastKey = function(key, typeCastMap){
   if(typeCastMap.has(key)){
-  return true;
+    return true;
   }
   return false;
 };
@@ -853,11 +875,18 @@ Blockly.Yail.TypeCastOneValue = function(key, value, typeCastMap){
   var result = "";
   if (v != null){
     if(Blockly.Yail.isNumber(value)){
-      //Java bridge library requires ints over floats
+      //Java bridge library requires ints/doubles over floats
       result = Math.round(value);
     }else{
+      if (value === "True" || value == "False"){
+          value = value.toLowerCase();
+      }
       result = v[0].replace("XXX", value);
     }
+  }
+  //casting the color to HEX
+  if(value.substring(0,2) === "&H" && value.length === 10){
+    result = "0x" + value.substring(2);
   }
   return result;
 };
@@ -1009,6 +1038,8 @@ Blockly.Yail.parseJBridgeEventBlock = function(eventBlock, isChildBlock){
   var componentName = eventBlock.instanceName;
   var eventName = eventBlock.eventName;
   var body = "";
+  //reset the event method params from the last event method generation
+  eventMethodParamListings = new Object();
   for (var x = 0, childBlock; childBlock = eventBlock.childBlocks_[x]; x++) {
       body = body 
              + "\n"
@@ -1063,10 +1094,10 @@ Blockly.Yail.addComponentEventMethod = function(eventMethodName, body){
 }
 
 
-/**
- * Generates parameters for each individual method name
- *
- * @param {String} body that contains the entire code generation
+ /** This method searches the body of the generated method for the dispatch event
+ * parameters. If any parameters are used within the method then they must be passed in
+ * as the method's parameter for use in the local scope
+ * @param body The body of the generated event method
  * @returns {String} the generated code if there were no errors.
  */
 Blockly.Yail.createMethodParameterString = function (body) {
@@ -1080,8 +1111,10 @@ Blockly.Yail.createMethodParameterString = function (body) {
     if (body.search("eventName") >= 0) {
         parameters.push("String eventName");
     }
-    if (body.search("params") >= 0) {
-        parameters.push("Object[] params");
+    for (var paramName in eventMethodParamListings){
+        if (body.search(paramName) >= 0){
+            parameters.push("Object " + paramName);
+        }
     }
     var stringParam = "";
     for (var i = 0; i < parameters.length; i++) {
@@ -1111,8 +1144,10 @@ Blockly.Yail.createCalledMethodParameterString = function (body) {
     if (body.search("eventName") >= 0) {
         parameters.push("eventName");
     }
-    if (body.search("params") >= 0) {
-        parameters.push("params");
+    for (var paramName in eventMethodParamListings){
+        if (body.search(paramName) >= 0){
+            parameters.push("params[" + eventMethodParamListings[paramName] + "]");
+        }
     }
     var stringParam = "";
     for (var i = 0; i < parameters.length; i++) {
