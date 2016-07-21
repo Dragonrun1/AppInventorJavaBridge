@@ -112,7 +112,7 @@ var jBridgeImportsMap = new Object();
 var jBridgeProceduresMap = new Object();
 var jBridgeEventMethodsList = [];
 var jBridgeIsIndividualBlock = false; // is to Identify if a block is Iduvidal root block or sub-block
-var jBridgeCurrentScreen = "Screen1";
+var jBridgeCurrentScreen;
 var JBRIDGE_COMPONENT_TEXT_PROPERTIES = ["text", "picture", "source"];
 
 var jBridgePermissionToAdd = new Object; //this should be a set
@@ -221,6 +221,7 @@ Blockly.Yail.initAllVariables = function(){
  */
 Blockly.Yail.parseJBridgeJsonData = function(jsonObject){
   var jsonProperties = jsonObject.Properties;
+  jBridgeCurrentScreen = jsonProperties.$Name;
   //iterating over the screen component properties
   for (var prop in jsonProperties){
     if (jsonProperties[prop] !== undefined){
@@ -441,7 +442,12 @@ Blockly.Yail.parseTopBlocks = function (topBlocks){
 };
 
 Blockly.Yail.getJBridgeInstanceName = function(block){
-  return block.instanceName;
+  var name = block.instanceName;
+  jBridgeInitializationList.push(jBridgeCurrentScreen);
+  if (jBridgeCurrentScreen == name){
+      name = "this";
+  }
+  return name;
 };
 
 /**
@@ -669,7 +675,7 @@ Blockly.Yail.parseJBridgeVariableSetBlock = function(variableSetBlock){
     paramsMap = Blockly.Yail.getJBridgeParentBlockFieldMap(variableSetBlock.parentBlock_, "component_event", "PARAMETERS");
     leftValue = Blockly.Yail.getJBridgeRelativeParamName(paramsMap, leftValue);
 
-    var rightValue = ""
+    var rightValue = "";
     for(var x = 0, childBlock; childBlock = variableSetBlock.childBlocks_[x]; x++){
         var data = Blockly.Yail.parseBlock(childBlock);
         rightValue = rightValue 
