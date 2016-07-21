@@ -579,6 +579,8 @@ Blockly.Yail.genJBridgeControlForEachBlock = function(forList, forItem, forState
 
 
 Blockly.Yail.genJBridgeControlIfBlock = function(condition, statement){
+  //in the case that the condition is a method
+  condition = condition.replace(/[;\n]*/g, "");
   var code = "";
   code = "if("
          +condition
@@ -590,6 +592,8 @@ Blockly.Yail.genJBridgeControlIfBlock = function(condition, statement){
 };
 
 Blockly.Yail.genJBridgeControlElseIfBlock = function(condition, statement){
+  //in the case that the condition is a method
+  condition = condition.replace(/[;\n]*/g, "");
   var code = "";
   code = "else if("
          +condition
