@@ -443,7 +443,6 @@ Blockly.Yail.parseTopBlocks = function (topBlocks){
 
 Blockly.Yail.getJBridgeInstanceName = function(block){
   var name = block.instanceName;
-  jBridgeInitializationList.push(jBridgeCurrentScreen);
   if (jBridgeCurrentScreen == name){
       name = "this";
   }
