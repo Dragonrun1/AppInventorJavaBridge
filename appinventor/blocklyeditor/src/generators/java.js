@@ -103,6 +103,7 @@ var jBridgeTopBlockCodesList = [];
 var jBridgeRegisterEventMap = new Object();
 var eventMethodParamListings = new Object();
 var jBridgeEventsList = [];
+//mapping the variable names to their types
 var jBridgeVariableDefinitionMap = new Object();
 var jBridgeInitializationList = [];
 var jBridgeComponentMap = new Object();
@@ -873,7 +874,8 @@ Blockly.Yail.TypeCast = function(key, paramList, typeCastMap){
 };
 
 /**
- * Will cast the value if the key is contained in the typeCastMap
+ * Will cast the value if the key is contained in the typeCastMap.
+ * Will cast floats to whole integers and cast types in paramTypeCastMap
  * @param key The key in the cast map
  * @param value The value to be casted
  * @param typeCastMap The type cast map
@@ -986,10 +988,8 @@ Blockly.Yail.parseJBridgeSetBlock = function(setBlock){
   }
   //If value is not already a string, apply String.valueOf(value)
   if(JBRIDGE_COMPONENT_TEXT_PROPERTIES.indexOf(property.toLowerCase()) > -1){
-   //isChildBlock = typeof isChildBlock !== 'undefined' ? isChildBlock : false;
-    if (typeof value !== 'string'){
-        value = "String.valueOf(" + value + ")";
-        }
+    value = "String.valueOf(" + value + ")";
+       
   }
 
 
@@ -999,7 +999,6 @@ Blockly.Yail.parseJBridgeSetBlock = function(setBlock){
     }
     value = "YailList.makeList(" + value + ")";  
   }
-  //will cast floats to whole integers and cast types in paramTypeCastMap
   if(Blockly.Yail.hasTypeCastKey(property, paramTypeCastMap)){
       value = Blockly.Yail.TypeCastOneValue(property, value, paramTypeCastMap);
   }else if (Blockly.Yail.isNumber(value)){
@@ -1283,7 +1282,7 @@ Blockly.Yail.parseJBridgeGlobalIntializationBlock = function(globalBlock){
   var rightValue ;
 
   leftValue = globalBlock.getFieldValue('NAME').replace("global ", "");
-  rightValue = ""
+  rightValue = "";
   for(var x = 0, childBlock; childBlock = globalBlock.childBlocks_[x]; x++){
         rightValue = rightValue 
                      + Blockly.Yail.parseBlock(childBlock);
@@ -1322,7 +1321,7 @@ Blockly.Yail.getValueType = function(childType, value){
   }else if(childType == "Logic"){
     variableType = "boolean";
   }else if (childType == "Lists"){
-    variableType = "ArrayList"
+    variableType = "ArrayList<Object>";
   }
   return variableType;
 };
@@ -1483,15 +1482,183 @@ Blockly.Yail.parseJBridgeTextTypeBlocks = function(textBlock){
     code = Blockly.Yail.parseJBridgeTextChangeCaseBlock(textBlock);
   }else if(type == "text_compare"){
     code = Blockly.Yail.parseJBridgeTextCompareBlock(textBlock);
+  }else if(type == "text_length"){
+    code = Blockly.Yail.parseJBridgeTextLengthBlock(textBlock);
+  }else if(type == "text_isEmpty"){
+    code = Blockly.Yail.parseJBridgeTextisEmptyBlock(textBlock);
+  }else if(type == "text_trim"){
+    code = Blockly.Yail.parseJBridgeTextTrimBlock(textBlock);
+  }else if(type == "text_starts_at"){
+    code = Blockly.Yail.parseJBridgeTextStartsAtBlock(textBlock);
+  }else if(type == "text_contains"){
+    code = Blockly.Yail.parseJBridgeTextContainsBlock(textBlock);
+  }else if(type == "text_replace_all"){
+    code = Blockly.Yail.parseJBridgeTextReplaceAllBlock(textBlock);
+  }else if(type == "text_split"){
+    code = Blockly.Yail.parseJBridgeTextSplitBlock(textBlock);
+  }else if(type == "text_split_at_spaces"){
+    code = Blockly.Yail.parseJBridgeTextSplitAtSpacesBlock(textBlock);
+  }else if(type == "text_segment"){
+    code = Blockly.Yail.parseJBridgeTextSegmentBlock(textBlock);
   }
   return code;
 };
 
+/**
+ * Parsing an App Inventor Text Block that:
+ * Extracts part of the text starting at start position and continuing for length characters.
+ * @param textBlock The Text Block
+ * @return The equivalent Java Bridge Code for the Block
+ */
+Blockly.Yail.parseJBridgeTextSegmentBlock = function(textBlock){
+    var code = "";
+    var text = Blockly.Yail.parseBlock(textBlock.childBlocks_[0]);
+    var start = Blockly.Yail.parseBlock(textBlock.childBlocks_[1]);
+    var length = Blockly.Yail.parseBlock(textBlock.childBlocks_[2]);
+    //subtract 1 from start and length because app inventor indexes start from 1
+    var textMethod = ".substring(" + start + " - 1, (" + start + " + " + length + ") -1)";
+    code += text + textMethod;
+    return code;
+};
+
+/**
+ * Parsing an App Inventor Text Block that:
+ * Divides the given text at any occurrence of a space, producing a list of the pieces.
+ * @param textBlock The Text Block
+ * @return The equivalent Java Bridge Code for the Block
+ */
+Blockly.Yail.parseJBridgeTextSplitAtSpacesBlock = function(textBlock){
+    var code = "";
+    var text = Blockly.Yail.parseBlock(textBlock.childBlocks_[0]);
+    var splitAt = '"\\\\s+"';
+    var textMethod = ".split(" + splitAt + ")";
+    code += text + textMethod;
+    return code;
+};
+
+/**
+ * Parsing an App Inventor Text Block that:
+ * Divides text into pieces using at as the dividing points and produces a list of the results.
+ * @param textBlock The Text Block
+ * @return The equivalent Java Bridge Code for the Block
+ */
+Blockly.Yail.parseJBridgeTextSplitBlock = function(textBlock){
+    //different Text Splits Still need to be supported
+    //currently the block for text splitting does not show what type of split
+    var code = "";
+    var text = Blockly.Yail.parseBlock(textBlock.childBlocks_[0]);
+    var splitAt = Blockly.Yail.parseBlock(textBlock.childBlocks_[1]);
+    var textMethod = ".split(" + splitAt + ")";
+    code += text + textMethod;
+    return code;
+};
+
+/**
+ * Parsing an App Inventor Text Block that:
+ * Returns a new text string obtained by replacing all occurrences of the substring with the replacement.
+ * @param textBlock The Text Block
+ * @return The equivalent Java Bridge Code for the Block
+ */
+Blockly.Yail.parseJBridgeTextReplaceAllBlock = function(textBlock){
+    var code = "";
+    var text = Blockly.Yail.parseBlock(textBlock.childBlocks_[0]);
+    var segment = Blockly.Yail.parseBlock(textBlock.childBlocks_[1]);
+    var replacement = Blockly.Yail.parseBlock(textBlock.childBlocks_[2]);
+    var textMethod = ".replaceAll(" + segment + ", " + replacement + ")";
+    code += text + textMethod;
+    return code;
+};
+
+/**
+ * Parsing an App Inventor Text Block that:
+ * Returns true if piece appears in text; otherwise, returns false.
+ * @param textBlock The Text Block
+ * @return The equivalent Java Bridge Code for the Block
+ */
+Blockly.Yail.parseJBridgeTextContainsBlock = function(textBlock){
+    var code = "";
+    var text = Blockly.Yail.parseBlock(textBlock.childBlocks_[0]);
+    var piece = Blockly.Yail.parseBlock(textBlock.childBlocks_[1]);
+    var textMethod = ".contains(" + piece + ")";
+    code += text + textMethod;
+    return code;
+};
+
+/**
+ * Parsing an App Inventor Text Block that:
+ * Returns the character position where the first character of piece first appears in text
+ * @param textBlock The Text Block
+ * @return The equivalent Java Bridge Code for the Block
+ */
+Blockly.Yail.parseJBridgeTextStartsAtBlock = function(textBlock){
+    var code = "";
+    var text = Blockly.Yail.parseBlock(textBlock.childBlocks_[0]);
+    var piece = Blockly.Yail.parseBlock(textBlock.childBlocks_[1]);
+    var textMethod = ".indexOf(" + piece + ")";
+    code += text + textMethod;
+    return code;
+};
+
+/**
+ * Parsing an App Inventor Text Block that:
+ * Removes any spaces leading or trailing the input string and returns the result.
+ * @param textBlock The Text Block
+ * @return The equivalent Java Bridge Code for the Block
+ */
+Blockly.Yail.parseJBridgeTextTrimBlock = function(textBlock){
+    var code = "";
+    var textMethod = ".trim()";
+    var child = Blockly.Yail.parseBlock(textBlock.childBlocks_[0]);
+    code += child + textMethod;
+    return code;
+};
+
+/**
+ * Parsing an App Inventor Text Block that:
+ * Returns whether or not the string contains any characters (including spaces). 
+ * @param textBlock The Text Block
+ * @return The equivalent Java Bridge Code for the Block
+ */
+Blockly.Yail.parseJBridgeTextisEmptyBlock = function(textBlock){
+    var code = "";
+    var emptyMethod = ".isEmpty()";
+    var child = Blockly.Yail.parseBlock(textBlock.childBlocks_[0]);
+    code += child + emptyMethod;
+    return code;
+};
+
+/**
+ * Parsing an App Inventor Text Block that:
+ * Returns the number of characters including spaces in the string. This is the length of the given text string.
+ * @param textBlock The Text Block
+ * @return The equivalent Java Bridge Code for the Block
+ */
+Blockly.Yail.parseJBridgeTextLengthBlock = function(textBlock){
+  var code = "";
+  var sizeMethod = ".length()";
+  var childType = textBlock.childBlocks_[0].type;
+  var child = Blockly.Yail.parseBlock(textBlock.childBlocks_[0]);
+  code = "(" + child + ")" + sizeMethod;
+  return code;
+};
+
+/**
+ * Parsing an App Inventor Text Block that:
+ * Contains a text string.
+ * @param textBlock The Text Block
+ * @return The equivalent Java Bridge Code for the Block
+ */
 Blockly.Yail.parseJBridgeTextBlock = function(textBlock){
   var textData = textBlock.getFieldValue("TEXT");
   return Blockly.Yail.genJBridgeTextBlock(textData);
 };
 
+/**
+ * Parsing an App Inventor Text Block that:
+ * Appends all of the inputs to make a single string. If no inputs, returns an empty string.
+ * @param textBlock The Text Block
+ * @return The equivalent Java Bridge Code for the Block
+ */
 Blockly.Yail.parseJBridgeTextJoinBlock = function(textBlock){
   var joinList = [];
   for (var y = 0, joinBlock; joinBlock = textBlock.childBlocks_[y]; y++){
@@ -1506,6 +1673,13 @@ Blockly.Yail.parseJBridgeTextJoinBlock = function(textBlock){
   }
 };
 
+/**
+ * Parsing an App Inventor Text Block that:
+ * Returns whether or not the first string is lexicographically <, >, or = the second string 
+ * depending on which dropdown is selected.
+ * @param textBlock The Text Block
+ * @return The equivalent Java Bridge Code for the Block
+ */
 Blockly.Yail.parseJBridgeTextCompareBlock = function(textBlock){
   var operator = textBlock.getFieldValue("OP");
   var leftValue = Blockly.Yail.parseBlock(textBlock.childBlocks_[0]);
@@ -1525,15 +1699,15 @@ Blockly.Yail.genJBridgeTextJoinBlock = function(joinList){
   for (var x = 0; x < joinList.length; x++){
     //if its the last item of joinList
     if(x == (joinList.length - 1)){
-        if(typeof x !== 'string'){
+        if(typeof joinList[x] !== 'string'){
             code = code + "(String.valueOf(" + joinList[x] + "))";
         }
         else{
-            code = code + joinList[x]+")";
+            code = code + joinList[x];
           }
     }
     else{
-        if(typeof x !== 'string'){
+        if(typeof joinList[x] !== 'string'){
             code = code + "(String.valueOf(" + joinList[x] + "))" + "+";
          }
         else{
@@ -1572,7 +1746,22 @@ Blockly.Yail.parseJBridgeListBlocks = function(listBlock){
       code = Blockly.Yail.parseJBridgeListAddItemBlock(listBlock);
   }else if (type == "lists_is_in"){
       code = Blockly.Yail.parseJBridgeListContainsBlock(listBlock);
+  }else if (type == "lists_pick_random_item"){
+      code = Blockly.Yail.parseJBridgeListListPickRandomItem(listBlock);
   }
+  return code;
+};
+
+Blockly.Yail.parseJBridgeListListPickRandomItem = function(listBlock){
+  var randomObjName = "random";
+  if(!jBridgeVariableDefinitionMap[randomObjName]){
+      jBridgeVariableDefinitionMap[randomObjName] = "Random";
+      jBridgeInitializationList.push(randomObjName + " = new Random();");
+      jBridgeImportsMap[randomObjName] = "import java.util.Random;";
+  }
+  var code = "";
+  var listName = Blockly.Yail.parseBlock(listBlock.childBlocks_[0]);
+  code += listName + ".get(" + randomObjName + ".nextInt(" + listName + ".size())" + ")";
   return code;
 };
 
@@ -1667,13 +1856,12 @@ Blockly.Yail.genJBridgeListSelectItemBlock = function(listName, index){
 };
 
 /**
-  * Generates java code for a new ArrayList
-  *
-  * @params {String} type of ArrayList instantiated
+  * Generates java code for a new ArrayList of type Object
+  * The List is of type "Object" because App Inventor lists take many types 
   * @returns {String} code generated if no errors
   */
 Blockly.Yail.genJBridgeNewList = function(type){
-  var code = "new ArrayList<"+type+">();\n";
+  var code = "new ArrayList<Object>();\n";
   return code;
 };
 
