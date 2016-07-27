@@ -279,6 +279,10 @@ Blockly.Java.parseJBridgeJsonComopnents = function (componentJson, rootName){
         //Convert color code & lower case for boolean value
         var valueOfLowerCase =componentJson[key].toLowerCase();
         var printableValue =componentJson[key];
+        //JSON value from height/width fill parent is -2
+        if ((key == "Height" || key == "Width") && printableValue == "-2"){
+            printableValue = "LENGTH_FILL_PARENT";
+        }
         //Java Bridge requires integers
         if (Blockly.Java.isNumber(printableValue)){
             printableValue = Math.round(printableValue);
