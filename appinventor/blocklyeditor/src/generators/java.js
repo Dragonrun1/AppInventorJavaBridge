@@ -122,6 +122,10 @@ var jBridgeAndroidPermisions = new Object();
 var jBridgeAndroidIntents = new Object();
 var jBridgeMethodAndTypeToPermisions = new Object();
 
+//predefined helper methods to be declared if used
+var toCSVMethod = "\npublic String toCSV(ArrayList<Object> originalList){\nStringBuilder stringBuilder = new StringBuilder();\nfor (int i=0;i < originalList.size(); i++){\nObject elem = originalList.get(i);\nstringBuilder.append(elem.toString());\nif (i < originalList.size()-1){\nstringBuilder.append(\", \");\n}\n}\nreturn stringBuilder.toString();\n}";
+var toCSVTableMethod = "\npublic String toCSVTable(ArrayList<Object> originalList){\nStringBuilder stringBuilder = new StringBuilder();\nfor (int i=0;i < originalList.size(); i++){\nObject elem = originalList.get(i);\nif (elem instanceof ArrayList){ \nstringBuilder.append(toCSVTable((ArrayList<Object>) elem)); \n}\nstringBuilder.append(elem.toString());\nif (i < originalList.size()-1){\nstringBuilder.append(\"\\n\");\n}\n}\nreturn stringBuilder.toString();\n}";
+
 /*** Type cast Map start ***/
 var paramTypeCastMap = new Map();
 paramTypeCastMap.set("BackgroundColor", ["((Float)XXX).intValue()"]);
@@ -1751,12 +1755,180 @@ Blockly.Java.parseJBridgeListBlocks = function(listBlock){
   }else if (type == "lists_is_in"){
       code = Blockly.Java.parseJBridgeListContainsBlock(listBlock);
   }else if (type == "lists_pick_random_item"){
-      code = Blockly.Java.parseJBridgeListListPickRandomItem(listBlock);
+      code = Blockly.Java.parseJBridgeListPickRandomItem(listBlock);
+  }else if (type == "lists_is_empty"){
+      code = Blockly.Java.parseJBridgeListIsEmpty(listBlock);
+  }else if (type == "lists_position_in"){
+      code = Blockly.Java.parseJBridgeListPositionIn(listBlock);
+  }else if (type == "lists_insert_item"){
+      code = Blockly.Java.parseJBridgeListInsertItem(listBlock);
+  }else if (type == "lists_replace_item"){
+      code = Blockly.Java.parseJBridgeListReplaceItem(listBlock);
+  }else if (type == "lists_remove_item"){
+      code = Blockly.Java.parseJBridgeListRemoveItem(listBlock);
+  }else if (type == "lists_append_list"){
+      code = Blockly.Java.parseJBridgeListAppendList(listBlock);
+  }else if (type == "lists_copy"){
+      code = Blockly.Java.parseJBridgeListCopyList(listBlock);
+  }else if (type == "lists_to_csv_row"){
+      code = Blockly.Java.parseJBridgeListToCSVRow(listBlock);
+  }else if (type == "lists_to_csv_table"){
+      code = Blockly.Java.parseJBridgeListToCSVTable(listBlock);
   }
   return code;
 };
 
-Blockly.Java.parseJBridgeListListPickRandomItem = function(listBlock){
+/**
+ * Parses an App Inventor List block that:
+ * Interprets the list as a table in row-major format and returns a CSV (comma-separated value) text representing the table.
+ * @param listBlock The List block
+ * @return The generated Java code
+ */
+Blockly.Java.parseJBridgeListToCSVTable = function(listBlock){
+  //defines the toCSV() method in the class
+  jBridgeEventMethodsList.push(toCSVTableMethod);
+  var code = "";
+  var listName = Blockly.Java.parseBlock(listBlock.childBlocks_[0]);
+  code += "toCSVTable(" + listName + ")";
+  return code;
+};
+
+/**
+ * Parses an App Inventor List block that:
+ * Interprets the list as a row of a table and returns a CSV (comma-separated value) text representing the row.
+ * @param listBlock The List block
+ * @return The generated Java code
+ */
+Blockly.Java.parseJBridgeListToCSVRow = function(listBlock){
+  //defines the toCSV() method in the class
+  jBridgeEventMethodsList.push(toCSVMethod);
+  var code = "";
+  var listName = Blockly.Java.parseBlock(listBlock.childBlocks_[0]);
+  code += "toCSV(" + listName + ")";
+  return code;
+};
+
+/**
+ * Parses an App Inventor List block that:
+ * Interprets the list as a row of a table and returns a CSV (comma-separated value) text representing the row.
+ * @param listBlock The List block
+ * @return The generated Java code
+ */
+Blockly.Java.parseJBridgeListToCSVRow = function(listBlock){
+  //defines the toCSV() method in the class
+  jBridgeEventMethodsList.push(toCSVMethod);
+  var code = "";
+  var listName = Blockly.Java.parseBlock(listBlock.childBlocks_[0]);
+  code += "toCSV(" + listName + ")";
+  return code;
+};
+
+/**
+ * Parses an App Inventor List block that:
+ * Makes a copy of a list
+ * @param listBlock The List block
+ * @return The generated Java code
+ */
+Blockly.Java.parseJBridgeListCopyList = function(listBlock){
+  var code = "";
+  var listName = Blockly.Java.parseBlock(listBlock.childBlocks_[0]);
+  code += "new ArrayList<Object>(" + listName + ");";
+  return code;
+};
+
+
+/**
+ * Parses an App Inventor List block that:
+ * Removes the item at the given position.
+ * @param listBlock The List block
+ * @return The generated Java code
+ */
+Blockly.Java.parseJBridgeListAppendList = function(listBlock){
+  var code = "";
+  var list1 = Blockly.Java.parseBlock(listBlock.childBlocks_[0]);
+  var list2 = Blockly.Java.parseBlock(listBlock.childBlocks_[1]);
+  code += list1 + ".addAll(" + list2 + ");";
+  return code;
+};
+
+/**
+ * Parses an App Inventor List block that:
+ * Removes the item at the given position.
+ * @param listBlock The List block
+ * @return The generated Java code
+ */
+Blockly.Java.parseJBridgeListRemoveItem = function(listBlock){
+  var code = "";
+  var listName = Blockly.Java.parseBlock(listBlock.childBlocks_[0]);
+  var index = Blockly.Java.parseBlock(listBlock.childBlocks_[1]);
+  code += listName + ".remove(" + index + " - 1);";
+  return code;
+};
+
+/**
+ * Parses an App Inventor List block that:
+ * Inserts replacement into the given list at position index.
+ * @param listBlock The List block
+ * @return The generated Java code
+ */
+Blockly.Java.parseJBridgeListReplaceItem = function(listBlock){
+  var code = "";
+  var listName = Blockly.Java.parseBlock(listBlock.childBlocks_[0]);
+  var index = Blockly.Java.parseBlock(listBlock.childBlocks_[1]);
+  var replacement = Blockly.Java.parseBlock(listBlock.childBlocks_[2]);
+  code += listName + ".set(" + index + " - 1, " + replacement + ");";
+  return code;
+};
+
+/**
+ * Parses an App Inventor List block that:
+ * Inserts an item into the list at the given position
+ * @param listBlock The List block
+ * @return The generated Java code
+ */
+Blockly.Java.parseJBridgeListInsertItem = function(listBlock){
+  var code = "";
+  var listName = Blockly.Java.parseBlock(listBlock.childBlocks_[0]);
+  var index = Blockly.Java.parseBlock(listBlock.childBlocks_[1]);
+  var item = Blockly.Java.parseBlock(listBlock.childBlocks_[2]);
+  code += listName + ".add(" + index + " - 1, " + item + ");";
+  return code;
+};
+
+/**
+ * Parses an App Inventor List block that:
+ * Returns the position of the thing in the list.
+ * @param listBlock The List block
+ * @return The generated Java code
+ */
+Blockly.Java.parseJBridgeListPositionIn = function(listBlock){
+  var code = "";
+  var thing = Blockly.Java.parseBlock(listBlock.childBlocks_[0]);
+  var listName = Blockly.Java.parseBlock(listBlock.childBlocks_[1]);
+  code += listName + ".indexOf(" + thing + ")";
+  return code;
+};
+
+/**
+ * Parses an App Inventor List block that:
+ * If list has no items, returns true; otherwise, returns false.
+ * @param listBlock The List block
+ * @return The generated Java code
+ */
+Blockly.Java.parseJBridgeListIsEmpty = function(listBlock){
+  var code = "";
+  var listName = Blockly.Java.parseBlock(listBlock.childBlocks_[0]);
+  code += listName + ".isEmpty()";
+  return code;
+};
+
+/**
+ * Parses an App Inventor List block that:
+ * Picks an item at random from the list.
+ * @param listBlock The List block
+ * @return The generated Java code
+ */
+Blockly.Java.parseJBridgeListPickRandomItem = function(listBlock){
   var randomObjName = "random";
   if(!jBridgeVariableDefinitionMap[randomObjName]){
       jBridgeVariableDefinitionMap[randomObjName] = "Random";
@@ -1769,6 +1941,12 @@ Blockly.Java.parseJBridgeListListPickRandomItem = function(listBlock){
   return code;
 };
 
+/**
+ * Parses an App Inventor List block that:
+ * Adds the given items to the end of the list.
+ * @param listBlock The List block
+ * @return The generated Java code
+ */
 Blockly.Java.parseJBridgeListAddItemBlock = function(listBlock){
   var code = "";
   var listName = Blockly.Java.parseBlock(listBlock.childBlocks_[0]);
@@ -1785,7 +1963,12 @@ Blockly.Java.parseJBridgeListAddItemBlock = function(listBlock){
   return code;
 };
 
-
+/**
+ * Parses an App Inventor List block that:
+ * Creates a list from the given blocks. 
+ * @param listBlock The List block
+ * @return The generated Java code
+ */
 Blockly.Java.parseJBridgeListsCreateWithBlock = function(listBlock){
    var code = "";
    var childType = "String";
