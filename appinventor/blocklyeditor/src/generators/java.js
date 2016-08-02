@@ -2479,3 +2479,13 @@ Blockly.Java.genManifestString = function(androidPermisions, androidIntents){
                             + "</manifest>";
   return mainfestString;
 };
+
+/**
+ * Method that strips all of the ";" and "\n" characters from the code.
+ * Used for methods that are generated but wrapped within another method
+ * @param {String} the code to strip
+ * @return {String} the stripped code 
+*/
+Blockly.Java.removeColonsAndNewlines = function(code){
+    return code.replace(/[;\n]*/g, "");
+}
