@@ -641,6 +641,10 @@ public class BlocklyPanel extends HTMLPanel implements ComponentDatabaseChangeLi
     doHardReset(formName);
   }
 
+  public void verifyAllBlocks() {
+    doVerifyAllBlocks(formName);
+  }
+
   public static boolean checkIsAdmin() {
     return Ode.getInstance().getUser().getIsAdmin();
   }
@@ -835,6 +839,8 @@ public class BlocklyPanel extends HTMLPanel implements ComponentDatabaseChangeLi
   @Override
   public void onComponentTypeAdded(List<String> componentTypes) {
     populateComponentTypes(formName);
+    verifyAllBlocks();
+
   }
 
   @Override
@@ -967,6 +973,7 @@ public class BlocklyPanel extends HTMLPanel implements ComponentDatabaseChangeLi
   // [lyn, 2014/10/27] added formJson for upgrading
   public static native void doLoadBlocksContent(String formName, String formJson, String blocksContent) /*-{
     $wnd.Blocklies[formName].SaveFile.load(formJson, blocksContent);
+    $wnd.Blocklies[formName].Component.verifyAllBlocks();
   }-*/;
 
   public static native String doGetBlocksContent(String formName) /*-{
@@ -1072,5 +1079,12 @@ public class BlocklyPanel extends HTMLPanel implements ComponentDatabaseChangeLi
    */
   public static native void populateComponentTypes(String formName) /*-{
       $wnd.Blocklies[formName].ComponentTypes.populateTypes();
+  }-*/;
+
+  /*
+   * Update Component Types in Blockly ComponentTypes
+   */
+  public static native void doVerifyAllBlocks(String formName) /*-{
+      $wnd.Blocklies[formName].Component.verifyAllBlocks();
   }-*/;
 }
