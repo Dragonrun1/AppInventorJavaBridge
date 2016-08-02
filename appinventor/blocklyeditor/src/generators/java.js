@@ -124,7 +124,6 @@ var jBridgeMethodAndTypeToPermisions = new Object();
 
 //predefined helper methods to be declared if used
 var toCSVMethod = "\npublic String toCSV(ArrayList<Object> originalList){\nStringBuilder stringBuilder = new StringBuilder();\nfor (int i=0;i < originalList.size(); i++){\nObject elem = originalList.get(i);\nstringBuilder.append(elem.toString());\nif (i < originalList.size()-1){\nstringBuilder.append(\", \");\n}\n}\nreturn stringBuilder.toString();\n}";
-var toCSVTableMethod = "\npublic String toCSVTable(ArrayList<Object> originalList){\nStringBuilder stringBuilder = new StringBuilder();\nfor (int i=0;i < originalList.size(); i++){\nObject elem = originalList.get(i);\nif (elem instanceof ArrayList){ \nstringBuilder.append(toCSVTable((ArrayList<Object>) elem)); \n}\nstringBuilder.append(elem.toString());\nif (i < originalList.size()-1){\nstringBuilder.append(\"\\n\");\n}\n}\nreturn stringBuilder.toString();\n}";
 
 /*** Type cast Map start ***/
 var paramTypeCastMap = new Map();
@@ -588,7 +587,7 @@ Blockly.Java.genJBridgeControlForEachBlock = function(forList, forItem, forState
 
 Blockly.Java.genJBridgeControlIfBlock = function(condition, statement){
   //in the case that the condition is a method
-  condition = condition.replace(/[;\n]*/g, "");
+  condition = Blockly.Java.removeColonsAndNewlines(condition);
   var code = "";
   code = "if("
          +condition
@@ -1785,8 +1784,6 @@ Blockly.Java.parseJBridgeListBlocks = function(listBlock){
  * @return The generated Java code
  */
 Blockly.Java.parseJBridgeListToCSVTable = function(listBlock){
-  //defines the toCSV() method in the class
-  jBridgeEventMethodsList.push(toCSVTableMethod);
   var code = "";
   var listName = Blockly.Java.parseBlock(listBlock.childBlocks_[0]);
   code += "toCSVTable(" + listName + ")";
@@ -1972,7 +1969,7 @@ Blockly.Java.parseJBridgeListAddItemBlock = function(listBlock){
 Blockly.Java.parseJBridgeListsCreateWithBlock = function(listBlock){
    var code = "";
    var childType = "String";
-   var listName = "[Unknown]";
+   var listName = "";
    if (listBlock.parentBlock_.getFieldValue('NAME') != undefined){
       listName = listBlock.parentBlock_.getFieldValue('NAME').replace("global ", "")
    }else if(listBlock.parentBlock_.getFieldValue('VAR') != undefined){
@@ -1988,7 +1985,7 @@ Blockly.Java.parseJBridgeListsCreateWithBlock = function(listBlock){
      }
      code = code 
             + Blockly.Java.genJBridgeListsAddItemBlock(listName, addItemData);
-   }
+    }
    if(listBlock.parentBlock_.type == "component_method"){
     var newList = Blockly.Java.genJBridgeNewList(childType);
     newList = newList.slice(0,-2);
@@ -2060,6 +2057,7 @@ Blockly.Java.genJBridgeNewList = function(type){
   * @returns {String} code generated if no errors
   */
 Blockly.Java.genJBridgeListsAddItemBlock = function(listName, addItem){
+   addItem = Blockly.Java.removeColonsAndNewlines(addItem);
    var code = listName
             + ".add(" 
             + addItem
