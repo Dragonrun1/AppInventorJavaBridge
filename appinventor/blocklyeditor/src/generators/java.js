@@ -166,6 +166,9 @@ var listTypeCastMap = new Map();
 listTypeCastMap.set("bookItem", ["((ArrayList<?>)XXX)"]);
 /*** Type cast Map end ***/
 
+//Java Component Types
+var TYPE_JAVA_ARRAYLIST = "ArrayList<Object>";
+
 /**
  * Generate the Yail code for this blocks workspace, given its associated form specification.
  * 
@@ -1328,7 +1331,7 @@ Blockly.Java.getValueType = function(childType, value){
   }else if(childType == "Logic"){
     variableType = "boolean";
   }else if (childType == "Lists"){
-    variableType = "ArrayList<Object>";
+    variableType = TYPE_JAVA_ARRAYLIST;
   }
   return variableType;
 };
@@ -1969,11 +1972,19 @@ Blockly.Java.parseJBridgeListAddItemBlock = function(listBlock){
 Blockly.Java.parseJBridgeListsCreateWithBlock = function(listBlock){
    var code = "";
    var childType = "String";
-   var listName = "";
+   var listName = "[Unknown]";
+   var parentName = "";
+   var isChildList = false;
    if (listBlock.parentBlock_.getFieldValue('NAME') != undefined){
-      listName = listBlock.parentBlock_.getFieldValue('NAME').replace("global ", "")
+      listName = listBlock.parentBlock_.getFieldValue('NAME').replace("global ", "");
    }else if(listBlock.parentBlock_.getFieldValue('VAR') != undefined){
-      listName = listBlock.parentBlock_.getFieldValue('VAR').replace("global ", "")
+      listName = listBlock.parentBlock_.getFieldValue('VAR').replace("global ", "");
+   }else {
+      isChildList = true;
+      parentName = Blockly.Java.findParentListName(listBlock);
+      listName = parentName + "SubList";
+      //set list name as comment for next recursive block to use
+      listBlock.setCommentText(listName);
    }
    for (var x = 0, childBlock; childBlock = listBlock.childBlocks_[x]; x++) {
      var addItemData = Blockly.Java.parseBlock(childBlock);
@@ -1983,19 +1994,51 @@ Blockly.Java.parseJBridgeListsCreateWithBlock = function(listBlock){
      }else if(childType == "float"){
       childType = "Float";
      }
-     code = code 
-            + Blockly.Java.genJBridgeListsAddItemBlock(listName, addItemData);
+     //if child block for list is another list, adds nested list contents outside of parent list ".add()"
+     if (childBlock.type == "lists_create_with"){
+       code += addItemData;
+       //list.add(childListName). childListName is stored in the block's "comment text"
+       code += Blockly.Java.genJBridgeListsAddItemBlock(listName, childBlock.getCommentText());
+     }else{
+       code = code + Blockly.Java.genJBridgeListsAddItemBlock(listName, addItemData);
+     }
     }
    if(listBlock.parentBlock_.type == "component_method"){
-    var newList = Blockly.Java.genJBridgeNewList(childType);
-    newList = newList.slice(0,-2);
-    code = newList + code;
+     var newList = Blockly.Java.genJBridgeNewList(childType);
+     newList = newList.slice(0,-2);
+     code = newList + code;
+   }else if (isChildList){
+     //create nested list seperately
+     jBridgeVariableDefinitionMap[listName] = TYPE_JAVA_ARRAYLIST;
+     jBridgeInitializationList.push(listName + " = new " + TYPE_JAVA_ARRAYLIST + "();");
    }else{
-    code = Blockly.Java.genJBridgeNewList(childType)
+     code = Blockly.Java.genJBridgeNewList(childType)
           +"\n"
           + code;
    }
    return code;
+};
+
+/**
+ * Will find the name of the parent of the given block.
+ * Looks at:
+ * listBlock.parentBlock_.getFieldValue('NAME').
+ * listBlock.parentBlock_.getCommentText()
+ * 
+ * Used when naming a new list
+ * @param listBlock The block to find the parent name of
+ * @return the parent Name of the given listBlock
+*/
+Blockly.Java.findParentListName = function(listBlock){
+    var parentName = "";    
+    if (listBlock.parentBlock_.getFieldValue('NAME') != undefined){
+      parentName = listBlock.parentBlock_.getFieldValue('NAME').replace("global ", "");
+    }else if(listBlock.parentBlock_.getFieldValue('VAR') != undefined){
+      parentName = listBlock.parentBlock_.getFieldValue('VAR').replace("global ", "");
+    }else if (listBlock.parentBlock_.getCommentText() != undefined){
+      parentName = listBlock.parentBlock_.getCommentText();        
+    }        
+    return parentName;
 };
 
 /**
@@ -2045,7 +2088,7 @@ Blockly.Java.genJBridgeListSelectItemBlock = function(listName, index){
   * @returns {String} code generated if no errors
   */
 Blockly.Java.genJBridgeNewList = function(type){
-  var code = "new ArrayList<Object>();\n";
+  var code = "new " + TYPE_JAVA_ARRAYLIST + "();\n";
   return code;
 };
 
