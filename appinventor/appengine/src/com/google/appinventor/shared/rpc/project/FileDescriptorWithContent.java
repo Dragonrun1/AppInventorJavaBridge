@@ -46,4 +46,13 @@ public final class FileDescriptorWithContent extends FileDescriptor {
   public String getContent() {
     return content;
   }
+  
+  /**
+   * sets the content of the associated file.
+   *
+   * @param The new file content
+   */
+  public void setContent(String newContent) {
+    content = newContent;
+  }
 }

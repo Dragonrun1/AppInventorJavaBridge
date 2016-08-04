@@ -394,7 +394,8 @@ public final class EditorManager {
 
     public void generateManifestForBlocksEditors(final Command successCommand,
                                              final Command failureCommand) {
-        List<FileDescriptorWithContent> yailFiles =  new ArrayList<FileDescriptorWithContent>();
+        List<FileDescriptorWithContent> manifestFiles =  new ArrayList<FileDescriptorWithContent>();
+        ArrayList<String> formNames = new ArrayList<String>();
         long currentProjectId = Ode.getInstance().getCurrentYoungAndroidProjectId();
         for (long projectId : openProjectEditors.keySet()) {
             if (projectId == currentProjectId) {
@@ -405,8 +406,9 @@ public final class EditorManager {
                 for (FileEditor fileEditor : projectEditor.getOpenFileEditors()) {
                     if (fileEditor instanceof YaBlocksEditor) {
                         YaBlocksEditor yaBlocksEditor = (YaBlocksEditor) fileEditor;
-                        try {
-                            yailFiles.add(yaBlocksEditor.getManifest());
+                        try {                                                        
+                            manifestFiles.add(yaBlocksEditor.getManifest());
+                            formNames.add(yaBlocksEditor.fileNode.getName());
                         } catch (YailGenerationException e) {
                             ErrorReporter.reportInfo(MESSAGES.yailGenerationError(e.getFormName(),
                                     e.getMessage()));
@@ -419,10 +421,14 @@ public final class EditorManager {
                 }
                 break;
             }
+        }        
+        //multiple manifest files
+        if (formNames.size() > 1){
+            manifestFiles = mergeManifests(manifestFiles, formNames);
         }
 
         Ode.getInstance().getProjectService().save(Ode.getInstance().getSessionId(),
-                yailFiles,
+                manifestFiles,
                 new OdeAsyncCallback<Long>(MESSAGES.saveErrorMultipleFiles()) {
                     @Override
                     public void onSuccess(Long date) {
@@ -439,6 +445,35 @@ public final class EditorManager {
                         }
                     }
                 });
+    }
+    
+    /**
+     * This is a helper method to generateManifestForBlocksEditors()
+     * It will add other screens as activities in the main manifest file
+     * @param manifestFiles The list of manifest files
+     * @param formNames The list of java files names to register as activity in Manifest
+     * @return a list containing one manifest file with all activities merged
+     */
+    private List<FileDescriptorWithContent> mergeManifests(List<FileDescriptorWithContent> manifestFiles, ArrayList<String> formNames){      
+      List<FileDescriptorWithContent> singleManifest =  new ArrayList<FileDescriptorWithContent>();
+      FileDescriptorWithContent firstScreenManifest = manifestFiles.get(0);
+      String content = firstScreenManifest.getContent();
+      for (int i=0; i < formNames.size(); i++){
+          String screenPathString = formNames.get(i);     
+          String screenName = screenPathString.substring(screenPathString.lastIndexOf("/") + 1, screenPathString.indexOf("."));
+          String manifestActivityTag = "<activity "
+                  + "android:name=\"."
+                  + screenName
+                  + "\" ></activity>\n\n"
+                  + "</application>";
+          //adding the activity to manifest
+          if (!content.contains(screenName)){
+              content = content.replace("</application>", manifestActivityTag);
+          }          
+      }
+      firstScreenManifest.setContent(content);
+      singleManifest.add(firstScreenManifest);
+      return singleManifest;
     }
 
   /**

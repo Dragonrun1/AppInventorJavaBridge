@@ -373,7 +373,7 @@ Blockly.Java.genComponentImport = function(jBridgeImportsMap){
  * @returns {String} the generated code if there were no errors.
  */
 Blockly.Java.genJBridgeClass =  function (topBlocks){
-  var code = "\npublic class Screen1 extends Form implements HandlesEventDispatching { \n"
+  var code = "\npublic class " + jBridgeCurrentScreen + " extends Form implements HandlesEventDispatching { \n"
     + Blockly.Java.parseComponentDefinition(jBridgeVariableDefinitionMap)
     + Blockly.Java.genJBridgeDefineMethod()
     + Blockly.Java.genJBridgeDispatchEvent()
@@ -504,10 +504,23 @@ Blockly.Java.parseJBridgeControlBlocks = function(controlBlock){
   }else if(controlType == "controls_forEach"){
     code = Blockly.Java.parseJBridgeControlForEachBlock(controlBlock);
     jBridgeIsIndividualBlock = true;
+  }else if(controlType == "controls_openAnotherScreen"){
+    code = Blockly.Java.parseJBridgeControlOpenAnotherScreenBlock(controlBlock);
+    jBridgeIsIndividualBlock = true;
   }
   return code;
 
-}
+};
+
+Blockly.Java.parseJBridgeControlOpenAnotherScreenBlock = function(controlBlock){
+    var code = "";
+    jBridgeImportsMap["Intent"] = "import android.content.Intent;";
+    var screenName = Blockly.Java.parseBlock(controlBlock.childBlocks_[0]);
+    //remove any quotes and spaces
+    screenName = screenName.replace(/"+/g, "");
+    code += "startActivity(new Intent().setClass(this, " + screenName + ".class));\n";
+    return code;    
+};
 Blockly.Java.parseJBridgeControlIfBlock = function(controlIfBlock){
   // var conditions = [];
   // var ifElseStatements = [];
