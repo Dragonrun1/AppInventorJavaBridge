@@ -289,8 +289,8 @@ Blockly.Java.parseJBridgeJsonComopnents = function (componentJson, rootName){
         if ((key == "Height" || key == "Width") && printableValue == "-2"){
             printableValue = "LENGTH_FILL_PARENT";
         }
-        //Java Bridge requires integers
-        if (Blockly.Java.isNumber(printableValue)){
+        //Java Bridge prefers java integers over floats or doubles
+        if (Blockly.Java.isNumber(printableValue) && JBRIDGE_JSON_TEXT_PROPERTIES.indexOf(key) <= -1){
             printableValue = Math.round(printableValue);
         }
         //casting the color to HEX
@@ -1361,12 +1361,10 @@ Blockly.Java.genJBridgeVariableIntializationBlock = function(leftValue, rightVal
 Blockly.Java.parseJBridgeLogicBlocks = function (logicBlock){
 var code = "";
   var componentType = logicBlock.type;
-  if (componentType == "logic_boolean"){
+  if (componentType == "logic_boolean" || componentType == "logic_false"){
       code = Blockly.Java.parseJBridgeBooleanBlock(logicBlock);
   }else if (componentType == "logic_operation"){
       code = Blockly.Java.parseJBridgeLogicOperationBlock(logicBlock);
-  }else if (componentType == "logic_false"){
-      code = "false";
   }else if (componentType == "logic_compare"){
       code = Blockly.Java.parseJBridgeLogicCompareBlocks(logicBlock);
   }else if (componentType == "logic_negate"){
