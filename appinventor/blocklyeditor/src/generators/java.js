@@ -507,11 +507,203 @@ Blockly.Java.parseJBridgeControlBlocks = function(controlBlock){
   }else if(controlType == "controls_openAnotherScreen"){
     code = Blockly.Java.parseJBridgeControlOpenAnotherScreenBlock(controlBlock);
     jBridgeIsIndividualBlock = true;
+  }else if(controlType == "controls_forRange"){
+    code = Blockly.Java.parseJBridgeControlForRangeBlock(controlBlock);
+    jBridgeIsIndividualBlock = false;
+  }else if(controlType == "controls_while"){
+    code = Blockly.Java.parseJBridgeControlWhileBlock(controlBlock);
+    jBridgeIsIndividualBlock = false;
+  }else if(controlType == "controls_choose"){
+    code = Blockly.Java.parseJBridgeControlChoose(controlBlock);
+    jBridgeIsIndividualBlock = false;
+  }else if(controlType == "controls_eval_but_ignore"){
+    code = Blockly.Java.parseJBridgeControlEvalIgnore(controlBlock);
+    jBridgeIsIndividualBlock = false;
+  }else if(controlType == "controls_openAnotherScreenWithStartValue"){
+    code = Blockly.Java.parseJBridgeControlOpenScreenWithStartValue(controlBlock);
+    jBridgeIsIndividualBlock = false;
+  }else if(controlType == "controls_getStartValue"){
+    code = Blockly.Java.parseJBridgeControlGetStartValue(controlBlock);
+    jBridgeIsIndividualBlock = false;
+  }else if(controlType == "controls_closeScreen"){
+    code = Blockly.Java.parseJBridgeControlCloseScreen(controlBlock);
+    jBridgeIsIndividualBlock = true;
+  }else if(controlType == "controls_closeApplication"){
+    code = Blockly.Java.parseJBridgeControlCloseApplication(controlBlock);
+    jBridgeIsIndividualBlock = true;
   }
   return code;
 
 };
 
+/**
+ * Parses an App Inventor block that:
+ * Closes the application
+ * @param controlBlock The App Inventor Block
+ * @return The equivalent Java Code
+*/
+Blockly.Java.parseJBridgeControlCloseApplication = function(controlBlock){
+    var code = "";
+    code +="System.exit(1);";
+    return code;
+};
+
+/**
+ * Parses an App Inventor block that:
+ * Closes the current screen
+ * @param controlBlock The App Inventor Block
+ * @return The equivalent Java Code
+*/
+Blockly.Java.parseJBridgeControlCloseScreen = function(controlBlock){
+    var code = "";
+    code +="finish();";
+    return code;
+};
+
+/**
+ * Parses an App Inventor block that:
+ * Returns the start value passed from the previous screen.
+ * @param controlBlock The App Inventor Block
+ * @return The equivalent Java Code
+*/
+Blockly.Java.parseJBridgeControlGetStartValue = function(controlBlock){
+    var code = "";
+    code +="getIntent().getExtras().get(\"startValue\")";
+    return code;
+};
+
+/**
+ * Parses an App Inventor block that:
+ * Opens a new screen and passes a value to it
+ * @param controlBlock The App Inventor Block
+ * @return The equivalent Java Code
+*/
+Blockly.Java.parseJBridgeControlOpenScreenWithStartValue = function(controlBlock){
+    jBridgeImportsMap["Intent"] = "import android.content.Intent;";
+    var code = "";
+    var screenName = Blockly.Java.parseBlock(controlBlock.childBlocks_[0]);
+    var startValue = Blockly.Java.parseBlock(controlBlock.childBlocks_[1]);
+    
+    //remove any quotes and spaces
+    screenName = screenName.replace(/"+/g, "");
+    code += "startActivity(new Intent().setClass(this, " 
+            + screenName 
+            + ".class).putExtra(\"startValue\", " 
+            + startValue
+            + "));\n";  
+    return code;
+};
+
+/**
+ * Parses an App Inventor block that:
+ * Calls a statement and ignore the return value
+ * @param controlBlock The App Inventor Block
+ * @return The equivalent Java Code
+*/
+Blockly.Java.parseJBridgeControlEvalIgnore = function(controlBlock){
+    var code = "";
+    var statement = Blockly.Java.parseBlock(controlBlock.childBlocks_[0]);
+    code += statement;    
+    return code;
+};
+
+/**
+ * Parses an App Inventor block that:
+ * Tests a given condition. 
+ * If the condition is true, performs the actions in the then-do sequence of blocks and returns the then-return value
+ * Otherwise, performs the actions in the else-do sequence of blocks and returns the else-return value.
+ * @param controlBlock The App Inventor Block
+ * @return The equivalent Java Code
+*/
+Blockly.Java.parseJBridgeControlChoose = function(controlBlock){
+    var code = "";
+    var condition = Blockly.Java.parseBlock(controlBlock.childBlocks_[0]);
+    var thenStatement = Blockly.Java.parseBlock(controlBlock.childBlocks_[1]);       
+    var elseStatement = Blockly.Java.parseBlock(controlBlock.childBlocks_[2]);
+    //ternary operator
+    code += "((" + condition + ") ?" + thenStatement + ": " + elseStatement + ")";    
+    return code;
+};
+
+/**
+ * Parses an App Inventor block that:
+ * Tests the test condition. 
+ * If true, performs the action given in do, then tests again. 
+ * When test is false, the block ends.
+ * @param controlBlock The App Inventor Block
+ * @return The equivalent Java Code
+*/
+Blockly.Java.parseJBridgeControlWhileBlock = function(controlBlock){
+    var code = "";
+    var condition = Blockly.Java.parseBlock(controlBlock.childBlocks_[0]);
+    var body = Blockly.Java.parseBlock(controlBlock.childBlocks_[1]);
+    code += Blockly.Java.genJBridgeControlWhileBlock(body, condition);    
+    
+    var nextBlock = Blockly.Java.parseBlock(controlBlock.childBlocks_[2]);
+    code += nextBlock;
+    
+    return code;
+};
+
+/**
+ * Generates the java code for the While loop
+ * @param body The body of the loop
+ * @param condition the boolean condition
+ * @return The Java Code
+*/
+Blockly.Java.genJBridgeControlWhileBlock = function(body, condition){
+  var code = "";
+  code = "while(" + condition + "){\n" 
+       + body
+       + "\n} \n";
+  return code;
+};
+
+/**
+ * Parses an App Inventor block that:
+ * Runs the block in the do section for each numeric value in the range from start to end, 
+ * stepping the value each time.
+ * @param controlBlock The App Inventor Block
+ * @return The equivalent Java Code
+*/
+Blockly.Java.parseJBridgeControlForRangeBlock = function(controlBlock){
+    var code = "";
+    var from = Blockly.Java.parseBlock(controlBlock.childBlocks_[0]);
+    var to = Blockly.Java.parseBlock(controlBlock.childBlocks_[1]);
+    var by = Blockly.Java.parseBlock(controlBlock.childBlocks_[2]);
+    var statement = Blockly.Java.parseBlock(controlBlock.childBlocks_[3]);
+    var iterator = controlBlock.getFieldValue('VAR');
+    
+    code += Blockly.Java.genJBridgeControlForRangeBlock(from, to, by, statement, iterator);    
+    
+    var nextBlock = Blockly.Java.parseBlock(controlBlock.childBlocks_[4]);
+    code += nextBlock;
+    return code;
+};
+
+/**
+ * Generates the java code for the for loop
+ * @param from the start value of the iterator
+ * @param to the end value of the iterator
+ * @param by the stepping value
+ * @param statement the code to run within the loop
+ * @param iterator the iterator name
+ * @return The Java Code
+*/
+Blockly.Java.genJBridgeControlForRangeBlock = function(from, to, by, statement, iterator){
+  var code = "";
+  code = "for(int " + iterator + " = " + from + "; " + iterator + "<=" + to + ";" + iterator + "+=" + by + "){ \n"
+       + statement
+       + "\n} \n";
+  return code;
+};
+
+/**
+ * Parses an App Inventor block that:
+ * Opens a new screen.
+ * @param controlBlock The App Inventor Block
+ * @return The equivalent Java Code
+*/
 Blockly.Java.parseJBridgeControlOpenAnotherScreenBlock = function(controlBlock){
     var code = "";
     jBridgeImportsMap["Intent"] = "import android.content.Intent;";
@@ -521,6 +713,14 @@ Blockly.Java.parseJBridgeControlOpenAnotherScreenBlock = function(controlBlock){
     code += "startActivity(new Intent().setClass(this, " + screenName + ".class));\n";
     return code;    
 };
+
+/**
+ * Parses an App Inventor block that:
+ * Tests a given condition. 
+ * If the condition is true, performs the actions in a given sequence of blocks
+ * @param controlIfBlock The App Inventor Block
+ * @return The equivalent Java Code
+*/
 Blockly.Java.parseJBridgeControlIfBlock = function(controlIfBlock){
   // var conditions = [];
   // var ifElseStatements = [];
@@ -579,6 +779,12 @@ Blockly.Java.parseJBridgeControlIfBlock = function(controlIfBlock){
   //     return Blockly.Java.genJBridgeControlIfBlock(conditions, ifStatement, ifElseStatements, elseStatement);
 };
 
+/**
+ * Parses an App Inventor block that:
+ * Runs the blocks in the do section for each item in the list in list
+ * @param controlForEachBlock The App Inventor Block
+ * @return The equivalent Java Code
+*/
 Blockly.Java.parseJBridgeControlForEachBlock = function(controlForEachBlock){
   var code = "";
   var forList = Blockly.Java.parseBlock(controlForEachBlock.childBlocks_[0]);
@@ -588,6 +794,13 @@ Blockly.Java.parseJBridgeControlForEachBlock = function(controlForEachBlock){
   return code;
 };
 
+/**
+ * Generates the java code for a "for each" loop
+ * @param forList the list to iterate through
+ * @param forItem the local iterator variable
+ * @param forStatement the code to run within the body of the loop
+ * @return The Java Code
+*/
 Blockly.Java.genJBridgeControlForEachBlock = function(forList, forItem, forStatement){
   var code = "";
   code = "for(Object "
@@ -600,7 +813,12 @@ Blockly.Java.genJBridgeControlForEachBlock = function(forList, forItem, forState
   return code;
 };
 
-
+/**
+ * Generates the java code for an if statement
+ * @param condition the if statement condition
+ * @param statement the code to run within the if statement body
+ * @return The Java Code
+*/
 Blockly.Java.genJBridgeControlIfBlock = function(condition, statement){
   //in the case that the condition is a method
   condition = Blockly.Java.removeColonsAndNewlines(condition);
@@ -614,6 +832,12 @@ Blockly.Java.genJBridgeControlIfBlock = function(condition, statement){
   return code;
 };
 
+/**
+ * Generates the java code for an "else if" statement
+ * @param condition the if statement condition
+ * @param statement the code to run within the "else if" body
+ * @return The Java Code
+*/
 Blockly.Java.genJBridgeControlElseIfBlock = function(condition, statement){
   //in the case that the condition is a method
   condition = condition.replace(/[;\n]*/g, "");
@@ -626,6 +850,11 @@ Blockly.Java.genJBridgeControlElseIfBlock = function(condition, statement){
   return code;
 };
 
+/**
+ * Generates the java code for an "else" statement
+ * @param statement the code to run within the "else" body
+ * @return The Java Code
+*/
 Blockly.Java.genJBridgeControlElseBlock = function(statement){
   var code = "";
   code = "else { \n"
