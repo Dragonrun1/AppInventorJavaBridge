@@ -125,6 +125,23 @@ var jBridgeMethodAndTypeToPermisions = new Object();
 //predefined helper methods to be declared if used
 var toCSVMethod = "\npublic String toCSV(ArrayList<Object> originalList){\nStringBuilder stringBuilder = new StringBuilder();\nfor (int i=0;i < originalList.size(); i++){\nObject elem = originalList.get(i);\nstringBuilder.append(elem.toString());\nif (i < originalList.size()-1){\nstringBuilder.append(\", \");\n}\n}\nreturn stringBuilder.toString();\n}";
 
+var singleMathJavaNames = new Map();
+singleMathJavaNames.set("ROOT", "sqrt");
+singleMathJavaNames.set("ABS", "abs");
+singleMathJavaNames.set("LN", "log");
+singleMathJavaNames.set("EXP", "exp");
+singleMathJavaNames.set("ROUND", "round");
+singleMathJavaNames.set("CEILING", "ceil");
+singleMathJavaNames.set("FLOOR", "floor");
+singleMathJavaNames.set("SIN", "sin");
+singleMathJavaNames.set("COS", "cos");
+singleMathJavaNames.set("TAN", "tan");
+singleMathJavaNames.set("ASIN", "asin");
+singleMathJavaNames.set("ACOS", "acos");
+singleMathJavaNames.set("ATAN", "atan");
+
+var singleMathTypes = ["math_single", "math_trig", "math_abs", "math_neg", "math_round", "math_ceiling", "math_floor"];
+
 /*** Type cast Map start ***/
 var paramTypeCastMap = new Map();
 paramTypeCastMap.set("BackgroundColor", ["((Float)XXX).intValue()"]);
@@ -1429,7 +1446,153 @@ Blockly.Java.parseJBridgeMathBlocks = function(mathBlock){
     code = Blockly.Java.parseJBridgeMathCompare(mathBlock);
   }else if(type == "math_atan2"){
     code = Blockly.Java.parseJBridgeMathAtan2(mathBlock);
+  }else if(type == "math_power"){
+    code = Blockly.Java.parseJBridgeMathPowerBlock(mathBlock);
+  }else if(singleMathTypes.indexOf(type) > -1){
+    code = Blockly.Java.parseJBridgeMathSingleBlock(mathBlock);
+  }else if(type == "math_convert_angles"){
+    code = Blockly.Java.parseJBridgeMathConvertAngleBlock(mathBlock);
+  }else if(type == "math_convert_number"){
+    code = Blockly.Java.parseJBridgeMathConvertNumberBlock(mathBlock);
+  }else if(type == "math_is_a_number"){
+    code = Blockly.Java.parseJBridgeMathIsNumberBlock(mathBlock);
   }
+  return code;
+};
+
+/**
+ * Parses an App Inventor Block that:
+ * Returns true if the given object is a number of the given base, and false otherwise.
+ * @param mathBlock the App Inventor math block
+ * @return the Java Code
+*/
+Blockly.Java.parseJBridgeMathIsNumberBlock = function(mathBlock){
+  var code = "";
+  var operand = mathBlock.getFieldValue('OP');
+  var value = Blockly.Java.parseBlock(mathBlock.childBlocks_[0]);
+  
+  if (operand == "NUMBER"){
+    code += "String.valueOf(" + value + ")" + ".matches(\"[0-9]+.?[0-9]+\")";
+  }else if (operand == "BASE10"){
+    //TODO NOT IMPLEMENTED IN LIBRARY YET
+  }else if (operand == "HEXADECIMAL"){
+    //TODO NOT IMPLEMENTED IN LIBRARY YET
+  }else if (operand == "BINARY"){
+    code += "String.valueOf(" + value + ")" + ".matches(\"[01]+\")";
+  }
+  return code;
+};
+
+/**
+ * Parses an App Inventor Block that:
+ * Converts a number to the given type
+ * @param mathBlock the App Inventor math block
+ * @return the Java Code
+*/
+Blockly.Java.parseJBridgeMathConvertNumberBlock = function(mathBlock){
+  var code = "";
+  var operand = mathBlock.getFieldValue('OP');
+  var value = Blockly.Java.parseBlock(mathBlock.childBlocks_[0]);
+  if(value.slice(-7) == ".Text()"){
+      value = "Integer.parseInt(" + value + ")";
+  }
+  
+  if (operand == "DEC_TO_HEX"){
+    code += "Integer.valueOf(String.valueOf(" + value + "), 16)";
+  }else if (operand == "HEX_TO_DEC"){
+    code += "Integer.parseInt(String.valueOf(" + value + "), 16)";  
+  }else if (operand == "DEC_TO_BIN"){
+    code += "Integer.toBinaryString((int)" + value + ")";  
+  }else if (operand == "BIN_TO_DEC"){
+    code += "Integer.parseInt(String.valueOf(" + value + "), 2)";  
+  }
+  return code;
+};
+
+/**
+ * Parses an App Inventor Block that:
+ * Converts a number from radians to degrees or from degrees to radians
+ * @param mathBlock the App Inventor math block
+ * @return the Java Code
+*/
+Blockly.Java.parseJBridgeMathConvertAngleBlock = function(mathBlock){
+  var code = "";
+  var operand = mathBlock.getFieldValue('OP');
+  var value = Blockly.Java.parseBlock(mathBlock.childBlocks_[0]);
+  if(value.slice(-7) == ".Text()"){
+      value = "Integer.parseInt(" + value + ")";
+  }
+  
+  if (operand == "RADIANS_TO_DEGREES"){
+    code += "Math.toDegrees(" + value + ")";
+  }else if (operand == "DEGREES_TO_RADIANS"){
+    code += "Math.toRadians(" + value + ")";  
+  }
+  return code;
+};
+
+/**
+ * Parses an App Inventor Block that:
+ * performs different math operations
+ * @param mathBlock the App Inventor math block
+ * @return the Java Code
+*/
+Blockly.Java.parseJBridgeMathSingleBlock = function(mathBlock){
+  var code = "";
+  var operand = mathBlock.getFieldValue('OP');
+  var value = Blockly.Java.parseBlock(mathBlock.childBlocks_[0]);
+  if(value.slice(-7) == ".Text()"){
+      value = "Integer.parseInt(" + value + ")";
+  }
+  //Theres no java method for negate
+  if (operand == "NEG"){
+    code = "Math.abs(" + value + ") * -1";
+  }else{
+    var javaMethodName = singleMathJavaNames.get(operand);
+    code = "Math." + javaMethodName + "(" + value + ")";
+  }
+  return code;
+};
+
+/**
+ * Parses an App Inventor Block that:
+ * gives the min or max of two given numbers
+ * @param mathBlock the App Inventor math block
+ * @return the Java Code
+*/
+Blockly.Java.parseJBridgeMathOnListBlock = function(mathBlock){
+  var code = "";
+  var operand = mathBlock.getFieldValue('OP');
+  var leftValue = Blockly.Java.parseBlock(mathBlock.childBlocks_[0]);
+  if(leftValue.slice(-7) == ".Text()"){
+      leftValue = "Integer.parseInt(" + leftValue + ")";
+  }
+  var rightValue = Blockly.Java.parseBlock(mathBlock.childBlocks_[1]);
+  if(rightValue.slice(-7) == ".Text()"){
+      rightValue = "Integer.parseInt(" + rightValue + ")";
+  }
+  //Math.min() or Math.max()
+  code += "Math." + operand.toLowerCase() + "(" + leftValue + ", " + rightValue + ")";
+  return code;
+};
+
+/**
+ * Parses an App Inventor Block that:
+ * gives the power of the given number raised to the second given number
+ * @param mathBlock the App Inventor math block
+ * @return the Java Code
+*/
+Blockly.Java.parseJBridgeMathPowerBlock = function(mathBlock){
+  var code = "";
+  var leftValue = Blockly.Java.parseBlock(mathBlock.childBlocks_[0]);
+  if(leftValue.slice(-7) == ".Text()"){
+      leftValue = "Integer.parseInt(" + leftValue + ")";
+  }
+  var rightValue = Blockly.Java.parseBlock(mathBlock.childBlocks_[1]);
+  if(rightValue.slice(-7) == ".Text()"){
+      rightValue = "Integer.parseInt(" + rightValue + ")";
+  }
+  code += "Math.pow(" + leftValue + ", " + rightValue + ")";
   return code;
 };
 Blockly.Java.parseJBridgeMathNumberBlock = function(mathBlock){
