@@ -863,22 +863,6 @@ Blockly.Java.genJBridgeControlElseBlock = function(statement){
   return code;
 };
 
-// Blockly.Java.genJBridgeControlIfBlock = function(conditions, ifStatement, ifElseStatements, elseStatement){
-//   var code = "";
-//   code += "if("+conditions[0]+")"
-//        + "{\n" + ifStatement + "\n}\n";
-//   for(var i = 1,j=0; i < ifElseStatements.length && j<i; j++,i++){
-//       code += "else if("+conditions[i]+")\n"
-//               + "{\n" + ifElseStatements[j] + "\n}\n";
-//   }
-
-//   if(elseStatement != undefined)
-//   {
-//     code += "else {"+ elseStatement+"\n}";
-//   }
-//   return code;
-// };
-
 
 Blockly.Java.parseJBridgeVariableBlocks = function (variableBlock){
 var code = "";
@@ -2087,7 +2071,13 @@ Blockly.Java.parseJBridgeListAppendList = function(listBlock){
   var code = "";
   var list1 = Blockly.Java.parseBlock(listBlock.childBlocks_[0]);
   var list2 = Blockly.Java.parseBlock(listBlock.childBlocks_[1]);
-  code += list1 + ".addAll(" + list2 + ");";
+  //if appending an empty list
+  if (listBlock.childBlocks_[1].type == "lists_create_with"){
+      code += list2;
+      code += list1 + ".add(" + listBlock.childBlocks_[1].getCommentText() + ");";
+  }else{
+      code += list1 + ".addAll(" + list2 + ");";
+  }
   return code;
 };
 
@@ -2270,14 +2260,20 @@ Blockly.Java.parseJBridgeListsCreateWithBlock = function(listBlock){
  * @return the parent Name of the given listBlock
 */
 Blockly.Java.findParentListName = function(listBlock){
-    var parentName = "";    
-    if (listBlock.parentBlock_.getFieldValue('NAME') != undefined){
-      parentName = listBlock.parentBlock_.getFieldValue('NAME').replace("global ", "");
-    }else if(listBlock.parentBlock_.getFieldValue('VAR') != undefined){
-      parentName = listBlock.parentBlock_.getFieldValue('VAR').replace("global ", "");
-    }else if (listBlock.parentBlock_.getCommentText() != undefined){
-      parentName = listBlock.parentBlock_.getCommentText();        
-    }        
+    var parentName = "";   
+    while (listBlock.parentBlock_ != undefined){
+      if (listBlock.parentBlock_.getFieldValue('NAME') != undefined){
+        parentName = listBlock.parentBlock_.getFieldValue('NAME').replace("global ", "");
+        break;
+      }else if(listBlock.parentBlock_.getFieldValue('VAR') != undefined){
+        parentName = listBlock.parentBlock_.getFieldValue('VAR').replace("global ", "");
+        break;
+      }else if (listBlock.parentBlock_.getCommentText() != ''){
+        parentName = listBlock.parentBlock_.getCommentText();        
+        break;
+      }
+      listBlock = listBlock.parentBlock_;
+    }   
     return parentName;
 };
 
