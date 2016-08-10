@@ -902,9 +902,6 @@ Blockly.Java.parseJBridgeVariableGetBlock = function(variableGetBlock){
     //Check if the variable is global or fuction param
     paramsMap = Blockly.Java.getJBridgeParentBlockFieldMap(variableGetBlock.parentBlock_, "component_event", "PARAMETERS");
     paramName = Blockly.Java.getJBridgeRelativeParamName(paramsMap, paramName);
-    if(variableGetBlock.parentBlock_.type == "controls_if" && variableGetBlock.childBlocks_.length == 0 && variableGetBlock.parentBlock_.childBlocks_[0] == variableGetBlock){
-      paramName = "((Boolean) " + paramName + ").booleanValue()";
-    }
     return Blockly.Java.genJBridgeVariableGetBlock(paramName);
   };
 
