@@ -2830,21 +2830,42 @@ Blockly.Java.prityPrintIndentationJBridge = function(indentLength){
   * @params{String} forRepl  true if the code is being generated for the REPL, false if for an apk
   * @return{String} code generated if no errors
   */
-Blockly.Java.getFormMainfest = function(formJson, packageName, forRepl) {
+Blockly.Java.getManifestJSONData = function(formJson) {
     Blockly.Java.initAndroidPermisionAndIntent();
     var jsonObject = JSON.parse(formJson); 
     Blockly.Java.genJBridgeCode(Blockly.mainWorkspace.getTopBlocks(true), jsonObject);
-    
-    var androidIntents = "";
-    var androidPermisions = "";
-    for (var key in jBridgePermissionToAdd) {
-      androidPermisions += jBridgeAndroidPermisions[key];
-    }
+
+    //forming json return string
+    var jsonReturn = "{";
+    jsonReturn += "\"screenName\": \"" + jBridgeCurrentScreen + "\",";
+
+    jsonReturn += "\"intents\": [";
+    var added = false;
     for (var key in jBridgeIntentsToAdd) {
-      androidIntents += jBridgeAndroidIntents[key];
+      jsonReturn += "{\"intent\": \"" + jBridgeAndroidIntents[key].replace(/["]/g, "'") + "\"},";
+      added = true;
     }
-    return Blockly.Java.genManifestString(androidPermisions, androidIntents);
-    
+    //remove last comma
+    if (added  == true){
+      jsonReturn = jsonReturn.slice(0, -1);
+    }
+    jsonReturn += "],";
+
+    added = false;
+    jsonReturn += "\"permissions\": [";
+    for (var key in jBridgePermissionToAdd) {
+      jsonReturn += "{\"permission\": \"" + jBridgeAndroidPermisions[key].replace(/["]/g, "'") + "\"},";
+      added = true;
+    }
+    //remove last comma
+    if (added  == true){
+      jsonReturn = jsonReturn.slice(0, -1);
+    }
+    //removing newline characters
+    jsonReturn = jsonReturn.replace(/[\r\n]*/g, "");
+    jsonReturn += "]";
+    jsonReturn += "}";
+    return jsonReturn;
 };
 
  /**
@@ -2868,10 +2889,10 @@ Blockly.Java.initAndroidPermisionAndIntent = function(){
     jBridgeMethodAndTypeToPermisions["sendmessage"] = ["receive_sms","send_sms", "voice_receive_sms","voice_send_sms", "manage_accounts", "get_accounts","use_credentials"];
     
     //This includes method Names or Type
-    jBridgeAndroidIntents["sendmessage"] = "<receiver android:name=\"com.google.appinventor.components.runtime.util.SmsBroadcastReceiver\"\r\n\r\n          android:enabled=\"true\" android:exported=\"true\">\r\n\r\n    "
+    jBridgeAndroidIntents["sendmessage"] = "<receiver android:name=\"com.google.appinventor.components.runtime.util.SmsBroadcastReceiver\"\r\n\r\n android:enabled=\"true\" android:exported=\"true\">\r\n\r\n"
                             + "<intent-filter>\r\n\r\n        \r\n\r\n        "
                             + "<action android:name=\"android.provider.Telephony.SMS_RECEIVED\"/>\r\n\r\n        "
-                            + "<action android:name=\"com.google.android.apps.googlevoice.SMS_RECEIVED\"\r\n\r\n                android:permission=\"com.google.android.apps.googlevoice.permission.RECEIVE_SMS\"/>\r\n\r\n    "
+                            + "<action android:name=\"com.google.android.apps.googlevoice.SMS_RECEIVED\"/>\r\n\r\n"
                             + "</intent-filter>\r\n\r\n"
                             + "</receiver>\r\n\r\n    ";
 };
@@ -2890,33 +2911,8 @@ Blockly.Java.addPermisionsAndIntents = function(name){
     }   
   }
   if(name in jBridgeAndroidIntents){
-    jBridgeIntentsToAdd[name] = true; 
+    jBridgeIntentsToAdd[name] = true;
   }
-};
-
-/**
- * Generates android manifest string from android permissions and android intents
- *
- * @params{String} androidPermissions
- * @params{String} androidIntents
- * @return{String} code that is generated
- */
-Blockly.Java.genManifestString = function(androidPermisions, androidIntents){
-  var mainfestString = "<?xml version=\"1.0\" encoding=\"utf-8\"?>\r\n\r\n"
-                            + "<manifest xmlns:android=\"http://schemas.android.com/apk/res/android\"\r\n\r\n    package=\"org.appinventor\"\r\n\r\n    android:versionCode=\"1\"\r\n\r\n    android:versionName=\"1.0\" >\r\n\r\n"
-                            + "<uses-sdk\r\n\r\n        android:minSdkVersion=\"8\"\r\n\r\n        android:targetSdkVersion=\"21\" />\r\n\r\n    "                  
-                            + androidPermisions
-                            + "<application\r\n\r\n        android:allowBackup=\"true\"\r\n\r\n        android:icon=\"@drawable/ic_launcher\"\r\n\r\n        android:label=\"Screen1\">\r\n\r\n        "
-                            + "<activity\r\n\r\n            android:name=\".Screen1\"\r\n\r\n            android:label=\"Screen1\" >\r\n\r\n            "
-                            + "<intent-filter>\r\n\r\n                "
-                            + "<action android:name=\"android.intent.action.MAIN\" />\r\n\r\n\r\n\r\n                "
-                            + "<category android:name=\"android.intent.category.LAUNCHER\" />\r\n\r\n            "
-                            + "</intent-filter>\r\n\r\n        "
-                            + androidIntents
-                            + "</activity>\r\n\r\n        "
-                            + "</application>\r\n\r\n\r\n\r\n"
-                            + "</manifest>";
-  return mainfestString;
 };
 
 /**

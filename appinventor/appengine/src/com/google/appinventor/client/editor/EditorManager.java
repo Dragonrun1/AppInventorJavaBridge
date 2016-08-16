@@ -18,6 +18,10 @@ import com.google.appinventor.shared.rpc.BlocksTruncatedException;
 import com.google.appinventor.shared.rpc.project.FileDescriptorWithContent;
 import com.google.appinventor.shared.rpc.project.ProjectRootNode;
 import com.google.common.collect.Maps;
+import com.google.gwt.json.client.JSONArray;
+import com.google.gwt.json.client.JSONObject;
+import com.google.gwt.json.client.JSONParser;
+import com.google.gwt.json.client.JSONValue;
 import com.google.gwt.user.client.Command;
 import com.google.gwt.user.client.Timer;
 
@@ -394,21 +398,17 @@ public final class EditorManager {
 
     public void generateManifestForBlocksEditors(final Command successCommand,
                                              final Command failureCommand) {
-        List<FileDescriptorWithContent> manifestFiles =  new ArrayList<FileDescriptorWithContent>();
-        ArrayList<String> formNames = new ArrayList<String>();
+        List<FileDescriptorWithContent> manifestJSONData =  new ArrayList<FileDescriptorWithContent>();
         long currentProjectId = Ode.getInstance().getCurrentYoungAndroidProjectId();
         for (long projectId : openProjectEditors.keySet()) {
             if (projectId == currentProjectId) {
-                // Generate yail for each blocks editor in this project and add it to the list of
-                // yail files. If an error occurs we stop the generation process, report the error,
-                // and return without executing nextCommand.
+                // get JSON permission and intent data for each screen
                 ProjectEditor projectEditor = openProjectEditors.get(projectId);
                 for (FileEditor fileEditor : projectEditor.getOpenFileEditors()) {
                     if (fileEditor instanceof YaBlocksEditor) {
                         YaBlocksEditor yaBlocksEditor = (YaBlocksEditor) fileEditor;
-                        try {                                                        
-                            manifestFiles.add(yaBlocksEditor.getManifest());
-                            formNames.add(yaBlocksEditor.fileNode.getName());
+                        try {
+                            manifestJSONData.add(yaBlocksEditor.getManifestJSONData());
                         } catch (YailGenerationException e) {
                             ErrorReporter.reportInfo(MESSAGES.yailGenerationError(e.getFormName(),
                                     e.getMessage()));
@@ -421,14 +421,12 @@ public final class EditorManager {
                 }
                 break;
             }
-        }        
-        //multiple manifest files
-        if (formNames.size() > 1){
-            manifestFiles = mergeManifests(manifestFiles, formNames);
         }
+        //parse JSON data to create manifest
+        manifestJSONData = parseManifestJSON(manifestJSONData);
 
         Ode.getInstance().getProjectService().save(Ode.getInstance().getSessionId(),
-                manifestFiles,
+                manifestJSONData,
                 new OdeAsyncCallback<Long>(MESSAGES.saveErrorMultipleFiles()) {
                     @Override
                     public void onSuccess(Long date) {
@@ -448,33 +446,96 @@ public final class EditorManager {
     }
     
     /**
-     * This is a helper method to generateManifestForBlocksEditors()
-     * It will add other screens as activities in the main manifest file
-     * @param manifestFiles The list of manifest files
-     * @param formNames The list of java files names to register as activity in Manifest
-     * @return a list containing one manifest file with all activities merged
+     * Parses the returned JSON (containing permission/intent info) for the manifest file.
+     * Returns a collection with only one file (The manifest) 
+     * (To save a "FileDescriptorWithContent" it must be in a collection)
+     * @param manifestJSONFiles The list of JSON data files
+     * @return a list containing "one" manifest file with the necessary information
      */
-    private List<FileDescriptorWithContent> mergeManifests(List<FileDescriptorWithContent> manifestFiles, ArrayList<String> formNames){      
+    private List<FileDescriptorWithContent> parseManifestJSON(List<FileDescriptorWithContent> manifestJSONFiles){
       List<FileDescriptorWithContent> singleManifest =  new ArrayList<FileDescriptorWithContent>();
-      FileDescriptorWithContent firstScreenManifest = manifestFiles.get(0);
-      String content = firstScreenManifest.getContent();
-      for (int i=0; i < formNames.size(); i++){
-          String screenPathString = formNames.get(i);     
-          String screenName = screenPathString.substring(screenPathString.lastIndexOf("/") + 1, screenPathString.indexOf("."));
-          String manifestActivityTag = "<activity "
-                  + "android:name=\"."
-                  + screenName
-                  + "\" ></activity>\n\n"
-                  + "</application>";
-          //adding the activity to manifest
-          if (!content.contains(screenName)){
-              content = content.replace("</application>", manifestActivityTag);
-          }          
+
+      //information for creating the manifest
+      String mainScreenName = "";
+      ArrayList<String> alternateScreens = new ArrayList<String>();
+      ArrayList<String> permissionsList = new ArrayList<String>();
+      ArrayList<String> intents = new ArrayList<String>();
+      //parse JSON
+      for (int i=0; i <  manifestJSONFiles.size(); i++){
+        FileDescriptorWithContent manifestFile = manifestJSONFiles.get(i);
+        String content = manifestFile.getContent();
+        JSONValue jsonValue = JSONParser.parseStrict(content);
+        JSONObject jsonContent = jsonValue.isObject();
+
+        if (jsonContent != null){
+          String screenName = jsonContent.get("screenName").toString().replaceAll("\"", "");
+          //main screen for app is always the first to be parsed
+          if (i == 0){
+            mainScreenName = screenName;
+          }else {
+            alternateScreens.add(screenName);
+          }
+          JSONArray permissions = (JSONArray) jsonContent.get("permissions");
+          for (int j=0; j <permissions.size(); j++){
+            JSONObject permission = (JSONObject) permissions.get(j);
+            if (permission != null){
+              permissionsList.add(permission.get("permission").toString().replaceAll("\"",""));
+            }
+          }
+
+          JSONArray intentsJSON = (JSONArray) jsonContent.get("intents");
+          for (int j=0; j <intentsJSON.size(); j++){
+            JSONObject intentJSON = (JSONObject) intentsJSON.get(j);
+            if (intentJSON != null){
+              intents.add(intentJSON.get("intent").toString().replaceAll("\"",""));
+            }
+          }
+        }
       }
-      firstScreenManifest.setContent(content);
-      singleManifest.add(firstScreenManifest);
+
+      //replace the first file's content with the created manifest string. 
+      //(easier than creating another file and the files are already named "AnrdoidManifest.xml")
+      manifestJSONFiles.get(0).setContent(createManifest(mainScreenName, alternateScreens, permissionsList, intents));
+      //add that first file to the Collection
+      singleManifest.add(manifestJSONFiles.get(0));
       return singleManifest;
     }
+
+  /**
+   * This method creates the manifest file for the generated java code
+   * @param mainScreenName The main screen of the app
+   * @param alternateScreens Alternative screens used in the app
+   * @param permissions The app's permissions
+   * @param intents The app's intents
+  */
+  private String createManifest(String mainScreenName, ArrayList<String> alternateScreens, ArrayList<String> permissions, ArrayList<String> intents){
+    String formattedPermissions = "";
+    for (String permission: permissions){
+      formattedPermissions += permission + "\r\n\r\n";
+    }
+    String formattedIntents = "";
+    for (String intent: intents){
+      formattedIntents += intent;
+    }
+    String manifest = "<?xml version=\"1.0\" encoding=\"utf-8\"?>\r\n\r\n"
+            + "<manifest xmlns:android=\"http://schemas.android.com/apk/res/android\"\r\n\r\n    package=\"org.appinventor\"\r\n\r\n    android:versionCode=\"1\"\r\n\r\n    android:versionName=\"1.0\" >\r\n\r\n"
+            + "<uses-sdk\r\n\r\n        android:minSdkVersion=\"8\"\r\n\r\n        android:targetSdkVersion=\"21\" />\r\n\r\n    "
+            + formattedPermissions
+            + "\r\n\r\n\r\n\r\n<application\r\n\r\n        android:allowBackup=\"true\"\r\n\r\n        android:icon=\"@drawable/ic_launcher\"\r\n\r\n        android:label=\"" + mainScreenName + "\">\r\n\r\n        "
+            + "<activity\r\n\r\n            android:name=\"." + mainScreenName + "\"\r\n\r\n            android:label=\"" + mainScreenName + "\" >\r\n\r\n            "
+            + "<intent-filter>\r\n\r\n                "
+            + "<action android:name=\"android.intent.action.MAIN\" />\r\n\r\n\r\n\r\n                "
+            + "<category android:name=\"android.intent.category.LAUNCHER\" />\r\n\r\n            "
+            + "</intent-filter>\r\n\r\n        "
+            + formattedIntents
+            + "\r\n\r\n</activity>\r\n\r\n        ";
+    for (String activityName: alternateScreens){
+      manifest += "<activity android:name=\"" + activityName + "\" ></activity>\n";
+
+    }
+    manifest += "</application>\r\n\r\n\r\n\r\n" + "</manifest>";
+    return manifest;
+  }
 
   /**
    * This code used to send the contents of all changed files to the server

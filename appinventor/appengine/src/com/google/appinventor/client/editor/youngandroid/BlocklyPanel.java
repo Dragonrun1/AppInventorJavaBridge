@@ -592,12 +592,12 @@ public class BlocklyPanel extends HTMLPanel implements ComponentDatabaseChangeLi
             throw new YailGenerationException(e.getDescription(), formName);
         }
     }
-    public String getManifest(String formJson, String packageName) throws YailGenerationException {
+    public String getManifestJSONData(String formJson) throws YailGenerationException {
         if (!blocksInited(formName)) {
             throw new YailGenerationException("Blocks area is not initialized yet", formName);
         }
         try {
-            return doGetManifest(formName, formJson, packageName);
+            return getManifestJSONData(formName, formJson);
         } catch (JavaScriptException e) {
             throw new YailGenerationException(e.getDescription(), formName);
         }
@@ -992,8 +992,8 @@ public class BlocklyPanel extends HTMLPanel implements ComponentDatabaseChangeLi
     return $wnd.Blocklies[formName].Yail.getFormYail(formJson, packageName);
   }-*/;
 
-  public static native String doGetManifest(String formName, String formJson, String packageName) /*-{
-    return $wnd.Blocklies[formName].Java.getFormMainfest(formJson, packageName);
+  public static native String getManifestJSONData(String formName, String formJson) /*-{
+    return $wnd.Blocklies[formName].Java.getManifestJSONData(formJson);
   }-*/;
 
   public static native void doSendJson(String formName, String formJson, String packageName) /*-{
