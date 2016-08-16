@@ -53,6 +53,7 @@ public interface FileExporter {
     boolean includeProjectHistory,
     boolean includeAndroidKeystore, @Nullable String zipName,
     boolean includeYail,
+    boolean includeScreenShots,
     boolean fatalError, boolean forGallery) throws IOException;
 
 
