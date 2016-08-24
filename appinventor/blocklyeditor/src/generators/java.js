@@ -142,19 +142,221 @@ singleMathJavaNames.set("ATAN", "atan");
 
 var singleMathTypes = ["math_single", "math_trig", "math_abs", "math_neg", "math_round", "math_ceiling", "math_floor"];
 
-/*** Type cast Map start ***/
-var paramTypeCastMap = new Map();
-paramTypeCastMap.set("BackgroundColor", ["((Float)XXX).intValue()"]);
-paramTypeCastMap.set("DrawLine", ["(XXX instanceof Integer)? Integer.parseInt(String.valueOf(XXX)) : ((Float)XXX).intValue()", "(XXX instanceof Integer)? Integer.parseInt(String.valueOf(XXX)) : ((Float)XXX).intValue()", "(XXX instanceof Integer)? Integer.parseInt(String.valueOf(XXX)) : ((Float)XXX).intValue()", "(XXX instanceof Integer)? Integer.parseInt(String.valueOf(XXX)) : ((Float)XXX).intValue()"]);
-paramTypeCastMap.set("DrawCircle", ["((Float)XXX).intValue()", "((Float)XXX).intValue()", "XXX", "XXX"]);
-paramTypeCastMap.set("PhoneNumber", ["String.valueOf(XXX)"]);
-paramTypeCastMap.set("Message", ["String.valueOf(XXX)"]);
-paramTypeCastMap.set("PaintColor", ["Integer.parseInt(String.valueOf(XXX))"]);
-paramTypeCastMap.set("GoToUrl", ["String.valueOf(XXX)"]);
-paramTypeCastMap.set("Duration", ["((Calendar)XXX)", "((Calendar)XXX)"]);
-paramTypeCastMap.set("TimerInterval", ["Integer.parseInt(String.valueOf(XXX))"]);
-paramTypeCastMap.set("MoveTo", ["(double) XXX", "XXX"]);
-paramTypeCastMap.set("Bounce", ["(int) XXX"]);
+var methodParam= new Object();
+
+var JAVA_INT = "int";
+var JAVA_FLOAT = "float";
+var JAVA_BOOLEAN = "boolean";
+var JAVA_STRING = "String";
+var JAVA_SPRITE = "Sprite";
+var JAVA_VIEW = "AndroidViewComponent";
+var JAVA_OBJECT = "Object";
+
+//Param type Map start. Includes methods and individual events
+var methodParamsMap = {
+
+   //canvas methods
+    'BackgroundColor' : {0 : JAVA_INT},
+    'BackgroundImage' : {0: JAVA_STRING},
+    'DrawCircle' : {0: JAVA_INT, 1: JAVA_INT, 2: JAVA_FLOAT, 3: JAVA_BOOLEAN},
+    'DrawLine' : {0: JAVA_INT, 1: JAVA_INT, 2: JAVA_INT, 3: JAVA_INT, 4: JAVA_INT, 5: JAVA_INT, 6: JAVA_BOOLEAN},
+    'DrawPoint' : {0: JAVA_INT, 1:JAVA_INT},
+    'DrawText' : {0: JAVA_STRING, 1: JAVA_INT, 2: JAVA_INT},
+    'DrawTextAtAngle' : {0:JAVA_STRING, 1:JAVA_INT, 2: JAVA_INT, 3: JAVA_FLOAT},
+    'findSpriteCollisions' : {0: JAVA_SPRITE},
+    'FontSize' : {0: JAVA_FLOAT},
+    'GetBackgroundPixelColor' : {0:JAVA_INT, 1: JAVA_INT},
+    'GetPixelColor' : {0:JAVA_INT, 1: JAVA_INT},
+    'GetBackgroundPixelColor' : {0:JAVA_INT, 1: JAVA_INT},
+    'Height' : {0: JAVA_INT},
+    'LineWidth' : {0: JAVA_FLOAT},
+    'SaveAs' : {0: JAVA_STRING},
+    'setChildHeight' : {0: JAVA_VIEW, 1: JAVA_INT},
+    'SetBackgroundPixelColor' : {0: JAVA_INT, 1: JAVA_INT, 2: JAVA_INT},
+    'PaintColor' : {0: JAVA_INT},
+    'TextAlignment' : {0: JAVA_INT},
+    'Visible' : {0: JAVA_BOOLEAN},
+    'Width' : {0: JAVA_FLOAT},
+    'WidthPercent' : {0: JAVA_FLOAT},
+    'MoveTo' : {0: JAVA_FLOAT, 1: JAVA_FLOAT},
+    'Dragged' : {0: JAVA_FLOAT, 1: JAVA_FLOAT, 2: JAVA_FLOAT, 3: JAVA_FLOAT, 4: JAVA_FLOAT, 5: JAVA_FLOAT, 6: JAVA_BOOLEAN},
+    'Flung' : {0: JAVA_FLOAT, 1: JAVA_FLOAT, 2: JAVA_FLOAT, 3: JAVA_FLOAT, 4: JAVA_FLOAT, 5: JAVA_FLOAT, 6: JAVA_BOOLEAN},
+    'TouchUp' : {0: JAVA_FLOAT, 1: JAVA_FLOAT},
+    'TouchDown' : {0: JAVA_FLOAT, 1: JAVA_FLOAT},
+
+    //sprite methods
+    'Bounce' : {0: JAVA_INT},
+    'CollidedWith' : {0: JAVA_SPRITE},
+    'CollidingWith': {0: JAVA_SPRITE},
+
+    //ball methods
+    'PointInDirection' : {0: JAVA_FLOAT, 1: JAVA_FLOAT},
+    'PointTowards' : {0: JAVA_SPRITE},
+
+    //camera
+    'TakePicture' : {0: JAVA_STRING},
+    'AfterPicture' : {0: JAVA_STRING},
+
+    //videoPlayer
+    'VideoPlayerError' : {0: JAVA_STRING},
+
+    //textTospeech
+    'AfterSpeaking' : {0: JAVA_STRING},
+    'Speak' : {0: JAVA_STRING},
+
+    //sound
+    'SoundError' : {0: JAVA_STRING},
+
+    //player
+    'PlayerError' : {0: JAVA_STRING},
+
+    //camcorder
+    'AfterRecording' : {0: JAVA_STRING},
+
+    //speechRecognizer
+    'AfterGettingText' : {0: JAVA_STRING},
+
+    //yandexTranslate
+    'GotTranslation': {0: JAVA_STRING, 1: JAVA_STRING},
+    'RequestTranslation' : {0: JAVA_STRING, 2: JAVA_STRING},
+
+    //spinner
+    'AfterSelecting': {0: JAVA_STRING},
+
+    //slider
+    'PositionChanged': {0: JAVA_FLOAT},
+
+    //notifer
+    'AfterChoosing' : {0: JAVA_STRING},
+    'AfterTextInput' : {0: JAVA_STRING},
+
+    //orientation sensor
+    'OrientationChanged' : {0: JAVA_FLOAT, 1: JAVA_FLOAT, 2: JAVA_FLOAT},
+
+    //nearField
+    'TagRead' : {0: JAVA_STRING},
+
+    //location sensor
+    'LongitudeFromAddress' :  {0: JAVA_STRING},
+    'LatitudeFromAddress' :  {0: JAVA_STRING},
+    'LocationChanged' : {0: JAVA_FLOAT, 1: JAVA_FLOAT, 2: JAVA_FLOAT},
+    'StatusChanged': {0: JAVA_STRING, 1: JAVA_STRING},
+
+    //barcode scanner
+    "AfterScan" : {0: JAVA_STRING},
+
+    //accelerometer sensor
+    'AccelerationChanged' :  {0: JAVA_FLOAT, 1: JAVA_FLOAT, 2: JAVA_FLOAT},
+
+    //pedometer
+    'SimpleStep' : {0: JAVA_INT, 1: JAVA_FLOAT},
+    'WalkStep' : {0: JAVA_INT, 1: JAVA_FLOAT},
+
+    //proximity sensor
+    'ProximityChanged' : {0: JAVA_FLOAT},
+
+    //file
+    'AppendToFile' :{0: JAVA_STRING, 1: JAVA_STRING},
+    'Delete' :{0: JAVA_STRING},
+    'ReadFrom' :{0: JAVA_STRING},
+    'SaveFile' :{0: JAVA_STRING, 1: JAVA_STRING},
+
+    //fusionTableControls
+    'GetRows' : {0: JAVA_STRING, 1: JAVA_STRING},
+    'GetRowsWithConditions' : {0: JAVA_STRING, 1: JAVA_STRING, 2: JAVA_STRING},
+    'InsertRow' : {0: JAVA_STRING, 1: JAVA_STRING, 2: JAVA_STRING},
+
+    //bluetoothServer
+    'AcceptConnection' : {0: JAVA_STRING},
+    'AcceptConnectionWithUUID' : {0: JAVA_STRING},
+    'Connect' : {0: JAVA_STRING},
+    'ConnectWithUUID' : {0: JAVA_STRING},
+    'IsDevicePaired' : {0: JAVA_STRING},
+    'RecievedSignedBytes' : {0: JAVA_INT},
+    'RecievedUnsignedBytes' : {0: JAVA_INT},
+    'RecieveText' : {0: JAVA_INT},
+    'Send1ByteNumber' : {0: JAVA_STRING},
+    'Send2ByteNumber' : {0: JAVA_STRING},
+    'Send4ByteNumber' : {0: JAVA_STRING},
+    'SendBytes' : {0: JAVA_OBJECT},
+    'SendText' : {0: JAVA_STRING},
+
+    //web
+    'BuildRequestData' : {0: JAVA_OBJECT},
+    'HtmlTextDecode' : {0: JAVA_STRING},
+    'JSONTextDecode' : {0: JAVA_STRING},
+    'PostFile' : {0: JAVA_STRING},
+    'PostText' : {0: JAVA_STRING},
+    'PostTextWithEncoding' : {0: JAVA_STRING, 1: JAVA_STRING},
+    'PutFile' : {0: JAVA_STRING},
+    'PutText' : {0: JAVA_STRING},
+    'PutTextWithEncoding': {0: JAVA_STRING},
+    'UriEncode' : {0: JAVA_STRING},
+    'XMLTextDecode' : {0: JAVA_STRING},
+
+    //sharing
+    'ShareFile' :{0: JAVA_STRING},
+    'ShareFileWithMessage' :{0: JAVA_STRING, 1: JAVA_STRING},
+    'ShareMessage' :{0: JAVA_STRING},
+
+    //twitter
+    'DirectMessage' : {0: JAVA_STRING, 1: JAVA_STRING},
+    'Follow' : {0: JAVA_STRING},
+    'Login' : {0: JAVA_STRING, 1: JAVA_STRING},
+    'SearchTwitter' : {0: JAVA_STRING},
+    'StopFollowing' : {0: JAVA_STRING},
+    'Tweet' : {0: JAVA_STRING},
+    'TweetWithImage' : {0: JAVA_STRING},
+
+    //tinyWebDB
+    'GetValue' :{0: JAVA_STRING},
+    'StoreValue' :{0: JAVA_STRING, 1: JAVA_OBJECT},
+
+    //tinyDB
+    'ClearTag' :{0: JAVA_STRING},
+    'GetValue' :{0: JAVA_STRING},
+    'StoreValue' :{0: JAVA_STRING, 1: JAVA_OBJECT},
+    //
+};
+//Map of double casting
+var methodSpecialCases = new Map();
+
+//canvas methods
+methodSpecialCases.set("BackgroundColor", ["((Float)XXX).intValue()"]);
+methodSpecialCases.set("DrawCircle", ["((Float)XXX).intValue()", "((Float)XXX).intValue()", "XXX", "XXX"]);
+methodSpecialCases.set("DrawLine", ["((Float)XXX).intValue()", "((Float)XXX).intValue()", "((Float)XXX).intValue()", "((Float)XXX).intValue()"]);
+methodSpecialCases.set("PaintColor", ["Integer.parseInt(String.valueOf(XXX))"]);
+methodSpecialCases.set("Dragged", ["((Float)XXX).intValue()", "((Float)XXX).intValue()", "((Float)XXX).intValue()", "((Float)XXX).intValue()", "((Float)XXX).intValue()", "((Float)XXX).intValue()", "((Boolean)XXX).booleanValue()"]);
+methodSpecialCases.set("MoveTo", ["((Float)XXX).intValue()", "((Float)XXX).intValue()"]);
+methodSpecialCases.set("Flung", ["((Float)XXX).intValue()", "((Float)XXX).intValue()", "((Float)XXX).intValue()", "((Float)XXX).intValue()", "((Float)XXX).intValue()", "((Float)XXX).intValue()", "((Boolean)XXX).booleanValue()"]);
+methodSpecialCases.set("TouchDown", ["((Float)XXX).intValue()", "((Float)XXX).intValue()"]);
+methodSpecialCases.set("TouchUp", ["((Float)XXX).intValue()", "((Float)XXX).intValue()"]);
+methodSpecialCases.set("Touched",["((Float)XXX).intValue()", "((Float)XXX).intValue()","((Boolean)XXX).booleanValue()"]);
+methodSpecialCases.set("PointinDirection", ["((Float)XXX).intValue()", "((Float)XXX).intValue()"]);
+
+//clock methods
+methodSpecialCases.set("Duration", ["((Calendar)XXX)", "((Calendar)XXX)"]);
+methodSpecialCases.set("TimerInterval", ["Integer.parseInt(String.valueOf(XXX))"]);
+
+//location sensor
+methodSpecialCases.set("LocationChanged", ["((Float)XXX).intValue()", "((Float)XXX).intValue()", "((Float)XXX).intValue()"]);
+
+//accelerometer sensor
+methodSpecialCases.set("AccelerationChanged", ["((Float)XXX).intValue()", "((Float)XXX).intValue()", "((Float)XXX).intValue()"]);
+
+//orientation sensor
+methodSpecialCases.set("OrientationChanged", ["((Float)XXX).intValue()", "((Float)XXX).intValue()", "((Float)XXX).intValue()"]);
+
+//pedometer
+methodSpecialCases.set('SimpleStep', ["(int)XXX", "((Float)XXX).intValue()"]);
+methodSpecialCases.set('WalkStep', ["(int)XXX", "((Float)XXX).intValue()"]);
+
+//proximity sensor
+methodSpecialCases.set('ProximityChanged', ["((Float)XXX).intValue()"]);
+
+//slider
+methodSpecialCases.set('PositionChanged', ["((Float)XXX).intValue()"]);
+
 
 //Map of accepted Screen Properties and castings
 var screenPropertyCastMap = new Map();
@@ -271,7 +473,7 @@ Blockly.Java.parseJBridgeJsonComopnents = function (componentJson, rootName){
   }
   jBridgeComponentMap[name] = [];
   jBridgeComponentMap[name].push({"rootName":rootName});
-  jBridgeComponentMap[name].push({"Type": componentJson.$Type});
+  jBridgeComponentMap[name].push({"Type": componentJson.$Type}); //<- look here?
 
   jBridgeVariableDefinitionMap[name] = componentJson.$Type;
   jBridgeImportsMap[componentJson.$Type] = "import com.google.appinventor.components.runtime."+componentJson.$Type+";"; 
@@ -283,7 +485,7 @@ Blockly.Java.parseJBridgeJsonComopnents = function (componentJson, rootName){
                +");";
 
   jBridgeInitializationList.push(newObj);  
-  if(componentJson.$Type.toLowerCase() == "imagesprite"){
+  if(componentJson.$Type.toLowerCase() == "imagesprite" || componentJson.$Type.toLowerCase() == "ball" ){ //just inserted 7/20/16 by *Elia*
     jBridgeInitializationList.push(name +".Initialize();");  
   }
   var componentsObj = undefined;
@@ -910,6 +1112,7 @@ Blockly.Java.genJBridgeVariableGetBlock = function(paramName){
   return code;
 };
 
+
 //It itertates through all the parent to find the specific blockType and loads fieldName map
 Blockly.Java.getJBridgeParentBlockFieldMap = function (block, blockType, fieldName){
   if(block != undefined && block != null && block.type == blockType){ 
@@ -996,6 +1199,8 @@ Blockly.Java.parseJBridgeComponentBlock = function(componentBlock){
   return code;
 };
 
+/* creates params list from field map generation from the particular component method
+ */
 Blockly.Java.parseJBridgeMethodCallBlock = function(methodCallBlock){
   var objectName = methodCallBlock.instanceName;
   var methodName = methodCallBlock.methodName;
@@ -1024,15 +1229,11 @@ Blockly.Java.parseJBridgeMethodCallBlock = function(methodCallBlock){
     }
     jBridgeParamList[1] = "YailList.makeList(" + jBridgeParamList[1] + ")";
   }
-  if(Blockly.Java.hasTypeCastKey(methodName, paramTypeCastMap)){
-    jBridgeParamList = Blockly.Java.TypeCast(methodName, jBridgeParamList, paramTypeCastMap);
-  }
-  code = Blockly.Java.genJBridgeMethodCallBlock(objectName ,methodName, jBridgeParamList) + "\n" + code;
+
+  code = Blockly.Yail.genJBridgeMethodCallBlock(objectName ,methodName, paramsList) + "\n" + code;
+
   return code;
 };
-
-
-
 
 /**
  *This function identifies if the param is a global variable or functional variable
@@ -1105,24 +1306,6 @@ Blockly.Java.getTypeCastValue = function(key, typeCastMap){
   return null;
 };
 
-Blockly.Java.TypeCast = function(key, paramList, typeCastMap){
-  var v = Blockly.Java.getTypeCastValue(key, typeCastMap);
-  if(key == "Duration"){
-    jBridgeImportsMap[key] = "import java.util.Calendar;";
-  }
-  var resultList = [];
-  if (v != null && paramList.length > 0){
-    for(var i = 0, param; param = paramList[i]; i++){
-      if(Blockly.Java.isNumber(param)){
-        resultList.push(Math.round(param));
-      }else{
-        resultList.push(v[i].replace(/XXX/g, param));
-      }
-    }
-  }
-  return resultList;
-};
-
 /**
  * Will cast the value if the key is contained in the typeCastMap.
  * Will cast floats to whole integers and cast types in paramTypeCastMap
@@ -1142,7 +1325,7 @@ Blockly.Java.TypeCastOneValue = function(key, value, typeCastMap){
       if (value === "True" || value == "False"){
           value = value.toLowerCase();
       }
-      result = v[0].replace("XXX", value);
+    result = v[0].replace("XXX", value);
     }
   }
   //casting the color to HEX
@@ -1183,18 +1366,20 @@ Blockly.Java.getProcName = function(block, inputName, fieldName){
   return procName;
 };
 
+/* Generates the method call block for the component method
+ */
 Blockly.Java.genJBridgeMethodCallBlock = function(objectName, methodName, paramsList){
-var code = "";
+  var code = "";
 // use splice to get all the arguments after 'methodName'
-var args = Array.prototype.splice.call(arguments, 2);
-code = objectName
+  var args = Array.prototype.splice.call(arguments, 2);
+  code = objectName
        + "."
        +methodName
        +"("
        + paramsList.join(", ")
        +");"
 
-return code;
+  return code;
 };
 
 Blockly.Java.parseJBridgeColorBlock = function(colorBlock){
@@ -1221,6 +1406,8 @@ Blockly.Java.genJBridgeGetBlock = function(componentName, property){
   return code;
 };
 
+/* Parses a set block of any component
+*/
 Blockly.Java.parseJBridgeSetBlock = function(setBlock){
   var componentName = Blockly.Java.getJBridgeInstanceName(setBlock);
   var property = setBlock.propertyName;
@@ -1238,20 +1425,18 @@ Blockly.Java.parseJBridgeSetBlock = function(setBlock){
   }
   //If value is not already a string, apply String.valueOf(value)
   if(JBRIDGE_COMPONENT_TEXT_PROPERTIES.indexOf(property.toLowerCase()) > -1){
-    value = "String.valueOf(" + value + ")";
-       
+    if (typeof value !== "string"){
+        value = "String.valueOf(" + value + ")";
+        }
   }
-
-
   if((componentName.slice(0, ListPicker.length) == ListPicker) && (property == "Elements")){
     if(!jBridgeImportsMap[YailList]){
       jBridgeImportsMap[YailList] = "import com.google.appinventor.components.runtime.util.YailList;";
     }
     value = "YailList.makeList(" + value + ")";  
   }
-  if(Blockly.Java.hasTypeCastKey(property, paramTypeCastMap)){
-      value = Blockly.Java.TypeCastOneValue(property, value, paramTypeCastMap);
-  }else if (Blockly.Java.isNumber(value)){
+
+  if (Blockly.Yail.isNumber(value)){
       //Java Bridge requires integers, floating point numbers will throw an exception
       value = Math.round(value);
   }
@@ -1295,6 +1480,7 @@ Blockly.Java.parseJBridgeEventBlock = function(eventBlock, isChildBlock){
   isChildBlock = typeof isChildBlock !== 'undefined' ? isChildBlock : false;
   var componentName = eventBlock.instanceName;
   var eventName = eventBlock.eventName;
+  methodParam = eventBlock.eventName; //method param is now eventname instead of methodname in the case of a set/get block
   var body = "";
   //reset the event method params from the last event method generation
   eventMethodParamListings = new Object();
@@ -1349,10 +1535,10 @@ Blockly.Java.addComponentEventMethod = function(eventMethodName, body){
     + body
     + "\n}";
   jBridgeEventMethodsList.push(code);
-}
+};
 
-
- /** This method searches the body of the generated method for the dispatch event
+/**
+ * This method searches the body of the generated method for the dispatch event
  * parameters. If any parameters are used within the method then they must be passed in
  * as the method's parameter for use in the local scope
  * @param body The body of the generated event method
@@ -1360,18 +1546,13 @@ Blockly.Java.addComponentEventMethod = function(eventMethodName, body){
  */
 Blockly.Java.createMethodParameterString = function (body) {
     var parameters = [];
-    if (body.search("component") >= 0) {
-        parameters.push("Component component");
-    }
-    if (body.search("componentName") >= 0) {
-        parameters.push("String componentName");
-    }
-    if (body.search("eventName") >= 0) {
-        parameters.push("String eventName");
-    }
+   // var castValue = new Object();
+    var index = new Object ();
     for (var paramName in eventMethodParamListings){
         if (body.search(paramName) >= 0){
-            parameters.push("Object " + paramName);
+            index = eventMethodParamListings[paramName];
+            var castValue = methodParamsMap[methodParam][index];
+            parameters.push(castValue + " " + paramName);
         }
     }
     var stringParam = "";
@@ -1392,31 +1573,112 @@ Blockly.Java.createMethodParameterString = function (body) {
  * @returns {String} the generated code if there were no errors.
  */
 Blockly.Java.createCalledMethodParameterString = function (body) {
-    var parameters = [];
-    if (body.search("component") >= 0) {
-        parameters.push("component");
-    }
-    if (body.search("componentName") >= 0) {
-        parameters.push("componentName");
-    }
-    if (body.search("eventName") >= 0) {
-        parameters.push("eventName");
-    }
-    for (var paramName in eventMethodParamListings){
-        if (body.search(paramName) >= 0){
-            parameters.push("params[" + eventMethodParamListings[paramName] + "]");
-        }
-    }
     var stringParam = "";
-    for (var i = 0; i < parameters.length; i++) {
-        stringParam += parameters[i];
-        //skip the comma at the end
-        if (i !== parameters.length-1) {
-            stringParam += ", ";
+
+    if (Blockly.Yail.checkCast(methodParam, methodSpecialCases)){ //if it contains special casting
+        stringParam = Blockly.Yail.specialCast(body, methodParam, eventMethodParamListings, methodSpecialCases);
+    }
+    else{ //regular cast
+        stringParam = Blockly.Yail.normalCast(body, methodParam, eventMethodParamListings, methodParamsMap);
+        }
+
+    return stringParam;
+};
+
+/* *
+ * Checks whether or not the casting contains markers that indicate a casting within a casting
+ * e.g.((Float)XXX).intValue())
+ *
+ * @param {Object} method that uses the parameters
+ * @param {Object} mapping from method to casting
+ * @returns {Boolean} whether or not the statement is true
+ */
+Blockly.Yail.checkCast = function(methodParam, methodSpecialCases){
+    var castValue = Blockly.Yail.getTypeCastValue(methodParam, methodSpecialCases);
+
+    if (castValue == null){
+        return false;
+    }else{
+        return true;
+    }
+};
+
+    //for each value within the eventMethodParams, match the parameter number to the
+/* *
+ * Basic casting of parameter values (e.g. string, int)
+ *
+ * @param {String} generated code thus far
+ * @param {Object} method that uses the parameters
+ * @param {Object} list of parameters
+ * @param {Object} mapping from method to casting
+ * @returns {String} the generated casting in java
+ */
+Blockly.Yail.normalCast = function (body, methodParam, eventMethodParamListings, methodParamsMap){
+     var parameters = [];
+     var stringParam = "";
+     var index = new Object(); //get key from methodParasMap
+
+     for (var paramName in eventMethodParamListings){
+        if (body.search(paramName) >= 0){
+            index = eventMethodParamListings[paramName];
+            parameters.push("(" + methodParamsMap[methodParam][index] + ")" + "params[" + eventMethodParamListings[paramName] + "]");
+        }
+     }
+
+     for (var i = 0; i < parameters.length; i++) {
+         stringParam += parameters[i];
+         //skip the comma at the end
+         if (i !== parameters.length-1) {
+             stringParam += ", ";
+         }
+     }
+
+     return stringParam;
+};
+
+
+/* *
+ * Deep casting of each parameter according to their cast. This is determined by
+ * the typeCastMap
+ *
+ * @param {String} generated code thus far
+ * @param {String} method that uses the parameters
+ * @param {Object} list of parameters
+ * @param {Object} mapping from method to casting
+ * @param {Boolean} whether or not this is method will be used for casting parameters (true)
+ * or within the method (false)
+ * @returns {String} the generated casting in java
+ */
+Blockly.Yail.specialCast = function(body, key, paramList, typeCastMap){
+  var v = Blockly.Yail.getTypeCastValue(key, typeCastMap);
+  var parameters = [];
+  var x = 0;
+  var stringParam = "";
+  if(key == "Duration"){
+    jBridgeImportsMap[key] = "import java.util.Calendar;";
+  }
+
+  if (v != null ){
+    for (paramName in paramList) {
+        if (body.search(paramName) >= 0){
+             parameters.push(v[x].replace(/XXX/g, "params["+ paramList[paramName] + "]"));
+         x++;
         }
     }
-    return stringParam;
-}
+  }
+
+  for (var i = 0; i < parameters.length; i++) {
+     stringParam += parameters[i];
+      //skip the comma at the end
+     if (i !== parameters.length-1) {
+        stringParam += ", ";
+     }
+   }
+
+  return stringParam;
+  //return resultList;
+};
+
 
 Blockly.Java.genJBridgeEventDispatcher = function(eventName){
   return "EventDispatcher.registerEventForDelegation(this, \"" + eventName +"Event\", \""+ eventName +"\" );";
@@ -2082,11 +2344,23 @@ Blockly.Java.parseJBridgeTextCompareBlock = function(textBlock){
   return Blockly.Java.getJBridgeTextCompareBlock(leftValue, rightValue, op);
 };
 
+ /**
+  *  Generates string in java
+  *
+  * @params {String} text to be seen in java
+  * @return {String} code if there are no errors
+  */
 Blockly.Java.genJBridgeTextBlock = function(text){
   var code = "\""+text.replace(/"/gi, "\'")+"\"";
   return code;
 };
 
+ /**
+  *  Generates text.join in java corresponding to list of text to concatenate
+  *
+  * @params {String} joinList
+  * @return {String} code if there are no errors
+  */
 Blockly.Java.genJBridgeTextJoinBlock = function(joinList){
   var code = "";
 
@@ -2112,6 +2386,15 @@ Blockly.Java.genJBridgeTextJoinBlock = function(joinList){
   return code;
 };
 
+ /**
+  *  Generates string comparison in java code
+  *
+  * @params {String} leftValue
+  * @params {String} rightValue
+  * @params {String} op
+  * @return {String} code if there are no errors
+  */
+
 Blockly.Java.getJBridgeTextCompareBlock = function(leftValue, rightValue, op){
   var code = "(String.valueOf("
            + leftValue
@@ -2123,6 +2406,12 @@ Blockly.Java.getJBridgeTextCompareBlock = function(leftValue, rightValue, op){
   return code;
 };
 
+ /**
+  *  Calls parsing for Lists according to corresponding method (e.g. add, is in, select)
+  *
+  * @params {String} listBlock
+  * @return {String} code if there are no errors
+  */
 Blockly.Java.parseJBridgeListBlocks = function(listBlock){
   var code = "";
   var type = listBlock.type;
@@ -2238,6 +2527,96 @@ Blockly.Java.parseJBridgeListAppendList = function(listBlock){
   }else{
       code += list1 + ".addAll(" + list2 + ");";
   }
+  return code;
+};
+
+/**
+ * Parses an App Inventor List block that:
+ * Removes the item at the given position.
+ * @param listBlock The List block
+ * @return The generated Java code
+ */
+Blockly.Java.parseJBridgeListRemoveItem = function(listBlock){
+  var code = "";
+  var listName = Blockly.Java.parseBlock(listBlock.childBlocks_[0]);
+  var index = Blockly.Java.parseBlock(listBlock.childBlocks_[1]);
+  code += listName + ".remove(" + index + " - 1);";
+  return code;
+};
+
+/**
+ * Parses an App Inventor List block that:
+ * Inserts replacement into the given list at position index.
+ * @param listBlock The List block
+ * @return The generated Java code
+ */
+Blockly.Java.parseJBridgeListReplaceItem = function(listBlock){
+  var code = "";
+  var listName = Blockly.Java.parseBlock(listBlock.childBlocks_[0]);
+  var index = Blockly.Java.parseBlock(listBlock.childBlocks_[1]);
+  var replacement = Blockly.Java.parseBlock(listBlock.childBlocks_[2]);
+  code += listName + ".set(" + index + " - 1, " + replacement + ");";
+  return code;
+};
+
+/**
+ * Parses an App Inventor List block that:
+ * Inserts an item into the list at the given position
+ * @param listBlock The List block
+ * @return The generated Java code
+ */
+Blockly.Java.parseJBridgeListInsertItem = function(listBlock){
+  var code = "";
+  var listName = Blockly.Java.parseBlock(listBlock.childBlocks_[0]);
+  var index = Blockly.Java.parseBlock(listBlock.childBlocks_[1]);
+  var item = Blockly.Java.parseBlock(listBlock.childBlocks_[2]);
+  code += listName + ".add(" + index + " - 1, " + item + ");";
+  return code;
+};
+
+/**
+ * Parses an App Inventor List block that:
+ * Returns the position of the thing in the list.
+ * @param listBlock The List block
+ * @return The generated Java code
+ */
+Blockly.Java.parseJBridgeListPositionIn = function(listBlock){
+  var code = "";
+  var thing = Blockly.Java.parseBlock(listBlock.childBlocks_[0]);
+  var listName = Blockly.Java.parseBlock(listBlock.childBlocks_[1]);
+  code += listName + ".indexOf(" + thing + ")";
+  return code;
+};
+
+/**
+ * Parses an App Inventor List block that:
+ * If list has no items, returns true; otherwise, returns false.
+ * @param listBlock The List block
+ * @return The generated Java code
+ */
+Blockly.Java.parseJBridgeListIsEmpty = function(listBlock){
+  var code = "";
+  var listName = Blockly.Java.parseBlock(listBlock.childBlocks_[0]);
+  code += listName + ".isEmpty()";
+  return code;
+};
+
+/**
+ * Parses an App Inventor List block that:
+ * Picks an item at random from the list.
+ * @param listBlock The List block
+ * @return The generated Java code
+ */
+Blockly.Java.parseJBridgeListPickRandomItem = function(listBlock){
+  var randomObjName = "random";
+  if(!jBridgeVariableDefinitionMap[randomObjName]){
+      jBridgeVariableDefinitionMap[randomObjName] = "Random";
+      jBridgeInitializationList.push(randomObjName + " = new Random();");
+      jBridgeImportsMap[randomObjName] = "import java.util.Random;";
+  }
+  var code = "";
+  var listName = Blockly.Java.parseBlock(listBlock.childBlocks_[0]);
+  code += listName + ".get(" + randomObjName + ".nextInt(" + listName + ".size())" + ")";
   return code;
 };
 
