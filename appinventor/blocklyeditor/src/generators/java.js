@@ -181,6 +181,7 @@ var methodParamsMap = {
     'MoveTo' : {0: JAVA_FLOAT, 1: JAVA_FLOAT},
     'Dragged' : {0: JAVA_FLOAT, 1: JAVA_FLOAT, 2: JAVA_FLOAT, 3: JAVA_FLOAT, 4: JAVA_FLOAT, 5: JAVA_FLOAT, 6: JAVA_BOOLEAN},
     'Flung' : {0: JAVA_FLOAT, 1: JAVA_FLOAT, 2: JAVA_FLOAT, 3: JAVA_FLOAT, 4: JAVA_FLOAT, 5: JAVA_FLOAT, 6: JAVA_BOOLEAN},
+    'Touched': {0: JAVA_FLOAT, 1: JAVA_FLOAT, 2: JAVA_BOOLEAN}, //newly added 8/23
     'TouchUp' : {0: JAVA_FLOAT, 1: JAVA_FLOAT},
     'TouchDown' : {0: JAVA_FLOAT, 1: JAVA_FLOAT},
 
@@ -1230,7 +1231,7 @@ Blockly.Java.parseJBridgeMethodCallBlock = function(methodCallBlock){
     jBridgeParamList[1] = "YailList.makeList(" + jBridgeParamList[1] + ")";
   }
 
-  code = Blockly.Yail.genJBridgeMethodCallBlock(objectName ,methodName, paramsList) + "\n" + code;
+  code = Blockly.Java.genJBridgeMethodCallBlock(objectName ,methodName, paramsList) + "\n" + code;
 
   return code;
 };
@@ -1575,11 +1576,11 @@ Blockly.Java.createMethodParameterString = function (body) {
 Blockly.Java.createCalledMethodParameterString = function (body) {
     var stringParam = "";
 
-    if (Blockly.Yail.checkCast(methodParam, methodSpecialCases)){ //if it contains special casting
-        stringParam = Blockly.Yail.specialCast(body, methodParam, eventMethodParamListings, methodSpecialCases);
+    if (Blockly.Java.checkCast(methodParam, methodSpecialCases)){ //if it contains special casting
+        stringParam = Blockly.Java.specialCast(body, methodParam, eventMethodParamListings, methodSpecialCases);
     }
     else{ //regular cast
-        stringParam = Blockly.Yail.normalCast(body, methodParam, eventMethodParamListings, methodParamsMap);
+        stringParam = Blockly.Java.normalCast(body, methodParam, eventMethodParamListings, methodParamsMap);
         }
 
     return stringParam;
@@ -1593,8 +1594,8 @@ Blockly.Java.createCalledMethodParameterString = function (body) {
  * @param {Object} mapping from method to casting
  * @returns {Boolean} whether or not the statement is true
  */
-Blockly.Yail.checkCast = function(methodParam, methodSpecialCases){
-    var castValue = Blockly.Yail.getTypeCastValue(methodParam, methodSpecialCases);
+Blockly.Java.checkCast = function(methodParam, methodSpecialCases){
+    var castValue = Blockly.Java.getTypeCastValue(methodParam, methodSpecialCases);
 
     if (castValue == null){
         return false;
@@ -1613,7 +1614,7 @@ Blockly.Yail.checkCast = function(methodParam, methodSpecialCases){
  * @param {Object} mapping from method to casting
  * @returns {String} the generated casting in java
  */
-Blockly.Yail.normalCast = function (body, methodParam, eventMethodParamListings, methodParamsMap){
+Blockly.Java.normalCast = function (body, methodParam, eventMethodParamListings, methodParamsMap){
      var parameters = [];
      var stringParam = "";
      var index = new Object(); //get key from methodParasMap
@@ -1649,8 +1650,8 @@ Blockly.Yail.normalCast = function (body, methodParam, eventMethodParamListings,
  * or within the method (false)
  * @returns {String} the generated casting in java
  */
-Blockly.Yail.specialCast = function(body, key, paramList, typeCastMap){
-  var v = Blockly.Yail.getTypeCastValue(key, typeCastMap);
+Blockly.Java.specialCast = function(body, key, paramList, typeCastMap){
+  var v = Blockly.Java.getTypeCastValue(key, typeCastMap);
   var parameters = [];
   var x = 0;
   var stringParam = "";
