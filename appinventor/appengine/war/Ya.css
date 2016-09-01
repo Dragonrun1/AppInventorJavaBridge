@@ -2379,3 +2379,96 @@ textarea::-webkit-input-placeholder {
   height: 0;
   clear: both;
 }
+.jbridge-popup_panel{
+}
+.genpanel-popup_panel{
+  text-align: center;
+  padding-top: 0px;
+}
+.genpanel-popup_panel a{
+  color:#95989A;
+}
+.genpanel-titleBar{
+  text-align: center;
+  background-color: #8fc202;
+  font-size: 23px;
+  padding: 8px;
+  margin: 0px;
+  color: white;
+}
+.genpanel-subtitle{
+  color: #e8eef3;
+  font-size: 12px;
+}
+.genpanel-buttonGrid{
+  text-align: center;
+  width: 60%;
+  height: 35%;
+  margin-left: auto;
+  margin-right: auto;
+  background-color: white;
+}
+.genpanel-genInstructions{
+  margin-left: auto;
+  margin-right: auto;
+  width: 50%;
+  color: #8fc202;
+  text-align: left;
+  margin-bottom: 100px;
+}
+.genpanel-hr{
+  width: 60%;
+  height: 1px;
+  border: 0;
+  border-top: 1px solid #8fc202;
+  margin-left: auto;
+  margin-right: auto;
+  margin-bottom:70px;
+}
+.genpanel-genButton{
+  color: #fff;
+  line-height: 35px;
+  text-shadow: none;
+  border-radius: 0;
+  text-transform: uppercase;
+  background-color: #8fc202;
+  background-position: 0 0;
+  background-image: none;
+  -webkit-box-shadow: none;
+  -moz-box-shadow: none;
+  box-shadow: none;
+  border: none;
+  padding: 25px;
+  font-size: 18px;
+}
+.genpanel-genButton:hover {
+  color: #fffdfd;
+  border-color: #e6e6e6 #e6e6e6 #bfbfbf;
+  background-color: #8fc202;
+  box-shadow: 0 5px 10px rgba(0, 0, 0, 0.2);
+  text-decoration: none;
+  cursor:pointer;
+}
+.genpanel-disabled-genButton{
+  color: #fff;
+  line-height: 35px;
+  text-shadow: none;
+  border-radius: 0;
+  text-transform: uppercase;
+  background-color: #eaeaea;
+  background-position: 0 0;
+  background-image: none;
+  -moz-box-shadow: none;
+  border: none;
+  padding: 25px;
+  font-size: 18px;
+}
+.genpanel-genButton-Description{
+  color: #95989A;
+  font-size: 14px;
+}
+.genpanel-projectName{
+  color: #616262;
+  font-size: 20px;
+  margin-top: 10px;
+}

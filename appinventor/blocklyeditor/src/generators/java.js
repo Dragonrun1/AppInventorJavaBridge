@@ -1437,7 +1437,7 @@ Blockly.Java.parseJBridgeSetBlock = function(setBlock){
     value = "YailList.makeList(" + value + ")";  
   }
 
-  if (Blockly.Yail.isNumber(value)){
+  if (Blockly.Java.isNumber(value)){
       //Java Bridge requires integers, floating point numbers will throw an exception
       value = Math.round(value);
   }

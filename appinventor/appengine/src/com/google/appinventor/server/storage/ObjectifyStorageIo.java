@@ -1508,11 +1508,7 @@ public class ObjectifyStorageIo implements  StorageIo {
 
           // <Screen>.yail files are missing when user converts AI1 project to AI2
           // instead of blowing up, just create a <Screen>.yail file
-<<<<<<< HEAD
           if (fd == null && (fileName.endsWith(".yail") || fileName.endsWith(".java")||fileName.endsWith(".xml"))){
-=======
-          if (fd == null && (fileName.endsWith(".yail") || (fileName.endsWith(".png")))){
->>>>>>> upstream/master
             fd = createProjectFile(datastore, projectKey(projectId), FileData.RoleEnum.SOURCE, fileName);
             fd.userId = userId;
           }

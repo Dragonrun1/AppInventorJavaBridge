@@ -87,7 +87,7 @@ public class TopToolbar extends Composite {
   private static final String WIDGET_NAME_IMPORTTEMPLATE = "ImportTemplate";
   private static final String WIDGET_NAME_EXPORTALLPROJECTS = "ExportAllProjects";
   private static final String WIDGET_NAME_EXPORTPROJECT = "ExportProject";
-  private static final String WIDGET_NAME_EXPORTECLIPSEPROJECT = "ExportJavaProject";
+  private static final String WIDGET_NAME_EXPORT_JAVA_PROJECT = "ExportJavaProject";
   private static final String WIDGET_NAME_COMPONENTS = "Components";
   private static final String WIDGET_NAME_MY_COMPONENTS = "MyComponents";
   private static final String WIDGET_NAME_START_NEW_COMPONENT = "StartNewComponent";
@@ -185,8 +185,8 @@ public class TopToolbar extends Composite {
         new BarcodeAction()));
     buildItems.add(new DropDownItem(WIDGET_NAME_BUILD_DOWNLOAD, MESSAGES.downloadToComputerMenuItem(),
         new DownloadAction()));
-    buildItems.add(new DropDownItem(WIDGET_NAME_EXPORTECLIPSEPROJECT, MESSAGES.exportEclipseProjectMenuItem(),
-        new ExportEclipseProjectAction()));
+    buildItems.add(new DropDownItem(WIDGET_NAME_EXPORT_JAVA_PROJECT, MESSAGES.exportJavaProjectMenuItem(),
+        new ShowJBridgeWindowAction()));
     if (AppInventorFeatures.hasYailGenerationOption() && Ode.getInstance().getUser().getIsAdmin()) {
       buildItems.add(null);
       buildItems.add(new DropDownItem(WIDGET_NAME_BUILD_YAIL, MESSAGES.generateYailMenuItem(),
@@ -920,8 +920,6 @@ public class TopToolbar extends Composite {
       fileDropDown.setItemEnabled(MESSAGES.checkpointMenuItem(), false);
       buildDropDown.setItemEnabled(MESSAGES.showBarcodeMenuItem(), false);
       buildDropDown.setItemEnabled(MESSAGES.downloadToComputerMenuItem(), false);
-      buildDropDown.setItemEnabled(MESSAGES.generateJavaItem(),false);
-      buildDropDown.setItemEnabled(MESSAGES.exportEclipseProjectMenuItem(),false);
     } else { // We have to be in the Designer/Blocks view
       fileDropDown.setItemEnabled(MESSAGES.deleteProjectButton(), true);
       fileDropDown.setItemEnabled(MESSAGES.exportAllProjectsMenuItem(),
@@ -932,8 +930,6 @@ public class TopToolbar extends Composite {
       fileDropDown.setItemEnabled(MESSAGES.checkpointMenuItem(), true);
       buildDropDown.setItemEnabled(MESSAGES.showBarcodeMenuItem(), true);
       buildDropDown.setItemEnabled(MESSAGES.downloadToComputerMenuItem(), true);
-      buildDropDown.setItemEnabled(MESSAGES.generateJavaItem(),true);
-      buildDropDown.setItemEnabled(MESSAGES.exportEclipseProjectMenuItem(), true);
 
     }
     updateKeystoreFileMenuButtons();
@@ -975,71 +971,13 @@ public class TopToolbar extends Composite {
       Ode.getInstance().switchToDebuggingView();
     }
   }
-    private class GenerateJavaAction implements Command {
-        @Override
-        public void execute() {
-            ProjectRootNode projectRootNode = Ode.getInstance().getCurrentYoungAndroidProjectRootNode();
-            if (projectRootNode != null) {
-                ChainableCommand cmd = new SaveAllEditorsCommand(new GenerateJavaCommand(null));
-                //updateBuildButton(true);
-                cmd.startExecuteChain(Tracking.PROJECT_ACTION_BUILD_YAIL_YA, projectRootNode,
-                        new Command() {
-                            @Override
-                            public void execute() {
-                                long projectId = Ode.getInstance().getCurrentYoungAndroidProjectId();
-                                String projectName = Ode.getInstance().getCurrentYoungAndroidProjectRootNode().getName();
-//                                Downloader.getInstance().download(ServerLayout.DOWNLOAD_SERVLET_BASE + ServerLayout.DOWNLOAD_FILE + "/" + projectId+"/eclipse/src/org/appinventor/Screen1.java");
-                                Downloader.getInstance().download(ServerLayout.DOWNLOAD_SERVLET_BASE + ServerLayout.DOWNLOAD_FILE + "/" + projectId+"/src/appinventor/ai_" + Ode.getInstance().getUser().getUserName()+"/"+projectName+"/Screen1.java");
-                                Ode.getInstance().getProjectService().deleteFile(Ode.getInstance().getSessionId(), projectId, "src/appinventor/ai_" + Ode.getInstance().getUser().getUserName()+"/" + projectName + "/Screen1.java", new OdeAsyncCallback<Long>(MESSAGES.deleteFileError()) {
-                                    @Override
-                                    public void onSuccess(Long date) {
 
-                                    }
-
-                                    @Override
-                                    public void onFailure(Throwable caught) {
-
-                                    }
-                                });
-                            }
-                        });
-            }
-
-
-
-        }
+  private class ShowJBridgeWindowAction implements Command {
+    @Override
+    public void execute() {
+      Ode.getInstance().showJBridgeWindow();
     }
-
-    private class ExportEclipseProjectAction implements Command{
-        @Override
-        public void execute() {
-            final long projectId = Ode.getInstance().getCurrentYoungAndroidProjectId();
-            final String sessionId = Ode.getInstance().getSessionId();
-            final ProjectRootNode projectRootNode = Ode.getInstance().getCurrentYoungAndroidProjectRootNode();
-            final String projectName = Ode.getInstance().getCurrentYoungAndroidProjectRootNode().getName();
-            final ProjectServiceAsync projectService = Ode.getInstance().getProjectService();
-            ChainableCommand cmd = new SaveAllEditorsCommand(new GenerateJavaCommand(null));
-            cmd.startExecuteChain(Tracking.PROJECT_ACTION_BUILD_YAIL_YA, projectRootNode,
-                    new Command() {
-                        @Override
-                        public void execute() {
-                            ChainableCommand cmd1 = new SaveAllEditorsCommand(new GenerateManifestCommand(null));
-                            cmd1.startExecuteChain(Tracking.PROJECT_ACTION_BUILD_YAIL_YA, projectRootNode,
-                                    new Command() {
-                                        @Override
-                                        public void execute() {
-                                            Downloader.getInstance().download(ServerLayout.DOWNLOAD_SERVLET_BASE + ServerLayout.DOWNLOAD_ECLIPSE_PROJECT + "/" + Ode.getInstance().getCurrentYoungAndroidProjectId() + "/" + Ode.getInstance().getCurrentYoungAndroidProjectRootNode().getName());
-                                        }
-                                    });
-
-
-
-                        }
-                    });
-
-
-        }
-    }
+  }
 
   private static class SwitchToUserAdminAction implements Command {
     @Override

@@ -154,6 +154,21 @@ public final class EditorManager {
   }
 
   /**
+   * Gives the names of all of the screens for the given project
+   * @param projectId The id for the project
+   * @return The list of screen names
+   */
+  public ArrayList<String> getAllScreenNames(long projectId){
+    ArrayList<String> screenNames = new ArrayList<String>();
+
+    ProjectEditor projectEditor = openProjectEditors.get(projectId);
+    for (FileEditor fileEditor: projectEditor.getOpenFileEditors()){
+      screenNames.add(fileEditor.getFileNode().getName().replace(".scm", ""));
+    }
+    return screenNames;
+  }
+
+  /**
    * Closes the project editor for a particular project, without saving.
    * Does not actually remove the editor from the ViewerBox.
    * This is used when the project is about to be deleted.

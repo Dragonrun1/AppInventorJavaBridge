@@ -479,9 +479,9 @@ public interface OdeMessages extends Messages {
   @Description("Name of Export Project menuitem")
   String exportProjectMenuItem();
 
-  @DefaultMessage("Generate Java Project")
-  @Description("Name of Generate Android Project menu-item")
-  String exportEclipseProjectMenuItem();
+  @DefaultMessage("Java Bridge")
+  @Description("Name of Java Bridge menu-item")
+  String exportJavaProjectMenuItem();
 
   @DefaultMessage("Export all projects")
   @Description("Name of Export all Project menuitem")
@@ -635,7 +635,7 @@ public interface OdeMessages extends Messages {
   @Description("Label of item for building a project and downloading")
   String downloadToComputerMenuItem();
 
-  @DefaultMessage("Generate Java")
+  @DefaultMessage("Java Bridge")
   @Description("Label of item for generating Java code")
   String generateJavaItem();
 

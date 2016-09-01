@@ -6,6 +6,7 @@
 
 package com.google.appinventor.client;
 
+import java.util.ArrayList;
 import java.util.Random;
 import static com.google.appinventor.client.Ode.MESSAGES;
 
@@ -32,6 +33,8 @@ import com.google.appinventor.client.editor.FileEditor;
 import com.google.appinventor.client.editor.youngandroid.BlocklyPanel;
 import com.google.appinventor.client.explorer.commands.ChainableCommand;
 import com.google.appinventor.client.explorer.commands.CommandRegistry;
+import com.google.appinventor.client.explorer.commands.GenerateJavaCommand;
+import com.google.appinventor.client.explorer.commands.GenerateManifestCommand;
 import com.google.appinventor.client.explorer.commands.SaveAllEditorsCommand;
 import com.google.appinventor.client.explorer.project.Project;
 import com.google.appinventor.client.explorer.project.ProjectChangeAdapter;
@@ -45,6 +48,7 @@ import com.google.appinventor.client.output.OdeLog;
 import com.google.appinventor.client.settings.Settings;
 import com.google.appinventor.client.settings.user.UserSettings;
 import com.google.appinventor.client.tracking.Tracking;
+import com.google.appinventor.client.utils.Downloader;
 import com.google.appinventor.client.utils.PZAwarePositionCallback;
 import com.google.appinventor.client.widgets.boxes.Box;
 import com.google.appinventor.client.widgets.boxes.ColumnLayout;
@@ -116,6 +120,7 @@ import com.google.gwt.user.client.ui.HasVerticalAlignment;
 import com.google.gwt.user.client.ui.HorizontalPanel;
 import com.google.gwt.user.client.ui.Image;
 import com.google.gwt.user.client.ui.Label;
+import com.google.gwt.user.client.ui.PopupPanel;
 import com.google.gwt.user.client.ui.PushButton;
 import com.google.gwt.user.client.ui.RootPanel;
 import com.google.gwt.user.client.ui.SimplePanel;
@@ -614,6 +619,189 @@ public class Ode implements EntryPoint {
       assetManager.loadAssets(project.getProjectId());
     }
     getTopToolbar().updateFileMenuButtons(1);
+  }
+
+  public void showJBridgeWindow(){
+    final PopupPanel jBridgePanel = new PopupPanel(false);
+    jBridgePanel.addStyleName("genpanel-popup_panel");
+
+    FlowPanel topTitleBar = new FlowPanel();
+    Label genTitle = new Label("App Inventor Java Bridge");
+    Label genSubTitle = new Label("View the Java equivalent of your App Inventor apps!");
+    genSubTitle.addStyleName("genpanel-subtitle");
+    topTitleBar.add(genTitle);
+    topTitleBar.add(genSubTitle);
+    topTitleBar.addStyleName("genpanel-titleBar");
+
+    Label currentProjectName = new Label();
+    currentProjectName.addStyleName("genpanel-projectName");
+
+    Grid genButtonsGrid = new Grid(2, 2);
+    Label genJavaFileDesc = new Label("Shows the Java code equivalent for the current " +
+                                              "open Screen");
+    genJavaFileDesc.addStyleName("genpanel-genButton-Description");
+    Label genJavaProjDesc = new Label("Generates a Java project that can be " +
+                                              "imported into Android " +
+                                              "Studio or Eclipse");
+    genJavaProjDesc.addStyleName("genpanel-genButton-Description");
+    Button genJavaFileButton = new Button("Java File");
+    genJavaFileButton.addStyleName("genpanel-genButton");
+    Button genJavaProjButton = new Button("Java Project");
+    genJavaProjButton.addStyleName("genpanel-genButton");
+    genButtonsGrid.setWidget(0, 0, genJavaFileDesc);
+    genButtonsGrid.setWidget(1, 0, genJavaFileButton);
+    genButtonsGrid.setWidget(0, 1, genJavaProjDesc);
+    genButtonsGrid.setWidget(1, 1, genJavaProjButton);
+    genButtonsGrid.addStyleName("genpanel-buttonGrid");
+
+    HTML seperatorLine = new HTML();
+    seperatorLine.addStyleName("genpanel-hr");
+
+    HTML helpList = new HTML("<ul>\n" +
+                                 "\t<li><a target=\"_blank\" href=\"https://docs.google.com/document/d/1oW7DSgy_Dx0LGnmf8kh7yytC6s3tZnrZsybI83op8nI/edit?usp=sharing\">Setting up your Java Project in Android Studio</a> (Preferred)</li>" +
+                                 "\t<li><a target=\"_blank\" href=\"https://docs.google.com/document/d/1VRXZOnNkcxlDgn589p7jrST377bG7FQOU2mm20yUoQo/edit?usp=sharing\">Setting up your Java Project in Eclipse</a></li>" +
+                             "</u>");
+    helpList.addStyleName("genpanel-genInstructions");
+
+    Button closeWindownButton = new Button("close");
+
+    HTML moreInfoBar = new HTML();
+
+    if (Ode.getInstance().getCurrentYoungAndroidProjectRootNode() == null){
+      currentProjectName.setText("No project is currently open");
+      genJavaFileButton.setEnabled(false);
+      genJavaProjButton.setEnabled(false);
+      genJavaFileButton.setStyleName("genpanel-disabled-genButton");
+      genJavaProjButton.setStyleName("genpanel-disabled-genButton");
+    }else {
+      currentProjectName.setText(Ode.getInstance().getCurrentYoungAndroidProjectRootNode().getName());
+      genJavaFileButton.setEnabled(true);
+      genJavaProjButton.setEnabled(true);
+      genJavaFileButton.setStyleName("genpanel-genButton");
+      genJavaProjButton.setStyleName("genpanel-genButton");
+    }
+
+    FlowPanel content = new FlowPanel();
+    content.add(topTitleBar);
+    content.add(currentProjectName);
+    content.add(genButtonsGrid);
+    content.add(seperatorLine);
+    content.add(helpList);
+    content.add(closeWindownButton);
+
+    closeWindownButton.addClickHandler(new ClickHandler() {
+      @Override
+      public void onClick(ClickEvent event) {
+        jBridgePanel.hide();
+      }
+    });
+
+    genJavaFileButton.addClickHandler(new ClickHandler() {
+      @Override
+      public void onClick(ClickEvent event) {
+        new GenerateJavaAction().execute();
+      }
+    });
+
+    genJavaProjButton.addClickHandler(new ClickHandler() {
+      @Override
+      public void onClick(ClickEvent event) {
+        new ExportJavaProjectAction().execute();
+      }
+    });
+
+    jBridgePanel.add(content);
+    jBridgePanel.setHeight("530px");
+    jBridgePanel.setWidth("800px");
+    jBridgePanel.show();
+    jBridgePanel.center();
+  }
+
+  private class GenerateJavaAction implements Command {
+    @Override
+    public void execute() {
+      ProjectRootNode projectRootNode = Ode.getInstance().getCurrentYoungAndroidProjectRootNode();
+      if (projectRootNode != null) {
+        ChainableCommand cmd = new SaveAllEditorsCommand(new GenerateJavaCommand(null));
+        cmd.startExecuteChain(Tracking.PROJECT_ACTION_BUILD_YAIL_YA, projectRootNode,
+                new Command() {
+                  @Override
+                  public void execute() {
+                    long projectId = Ode.getInstance().getCurrentYoungAndroidProjectId();
+                    String projectName = Ode.getInstance().getCurrentYoungAndroidProjectRootNode().getName();
+                    String screenJavaFile = Ode.getInstance().getCurrentFileEditor().getFileNode().getName().replace(".scm", ".java");
+                    Downloader.getInstance().download(ServerLayout.DOWNLOAD_SERVLET_BASE + ServerLayout.DOWNLOAD_FILE + "/" + projectId+"/src/appinventor/ai_" + Ode.getInstance().getUser().getUserName()+"/"+projectName+"/" + screenJavaFile);
+                    Ode.getInstance().getProjectService().deleteFile(Ode.getInstance().getSessionId(), projectId, "src/appinventor/ai_" + Ode.getInstance().getUser().getUserName()+"/" + projectName + "/" + screenJavaFile, new OdeAsyncCallback<Long>(MESSAGES.deleteFileError()) {
+                      @Override
+                      public void onSuccess(Long date) {
+
+                      }
+
+                      @Override
+                      public void onFailure(Throwable caught) {
+
+                      }
+                    });
+                  }
+                });
+      }
+    }
+  }
+
+  private class ExportJavaProjectAction implements Command{
+    @Override
+    public void execute() {
+      final long projectId = Ode.getInstance().getCurrentYoungAndroidProjectId();
+      final ProjectRootNode projectRootNode = Ode.getInstance().getCurrentYoungAndroidProjectRootNode();
+      final String projectName = Ode.getInstance().getCurrentYoungAndroidProjectRootNode().getName();
+      ChainableCommand cmd = new SaveAllEditorsCommand(new GenerateJavaCommand(null));
+      cmd.startExecuteChain(Tracking.PROJECT_ACTION_BUILD_YAIL_YA, projectRootNode,
+              new Command() {
+                @Override
+                public void execute() {
+                  ChainableCommand cmd1 = new SaveAllEditorsCommand(new GenerateManifestCommand(null));
+                  cmd1.startExecuteChain(Tracking.PROJECT_ACTION_BUILD_YAIL_YA, projectRootNode,
+                          new Command() {
+                            @Override
+                            public void execute() {
+                              //download project
+                              Downloader.getInstance().download(ServerLayout.DOWNLOAD_SERVLET_BASE + ServerLayout.DOWNLOAD_ECLIPSE_PROJECT + "/" + projectId + "/" + projectName);
+
+                              //deleting files downloaded for java project
+                              ArrayList<String> screenNames = Ode.getInstance().getEditorManager().getAllScreenNames(projectId);
+                              for (String screenName: screenNames){
+                                String screenJavaFile = screenName + ".java";
+                                String screenManifestFile = screenName + ".xml";
+                                OdeLog.log("attempting to delete java file: " + screenJavaFile );
+                                OdeLog.log("attempting to delete xml file: " + screenManifestFile );
+                                Ode.getInstance().getProjectService().deleteFile(Ode.getInstance().getSessionId(), projectId, "src/appinventor/ai_" + Ode.getInstance().getUser().getUserName()+"/" + projectName + "/" + screenJavaFile, new OdeAsyncCallback<Long>(MESSAGES.deleteFileError()) {
+                                  @Override
+                                  public void onSuccess(Long date) {
+
+                                  }
+
+                                  @Override
+                                  public void onFailure(Throwable caught) {
+
+                                  }
+                                });
+                                Ode.getInstance().getProjectService().deleteFile(Ode.getInstance().getSessionId(), projectId, "src/appinventor/ai_" + Ode.getInstance().getUser().getUserName()+"/" + projectName + "/" + screenManifestFile, new OdeAsyncCallback<Long>(MESSAGES.deleteFileError()) {
+                                  @Override
+                                  public void onSuccess(Long date) {
+
+                                  }
+
+                                  @Override
+                                  public void onFailure(Throwable caught) {
+
+                                  }
+                                });
+                              }
+                            }
+                          });
+                }
+              });
+    }
   }
 
   /**
@@ -1128,7 +1316,6 @@ public class Ode implements EntryPoint {
 
     setupMotd();
   }
-
   private void setupMotd() {
     AsyncCallback<Integer> callback = new AsyncCallback<Integer>() {
       @Override
