@@ -759,8 +759,8 @@ public class BlocklyPanel extends HTMLPanel implements ComponentDatabaseChangeLi
     return YaBlocksEditor.getComponentInfo(typeName);
   }
 
-  public static String getComponentsJSONString() {
-    return YaBlocksEditor.getComponentsJSONString();
+  public static String getComponentsJSONString(String projectId) {
+    return YaBlocksEditor.getComponentsJSONString(Long.parseLong(projectId));
   }
 
   public static String getComponentInstanceTypeName(String formName, String instanceName) {
@@ -905,7 +905,7 @@ public class BlocklyPanel extends HTMLPanel implements ComponentDatabaseChangeLi
     $wnd.BlocklyPanel_getComponentInfo =
         $entry(@com.google.appinventor.client.editor.youngandroid.BlocklyPanel::getComponentInfo(Ljava/lang/String;));
     $wnd.BlocklyPanel_getComponentsJSONString =
-        $entry(@com.google.appinventor.client.editor.youngandroid.BlocklyPanel::getComponentsJSONString());
+        $entry(@com.google.appinventor.client.editor.youngandroid.BlocklyPanel::getComponentsJSONString(Ljava/lang/String;));
     $wnd.BlocklyPanel_getYaVersion =
         $entry(@com.google.appinventor.client.editor.youngandroid.BlocklyPanel::getYaVersion());
     $wnd.BlocklyPanel_getBlocksLanguageVersion =
