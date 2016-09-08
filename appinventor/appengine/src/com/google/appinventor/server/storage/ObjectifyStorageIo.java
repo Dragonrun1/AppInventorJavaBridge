@@ -2195,10 +2195,6 @@ public class ObjectifyStorageIo implements  StorageIo {
 
                         }
                     }
-                    ProjectData pdata = datastore.find(projectKey);
-                    String name = pdata.name;
-                    deleteFile(userId, projectId, "src/appinventor/ai_test/" + name + "/Screen1.java");
-                    deleteFile(userId, projectId, "src/appinventor/ai_test/" + name + "/Screen1.xml");
 
                     //save icon and JavaBridge in storage.
                     InputStream javaBridge = getClass().getResourceAsStream("resources/AIBridge.jar");

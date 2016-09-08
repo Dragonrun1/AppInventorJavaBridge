@@ -6,11 +6,8 @@
 
 package com.google.appinventor.client;
 
-import java.util.ArrayList;
 import java.util.Random;
-import static com.google.appinventor.client.Ode.MESSAGES;
 
-import java.util.List;
 import java.util.logging.Logger;
 
 import com.google.appinventor.client.boxes.AdminUserListBox;
@@ -71,7 +68,6 @@ import com.google.appinventor.shared.rpc.help.HelpServiceAsync;
 import com.google.appinventor.shared.rpc.launch.LaunchService;
 import com.google.appinventor.shared.rpc.launch.LaunchServiceAsync;
 import com.google.appinventor.shared.rpc.project.FileNode;
-import com.google.appinventor.shared.rpc.project.GalleryAppListResult;
 import com.google.appinventor.shared.rpc.project.GallerySettings;
 import com.google.appinventor.shared.rpc.project.ProjectRootNode;
 import com.google.appinventor.shared.rpc.project.ProjectService;
@@ -123,7 +119,6 @@ import com.google.gwt.user.client.ui.Label;
 import com.google.gwt.user.client.ui.PopupPanel;
 import com.google.gwt.user.client.ui.PushButton;
 import com.google.gwt.user.client.ui.RootPanel;
-import com.google.gwt.user.client.ui.SimplePanel;
 import com.google.gwt.user.client.ui.VerticalPanel;
 import com.google.gwt.user.client.ui.Widget;
 import com.google.appinventor.shared.rpc.project.GalleryApp;
@@ -720,30 +715,30 @@ public class Ode implements EntryPoint {
   private class GenerateJavaAction implements Command {
     @Override
     public void execute() {
-      ProjectRootNode projectRootNode = Ode.getInstance().getCurrentYoungAndroidProjectRootNode();
+      final ProjectRootNode projectRootNode = Ode.getInstance().getCurrentYoungAndroidProjectRootNode();
       if (projectRootNode != null) {
-        ChainableCommand cmd = new SaveAllEditorsCommand(new GenerateJavaCommand(null));
-        cmd.startExecuteChain(Tracking.PROJECT_ACTION_BUILD_YAIL_YA, projectRootNode,
-                new Command() {
-                  @Override
-                  public void execute() {
-                    long projectId = Ode.getInstance().getCurrentYoungAndroidProjectId();
-                    String projectName = Ode.getInstance().getCurrentYoungAndroidProjectRootNode().getName();
-                    String screenJavaFile = Ode.getInstance().getCurrentFileEditor().getFileNode().getName().replace(".scm", ".java");
-                    Downloader.getInstance().download(ServerLayout.DOWNLOAD_SERVLET_BASE + ServerLayout.DOWNLOAD_FILE + "/" + projectId+"/src/appinventor/ai_" + Ode.getInstance().getUser().getUserName()+"/"+projectName+"/" + screenJavaFile);
-                    Ode.getInstance().getProjectService().deleteFile(Ode.getInstance().getSessionId(), projectId, "src/appinventor/ai_" + Ode.getInstance().getUser().getUserName()+"/" + projectName + "/" + screenJavaFile, new OdeAsyncCallback<Long>(MESSAGES.deleteFileError()) {
+        final long projectId = Ode.getInstance().getCurrentYoungAndroidProjectId();
+        final String projectName = Ode.getInstance().getCurrentYoungAndroidProjectRootNode().getName();
+        final String screenJavaFile = Ode.getInstance().getCurrentFileEditor().getFileNode().getName().replace(".scm", "") + ".java";
+        final String userName = Ode.getInstance().getUser().getUserName();
+
+        final String rootGenPath = "src/appinventor/ai_" + userName + "/gen/" + projectName;
+
+        //deleting any existing generated files
+        Ode.getInstance().getProjectService().deleteFolder(Ode.getInstance().getSessionId(), projectId, rootGenPath, new OdeAsyncCallback<Long>() {
+          @Override
+          public void onSuccess(Long result) {
+            //generate after deletion
+            ChainableCommand cmd = new SaveAllEditorsCommand(new GenerateJavaCommand(null));
+            cmd.startExecuteChain(Tracking.PROJECT_ACTION_BUILD_YAIL_YA, projectRootNode,
+                    new Command() {
                       @Override
-                      public void onSuccess(Long date) {
-
-                      }
-
-                      @Override
-                      public void onFailure(Throwable caught) {
-
+                      public void execute() {
+                        Downloader.getInstance().download(ServerLayout.DOWNLOAD_SERVLET_BASE + ServerLayout.DOWNLOAD_FILE + "/" + projectId + "/" + rootGenPath + "/" + screenJavaFile);
                       }
                     });
-                  }
-                });
+          }
+        });
       }
     }
   }
@@ -754,53 +749,39 @@ public class Ode implements EntryPoint {
       final long projectId = Ode.getInstance().getCurrentYoungAndroidProjectId();
       final ProjectRootNode projectRootNode = Ode.getInstance().getCurrentYoungAndroidProjectRootNode();
       final String projectName = Ode.getInstance().getCurrentYoungAndroidProjectRootNode().getName();
-      ChainableCommand cmd = new SaveAllEditorsCommand(new GenerateJavaCommand(null));
-      cmd.startExecuteChain(Tracking.PROJECT_ACTION_BUILD_YAIL_YA, projectRootNode,
-              new Command() {
-                @Override
-                public void execute() {
-                  ChainableCommand cmd1 = new SaveAllEditorsCommand(new GenerateManifestCommand(null));
-                  cmd1.startExecuteChain(Tracking.PROJECT_ACTION_BUILD_YAIL_YA, projectRootNode,
-                          new Command() {
-                            @Override
-                            public void execute() {
-                              //download project
-                              Downloader.getInstance().download(ServerLayout.DOWNLOAD_SERVLET_BASE + ServerLayout.DOWNLOAD_ECLIPSE_PROJECT + "/" + projectId + "/" + projectName);
+      final String userName = Ode.getInstance().getUser().getUserName();
+      final String rootGenPath = "src/appinventor/ai_" + userName + "/gen/" + projectName;
 
-                              //deleting files downloaded for java project
-                              ArrayList<String> screenNames = Ode.getInstance().getEditorManager().getAllScreenNames(projectId);
-                              for (String screenName: screenNames){
-                                String screenJavaFile = screenName + ".java";
-                                String screenManifestFile = screenName + ".xml";
-                                OdeLog.log("attempting to delete java file: " + screenJavaFile );
-                                OdeLog.log("attempting to delete xml file: " + screenManifestFile );
-                                Ode.getInstance().getProjectService().deleteFile(Ode.getInstance().getSessionId(), projectId, "src/appinventor/ai_" + Ode.getInstance().getUser().getUserName()+"/" + projectName + "/" + screenJavaFile, new OdeAsyncCallback<Long>(MESSAGES.deleteFileError()) {
-                                  @Override
-                                  public void onSuccess(Long date) {
+      //deleting any existing files downloaded for java project
+      Ode.getInstance().getProjectService().deleteFolder(Ode.getInstance().getSessionId(), projectId, rootGenPath, new AsyncCallback<Long>() {
+        @Override
+        public void onFailure(Throwable caught) {
 
-                                  }
-
-                                  @Override
-                                  public void onFailure(Throwable caught) {
-
-                                  }
-                                });
-                                Ode.getInstance().getProjectService().deleteFile(Ode.getInstance().getSessionId(), projectId, "src/appinventor/ai_" + Ode.getInstance().getUser().getUserName()+"/" + projectName + "/" + screenManifestFile, new OdeAsyncCallback<Long>(MESSAGES.deleteFileError()) {
-                                  @Override
-                                  public void onSuccess(Long date) {
-
-                                  }
-
-                                  @Override
-                                  public void onFailure(Throwable caught) {
-
-                                  }
-                                });
-                              }
-                            }
-                          });
-                }
-              });
+        }
+        @Override
+        public void onSuccess(Long result) {
+          OdeLog.log("Deleted folder: " + rootGenPath);
+          OdeLog.log("Now generating project");
+          //generate next set of files
+          ChainableCommand cmd = new SaveAllEditorsCommand(new GenerateJavaCommand(null));
+          cmd.startExecuteChain(Tracking.PROJECT_ACTION_BUILD_YAIL_YA, projectRootNode,
+                  new Command() {
+                    @Override
+                    public void execute() {
+                      ChainableCommand cmd1 = new SaveAllEditorsCommand(new GenerateManifestCommand(null));
+                      cmd1.startExecuteChain(Tracking.PROJECT_ACTION_BUILD_YAIL_YA, projectRootNode,
+                              new Command() {
+                                @Override
+                                public void execute() {
+                                  OdeLog.log("Attempting to download: " + ServerLayout.DOWNLOAD_SERVLET_BASE + ServerLayout.DOWNLOAD_JAVA_PROJECT + "/" + projectId + "/" + rootGenPath);
+                                  //download project
+                                  Downloader.getInstance().download(ServerLayout.DOWNLOAD_SERVLET_BASE + ServerLayout.DOWNLOAD_JAVA_PROJECT + "/" + projectId + "/" + rootGenPath);
+                                }
+                              });
+                    }
+                  });
+        }
+      });
     }
   }
 

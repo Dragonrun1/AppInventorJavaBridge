@@ -58,7 +58,7 @@ public class DownloadServlet extends OdeServlet {
   // Constants used when download kind is "project-source".
   // Since the project title may contain slashes, it must be the last component in the URI.
   // PROJECT_ID_INDEX = 4 (declared above)
-  private static final int PROJECT_TITLE_INDEX = 5;
+  private static final int PROJECT_TITLE_INDEX = 9;
   private static final int SPLIT_LIMIT_PROJECT_SOURCE = 6;
 
   // Constants used when download kind is "user-project-source".
@@ -131,11 +131,10 @@ public class DownloadServlet extends OdeServlet {
           includeScreenShots, false, false);
         downloadableFile = zipFile.getRawFile();
 
-      } else if (downloadKind.equals(ServerLayout.DOWNLOAD_ECLIPSE_PROJECT)) {
+      } else if (downloadKind.equals(ServerLayout.DOWNLOAD_JAVA_PROJECT)) {
           // Download project source files as a zip.
           long projectId = Long.parseLong(uriComponents[PROJECT_ID_INDEX]);
-          uriComponents = uri.split("/", SPLIT_LIMIT_PROJECT_SOURCE);
-          String projectTitle = (uriComponents.length > PROJECT_TITLE_INDEX) ?
+          String projectTitle = (uriComponents.length >= PROJECT_TITLE_INDEX) ?
                   uriComponents[PROJECT_TITLE_INDEX] : null;
           final boolean includeProjectHistory = true;
           String zipName = (projectTitle == null) ? null :

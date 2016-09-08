@@ -488,15 +488,19 @@ public final class YaBlocksEditor extends FileEditor
   }
 
   private String javaFileName(){
-        String fileId = getFileId();
-        return fileId.replace(YoungAndroidSourceAnalyzer.BLOCKLY_SOURCE_EXTENSION,
-                YoungAndroidSourceAnalyzer.JAVA_FILE_EXTENSION);
+    String fileId = getFileId();
+    String fileName = fileId.substring(fileId.lastIndexOf('/') + 1, fileId.length());
+    String javaFileName = fileName.replace(YoungAndroidSourceAnalyzer.BLOCKLY_SOURCE_EXTENSION,
+            YoungAndroidSourceAnalyzer.JAVA_FILE_EXTENSION);
+    String projectName = Ode.getInstance().getCurrentYoungAndroidProjectRootNode().getName();
+    String userName = Ode.getInstance().getUser().getUserName();
+    return "src/appinventor/_ai" + userName + "/gen/" + projectName + "/" + javaFileName;
     }
 
   private String manifestFileName(){
-        String fileId = getFileId();
-        return fileId.replace(YoungAndroidSourceAnalyzer.BLOCKLY_SOURCE_EXTENSION,
-                YoungAndroidSourceAnalyzer.XML_FILE_EXTENSION);
+    String projectName = Ode.getInstance().getCurrentYoungAndroidProjectRootNode().getName();
+    String userName = Ode.getInstance().getUser().getUserName();
+    return "src/appinventor/_ai" + userName + "/gen/" + projectName + "/AndroidManifest.xml";
     }
 
   // FormChangeListener implementation
