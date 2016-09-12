@@ -2203,7 +2203,7 @@ public class ObjectifyStorageIo implements  StorageIo {
             runJobWithRetries(new JobRetryHelper() {
                 @Override
                 public void run(Objectify datastore) {
-                    Key<ProjectData> projectKey = projectKey(projectId);                    
+                    Key<ProjectData> projectKey = projectKey(projectId);
                     boolean foundFiles = false;
                     for (FileData fd : datastore.query(FileData.class).ancestor(projectKey)) {                        
                         String fileName = fd.fileName;
@@ -2215,7 +2215,7 @@ public class ObjectifyStorageIo implements  StorageIo {
                             if(fileName.startsWith(fileName)) {
                                 foundFiles = true;
                             }
-                            //renaming project files
+                            //renaming generated files and deleting from storage
                             if (fileName.startsWith("assets")){
                                 FileData assets = fd;
                                 assets.fileName = fileName;
@@ -2224,16 +2224,17 @@ public class ObjectifyStorageIo implements  StorageIo {
                             else if(fileName.endsWith(".java")){
                                 FileData javaFile = fd;
                                 String path = javaFile.fileName;
+                                removeFilesFromProject(datastore, projectId, FileData.RoleEnum.SOURCE, false, path);
                                 String screenName = path.substring(path.lastIndexOf('/'), path.length());
                                 javaFile.fileName = "/src/org/appinventor/" + screenName;
                                 fileData.add(javaFile);
                             }
-                            else if(fileName.endsWith(".xml")){                                
-                                FileData xmlFile = fd;
-                                xmlFile.fileName = "/AndroidManifest.xml";                                
-                                fileData.add(xmlFile);
+                            else if(fileName.endsWith(".xml")) {
+                              FileData xmlFile = fd;
+                              removeFilesFromProject(datastore, projectId, FileData.RoleEnum.SOURCE, false, xmlFile.fileName);
+                              xmlFile.fileName = "/AndroidManifest.xml";
+                              fileData.add(xmlFile);
                             }
-
                         }
                     }
 

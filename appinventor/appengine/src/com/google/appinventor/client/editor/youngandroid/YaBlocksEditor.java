@@ -22,6 +22,7 @@ import com.google.appinventor.client.explorer.SourceStructureExplorerItem;
 import com.google.appinventor.client.explorer.project.ComponentDatabaseChangeListener;
 import com.google.appinventor.client.output.OdeLog;
 import com.google.appinventor.client.widgets.dnd.DropTarget;
+import com.google.appinventor.shared.rpc.ServerLayout;
 import com.google.appinventor.shared.rpc.project.ChecksumedFileException;
 import com.google.appinventor.shared.rpc.project.ChecksumedLoadFile;
 import com.google.appinventor.shared.rpc.project.FileDescriptorWithContent;
@@ -494,13 +495,13 @@ public final class YaBlocksEditor extends FileEditor
             YoungAndroidSourceAnalyzer.JAVA_FILE_EXTENSION);
     String projectName = Ode.getInstance().getCurrentYoungAndroidProjectRootNode().getName();
     String userName = Ode.getInstance().getUser().getUserName();
-    return "src/appinventor/_ai" + userName + "/gen/" + projectName + "/" + javaFileName;
+    return ServerLayout.generatedJavaPath(userName, projectName) + "/" + javaFileName;
     }
 
   private String manifestFileName(){
     String projectName = Ode.getInstance().getCurrentYoungAndroidProjectRootNode().getName();
     String userName = Ode.getInstance().getUser().getUserName();
-    return "src/appinventor/_ai" + userName + "/gen/" + projectName + "/AndroidManifest.xml";
+    return ServerLayout.generatedJavaPath(userName, projectName) + "/AndroidManifest.xml";
     }
 
   // FormChangeListener implementation

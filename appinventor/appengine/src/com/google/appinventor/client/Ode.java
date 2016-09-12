@@ -637,10 +637,10 @@ public class Ode implements EntryPoint {
     genJavaFileButton.addStyleName("genpanel-genButton");
     Button genJavaProjButton = new Button("Java Project");
     genJavaProjButton.addStyleName("genpanel-genButton");
-    genButtonsGrid.setWidget(0, 0, genJavaFileDesc);
-    genButtonsGrid.setWidget(1, 0, genJavaFileButton);
-    genButtonsGrid.setWidget(0, 1, genJavaProjDesc);
-    genButtonsGrid.setWidget(1, 1, genJavaProjButton);
+    genButtonsGrid.setWidget(0, 0, genJavaFileButton);
+    genButtonsGrid.setWidget(1, 0, genJavaFileDesc);
+    genButtonsGrid.setWidget(0, 1, genJavaProjButton);
+    genButtonsGrid.setWidget(1, 1, genJavaProjDesc);
     genButtonsGrid.addStyleName("genpanel-buttonGrid");
 
     HTML seperatorLine = new HTML();
@@ -713,26 +713,18 @@ public class Ode implements EntryPoint {
       if (projectRootNode != null) {
         final long projectId = Ode.getInstance().getCurrentYoungAndroidProjectId();
         final String projectName = Ode.getInstance().getCurrentYoungAndroidProjectRootNode().getName();
-        final String screenJavaFile = Ode.getInstance().getCurrentFileEditor().getFileNode().getName().replace(".scm", "") + ".java";
+        final String javaFileName = Ode.getInstance().getCurrentFileEditor().getFileNode().getName().replace(".scm", "") + ".java";
         final String userName = Ode.getInstance().getUser().getUserName();
 
-        final String rootGenPath = "src/appinventor/ai_" + userName + "/gen/" + projectName;
-
-        //deleting any existing generated files
-        Ode.getInstance().getProjectService().deleteFolder(Ode.getInstance().getSessionId(), projectId, rootGenPath, new OdeAsyncCallback<Long>() {
-          @Override
-          public void onSuccess(Long result) {
-            //generate after deletion
-            ChainableCommand cmd = new SaveAllEditorsCommand(new GenerateJavaCommand(null));
-            cmd.startExecuteChain(Tracking.PROJECT_ACTION_BUILD_YAIL_YA, projectRootNode,
-                    new Command() {
-                      @Override
-                      public void execute() {
-                        Downloader.getInstance().download(ServerLayout.DOWNLOAD_SERVLET_BASE + ServerLayout.DOWNLOAD_FILE + "/" + projectId + "/" + rootGenPath + "/" + screenJavaFile);
-                      }
-                    });
-          }
-        });
+        //generate and download java file
+        ChainableCommand cmd = new SaveAllEditorsCommand(new GenerateJavaCommand(null));
+        cmd.startExecuteChain(Tracking.PROJECT_ACTION_BUILD_YAIL_YA, projectRootNode,
+                new Command() {
+                  @Override
+                  public void execute() {
+                    Downloader.getInstance().download(ServerLayout.downloadJavaFilePath(projectId, userName, projectName, javaFileName));
+                  }
+                });
       }
     }
   }
@@ -744,38 +736,23 @@ public class Ode implements EntryPoint {
       final ProjectRootNode projectRootNode = Ode.getInstance().getCurrentYoungAndroidProjectRootNode();
       final String projectName = Ode.getInstance().getCurrentYoungAndroidProjectRootNode().getName();
       final String userName = Ode.getInstance().getUser().getUserName();
-      final String rootGenPath = "src/appinventor/ai_" + userName + "/gen/" + projectName;
-
-      //deleting any existing files downloaded for java project
-      Ode.getInstance().getProjectService().deleteFolder(Ode.getInstance().getSessionId(), projectId, rootGenPath, new AsyncCallback<Long>() {
-        @Override
-        public void onFailure(Throwable caught) {
-
-        }
-        @Override
-        public void onSuccess(Long result) {
-          OdeLog.log("Deleted folder: " + rootGenPath);
-          OdeLog.log("Now generating project");
-          //generate next set of files
-          ChainableCommand cmd = new SaveAllEditorsCommand(new GenerateJavaCommand(null));
-          cmd.startExecuteChain(Tracking.PROJECT_ACTION_BUILD_YAIL_YA, projectRootNode,
-                  new Command() {
-                    @Override
-                    public void execute() {
-                      ChainableCommand cmd1 = new SaveAllEditorsCommand(new GenerateManifestCommand(null));
-                      cmd1.startExecuteChain(Tracking.PROJECT_ACTION_BUILD_YAIL_YA, projectRootNode,
-                              new Command() {
-                                @Override
-                                public void execute() {
-                                  OdeLog.log("Attempting to download: " + ServerLayout.DOWNLOAD_SERVLET_BASE + ServerLayout.DOWNLOAD_JAVA_PROJECT + "/" + projectId + "/" + rootGenPath);
-                                  //download project
-                                  Downloader.getInstance().download(ServerLayout.DOWNLOAD_SERVLET_BASE + ServerLayout.DOWNLOAD_JAVA_PROJECT + "/" + projectId + "/" + rootGenPath);
-                                }
-                              });
-                    }
-                  });
-        }
-      });
+      //generate and download project
+      ChainableCommand cmd = new SaveAllEditorsCommand(new GenerateJavaCommand(null));
+      cmd.startExecuteChain(Tracking.PROJECT_ACTION_BUILD_YAIL_YA, projectRootNode,
+              new Command() {
+                @Override
+                public void execute() {
+                  ChainableCommand cmd1 = new SaveAllEditorsCommand(new GenerateManifestCommand(null));
+                  cmd1.startExecuteChain(Tracking.PROJECT_ACTION_BUILD_YAIL_YA, projectRootNode,
+                          new Command() {
+                            @Override
+                            public void execute() {
+                              //download project
+                              Downloader.getInstance().download(ServerLayout.downloadJavaProjectPath(projectId,userName, projectName));
+                            }
+                          });
+                }
+              });
     }
   }
 

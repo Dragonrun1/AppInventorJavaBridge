@@ -250,4 +250,27 @@ public class ServerLayout {
   public static String genFullDownloadPath(long projectId, String target) {
     return ODE_BASEURL + genRelativeDownloadPath(projectId, target);
   }
+
+  /**
+   * Path to the generated files
+   */
+  public static String generatedJavaPath(String userName, String projectName){
+    return "src/appinventor/ai_" + userName + "/gen/" + projectName;
+  }
+
+  /**
+   * Path to a specific java file for download
+   */
+  public static String downloadJavaFilePath(long projectId, String userName, String projectName, String javaFileName){
+    String genPath = generatedJavaPath(userName, projectName);
+    return ServerLayout.DOWNLOAD_SERVLET_BASE + ServerLayout.DOWNLOAD_FILE + "/" + projectId + "/" + genPath + "/" + javaFileName;
+  }
+
+  /**
+   * Path to a specific java project for download
+   */
+  public static String downloadJavaProjectPath(long projectId, String userName, String projectName){
+    String genPath = generatedJavaPath(userName, projectName);
+    return ServerLayout.DOWNLOAD_SERVLET_BASE + ServerLayout.DOWNLOAD_JAVA_PROJECT + "/" + projectId + "/" + genPath;
+  }
 }
