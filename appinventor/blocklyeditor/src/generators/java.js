@@ -167,7 +167,6 @@ var methodParamsMap = {
     'FontSize' : {0: JAVA_FLOAT},
     'GetBackgroundPixelColor' : {0:JAVA_INT, 1: JAVA_INT},
     'GetPixelColor' : {0:JAVA_INT, 1: JAVA_INT},
-    'GetBackgroundPixelColor' : {0:JAVA_INT, 1: JAVA_INT},
     'Height' : {0: JAVA_INT},
     'LineWidth' : {0: JAVA_FLOAT},
     'SaveAs' : {0: JAVA_STRING},
@@ -314,9 +313,7 @@ var methodParamsMap = {
     'StoreValue' :{0: JAVA_STRING, 1: JAVA_OBJECT},
 
     //tinyDB
-    'ClearTag' :{0: JAVA_STRING},
-    'GetValue' :{0: JAVA_STRING},
-    'StoreValue' :{0: JAVA_STRING, 1: JAVA_OBJECT},
+    'ClearTag' :{0: JAVA_STRING}
     //
 };
 //Map of double casting
