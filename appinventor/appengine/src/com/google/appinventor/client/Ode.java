@@ -713,7 +713,7 @@ public class Ode implements EntryPoint {
       if (projectRootNode != null) {
         final long projectId = Ode.getInstance().getCurrentYoungAndroidProjectId();
         final String projectName = Ode.getInstance().getCurrentYoungAndroidProjectRootNode().getName();
-        final String javaFileName = Ode.getInstance().getCurrentFileEditor().getFileNode().getName().replace(".scm", "") + ".java";
+        final String javaFileName = Ode.getInstance().getCurrentFileEditor().getFileNode().getName().replace(".scm", "").replace(".bky", "") + ".java";
         final String userName = Ode.getInstance().getUser().getUserName();
 
         //generate and download java file
