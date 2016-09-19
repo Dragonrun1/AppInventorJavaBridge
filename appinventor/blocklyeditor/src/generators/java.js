@@ -107,6 +107,7 @@ var jBridgeEventsList = [];
 var jBridgeVariableDefinitionMap = new Object();
 var jBridgeInitializationList = [];
 var jBridgeComponentMap = new Object();
+var jBridgeGlobalVarTypes = new Object();
 var JBRIDGE_COMPONENT_SKIP_PROPERTIES = ["Uuid", "$Version", "TextAlignment"]; //properties to skip when reading Json File
 var JBRIDGE_JSON_TEXT_PROPERTIES = ["Title", "Text", "BackgroundImage", "Image", "Icon", "Source", "Picture", "Hint", "Action", "ActivityClass", "ActivityPackage", "ServiceURL", "Country", "Language"]; //Properties that should include the double qoutes "" in the output JBridge Javacode
 var jBridgeImportsMap = new Object();
@@ -414,6 +415,7 @@ Blockly.Java.getFormJava = function(formJson, packageName, forRepl) {
 Blockly.Java.genJBridgeCode = function(topBlocks, jsonObject){
   Blockly.Java.initAllVariables();
   Blockly.Java.parseJBridgeJsonData(jsonObject);
+  Blockly.Java.sortBlocksByPriority(topBlocks);
   Blockly.Java.parseTopBlocks(topBlocks);
 
   var code = Blockly.Java.JBRIDGE_PACKAGE_NAME + 
@@ -422,6 +424,18 @@ Blockly.Java.genJBridgeCode = function(topBlocks, jsonObject){
   Blockly.Java.genJBridgeClass(topBlocks);
 
   return code;  
+};
+
+Blockly.Java.sortBlocksByPriority = function(topBlocks){
+    var priorityIndex = 0;
+    for (var x = 0, block; block = topBlocks[x]; x++) {
+      if (block.type == "global_declaration"){
+          //swap priority
+          var tmpBlock = topBlocks[priorityIndex];
+          topBlocks[priorityIndex++] = block;
+          topBlocks[x] = tmpBlock;
+      }
+    }
 };
 
 /**
@@ -434,6 +448,7 @@ Blockly.Java.initAllVariables = function(){
     jBridgeVariableDefinitionMap = new Object();
     jBridgeInitializationList = [];
     jBridgeComponentMap = new Object();
+    jBridgeGlobalVarTypes = new Object();
     jBridgeImportsMap = new Object();
     jBridgeProceduresMap = new Object();
     jBridgeEventMethodsList = [];
@@ -1132,6 +1147,7 @@ Blockly.Java.parseJBridgeVariableSetBlock = function(variableSetBlock){
     leftValue = Blockly.Java.getJBridgeRelativeParamName(paramsMap, leftValue);
 
     var rightValue = "";
+    rightValue = "(" + jBridgeGlobalVarTypes[leftValue] + ") ";
     for(var x = 0, childBlock; childBlock = variableSetBlock.childBlocks_[x]; x++){
         var data = Blockly.Java.parseBlock(childBlock);
         rightValue = rightValue 
@@ -1947,11 +1963,10 @@ Blockly.Java.parseJBridgeGlobalIntializationBlock = function(globalBlock){
                      + Blockly.Java.parseBlock(childBlock);
   }
 
-  jBridgeComponentMap[leftValue] = [];
   var childType = globalBlock.childBlocks_[0].category;
   var variableType = Blockly.Java.getValueType(childType, rightValue);  
 
-  jBridgeComponentMap[leftValue].push({"Type" : variableType});
+  jBridgeGlobalVarTypes[leftValue] = variableType;
   jBridgeVariableDefinitionMap[leftValue] = variableType;
 
 
