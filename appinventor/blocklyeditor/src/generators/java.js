@@ -192,6 +192,7 @@ var methodParamsMap = {
     //ball methods
     'PointInDirection' : {0: JAVA_FLOAT, 1: JAVA_FLOAT},
     'PointTowards' : {0: JAVA_SPRITE},
+    'EdgeReached' : {0: JAVA_INT},
 
     //camera
     'TakePicture' : {0: JAVA_STRING},
