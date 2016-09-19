@@ -1417,15 +1417,17 @@ Blockly.Java.parseJBridgeSetBlock = function(setBlock){
     var genCode = Blockly.Java.parseBlock(childBlock);
      if(jBridgeIsIndividualBlock){
         code = code + genCode + "\n";
-      }else{
+     }else{
         value = value + genCode;
-      }
+     }
   }
   //If value is not already a string, apply String.valueOf(value)
   if(JBRIDGE_COMPONENT_TEXT_PROPERTIES.indexOf(property.toLowerCase()) > -1){
-    if (typeof value !== "string"){
+    //setting a string property to an integer should call String.valueOf()
+    if (setBlock.childBlocks_[0].category.toLowerCase() == "math" 
+            || setBlock.childBlocks_[0].category.toLowerCase() == "lists"){
         value = "String.valueOf(" + value + ")";
-        }
+    }
   }
   if((componentName.slice(0, ListPicker.length) == ListPicker) && (property == "Elements")){
     if(!jBridgeImportsMap[YailList]){
@@ -1433,7 +1435,7 @@ Blockly.Java.parseJBridgeSetBlock = function(setBlock){
     }
     value = "YailList.makeList(" + value + ")";  
   }
-
+      
   if (Blockly.Java.isNumber(value)){
       //Java Bridge requires integers, floating point numbers will throw an exception
       value = Math.round(value);
@@ -2906,8 +2908,14 @@ Blockly.Java.parseJBridgeMathCompare = function (mathBlock){
   var operator = mathBlock.getFieldValue("OP");
   var leftValue = Blockly.Java.parseBlock(mathBlock.childBlocks_[0]);
   var rightValue = Blockly.Java.parseBlock(mathBlock.childBlocks_[1]);
+  if (mathBlock.childBlocks_[0].category.toLowerCase() != "math" && leftValue.indexOf("Integer.valueOf(") != 0){
+      leftValue = "Integer.valueOf(" + leftValue + ")";
+  }
+  if (mathBlock.childBlocks_[1].category.toLowerCase() != "math" && rightValue.indexOf("Integer.valueOf(") != 0){
+      rightValue = "Integer.valueOf(" + rightValue + ")";
+  }
   var op = Blockly.Java.getJBridgeOperator(operator);
-  if(op == "==" && (leftValue.indexOf("String.valueOf(") == 0 || mathBlock.childBlocks_[1].category == "Text")){
+  if(op == "==" && (leftValue.indexOf("String.valueOf(") == 0)){
     return Blockly.Java.genJBridgeStringEqualsCompare(leftValue, rightValue, op);
   }
   return Blockly.Java.genJBridgeMathCompare(leftValue, rightValue, op);
