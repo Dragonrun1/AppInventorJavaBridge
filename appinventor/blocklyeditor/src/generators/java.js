@@ -703,6 +703,9 @@ Blockly.Java.getJBridgeInstanceName = function(block){
  */
 
 Blockly.Java.parseBlock = function (block){
+  if (block == undefined){
+      return "";
+  }
   jBridgeIsIndividualBlock = false;
   var code = "";
   var blockCategory = block.category;
@@ -904,13 +907,18 @@ Blockly.Java.parseJBridgeControlForRangeBlock = function(controlBlock){
     var from = Blockly.Java.parseBlock(controlBlock.childBlocks_[0]);
     var to = Blockly.Java.parseBlock(controlBlock.childBlocks_[1]);
     var by = Blockly.Java.parseBlock(controlBlock.childBlocks_[2]);
-    var statement = Blockly.Java.parseBlock(controlBlock.childBlocks_[3]);
+    var statement = "";
+    if (controlBlock.childBlocks_[3] != undefined){
+      statement = Blockly.Java.parseBlock(controlBlock.childBlocks_[3]);
+    }
     var iterator = controlBlock.getFieldValue('VAR');
     
     code += Blockly.Java.genJBridgeControlForRangeBlock(from, to, by, statement, iterator);    
     
-    var nextBlock = Blockly.Java.parseBlock(controlBlock.childBlocks_[4]);
-    code += nextBlock;
+    if(controlBlock.childBlocks_[4] != undefined){
+        var nextBlock = Blockly.Java.parseBlock(controlBlock.childBlocks_[4]);
+        code += nextBlock;
+    }
     return code;
 };
 
