@@ -108,6 +108,7 @@ var jBridgeVariableDefinitionMap = new Object();
 var jBridgeInitializationList = [];
 var jBridgeComponentMap = new Object();
 var jBridgeGlobalVarTypes = new Object();
+var jBridgeLexicalVarTypes = new Object();
 var JBRIDGE_COMPONENT_SKIP_PROPERTIES = ["Uuid", "$Version", "TextAlignment"]; //properties to skip when reading Json File
 var JBRIDGE_JSON_TEXT_PROPERTIES = ["Title", "Text", "BackgroundImage", "Image", "Icon", "Source", "Picture", "Hint", "Action", "ActivityClass", "ActivityPackage", "ServiceURL", "Country", "Language"]; //Properties that should include the double qoutes "" in the output JBridge Javacode
 var jBridgeImportsMap = new Object();
@@ -142,6 +143,7 @@ singleMathJavaNames.set("ACOS", "acos");
 singleMathJavaNames.set("ATAN", "atan");
 
 var singleMathTypes = ["math_single", "math_trig", "math_abs", "math_neg", "math_round", "math_ceiling", "math_floor"];
+var mathOperationBlocks = ["math_add", "math_subtract", "math_multiply", "math_division", "math_compare", "math_atan2", "math_power"];
 
 var methodParam= new Object();
 
@@ -179,9 +181,9 @@ var methodParamsMap = {
     'Width' : {0: JAVA_FLOAT},
     'WidthPercent' : {0: JAVA_FLOAT},
     'MoveTo' : {0: JAVA_FLOAT, 1: JAVA_FLOAT},
-    'Dragged' : {0: JAVA_FLOAT, 1: JAVA_FLOAT, 2: JAVA_FLOAT, 3: JAVA_FLOAT, 4: JAVA_FLOAT, 5: JAVA_FLOAT, 6: JAVA_BOOLEAN},
+    'Dragged' : {0: JAVA_INT, 1: JAVA_INT, 2: JAVA_INT, 3: JAVA_INT, 4: JAVA_INT, 5: JAVA_INT, 6: JAVA_BOOLEAN},
     'Flung' : {0: JAVA_FLOAT, 1: JAVA_FLOAT, 2: JAVA_FLOAT, 3: JAVA_FLOAT, 4: JAVA_FLOAT, 5: JAVA_FLOAT, 6: JAVA_BOOLEAN},
-    'Touched': {0: JAVA_FLOAT, 1: JAVA_FLOAT, 2: JAVA_BOOLEAN}, //newly added 8/23
+    'Touched': {0: JAVA_INT, 1: JAVA_INT, 2: JAVA_BOOLEAN}, //newly added 8/23
     'TouchUp' : {0: JAVA_FLOAT, 1: JAVA_FLOAT},
     'TouchDown' : {0: JAVA_FLOAT, 1: JAVA_FLOAT},
 
@@ -905,13 +907,23 @@ Blockly.Java.genJBridgeControlWhileBlock = function(body, condition){
 Blockly.Java.parseJBridgeControlForRangeBlock = function(controlBlock){
     var code = "";
     var from = Blockly.Java.parseBlock(controlBlock.childBlocks_[0]);
+    if (controlBlock.childBlocks_[0].category != "Math"){
+        from = "Integer.valueOf(" + from + ")";
+    }
     var to = Blockly.Java.parseBlock(controlBlock.childBlocks_[1]);
+    if (controlBlock.childBlocks_[1].category != "Math"){
+        to = "Integer.valueOf(" + to + ")";
+    }
     var by = Blockly.Java.parseBlock(controlBlock.childBlocks_[2]);
+    if (controlBlock.childBlocks_[2].category != "Math"){
+        by = "Integer.valueOf(" + by + ")";
+    }
     var statement = "";
     if (controlBlock.childBlocks_[3] != undefined){
       statement = Blockly.Java.parseBlock(controlBlock.childBlocks_[3]);
     }
     var iterator = controlBlock.getFieldValue('VAR');
+    jBridgeLexicalVarTypes[iterator] = JAVA_INT;
     
     code += Blockly.Java.genJBridgeControlForRangeBlock(from, to, by, statement, iterator);    
     
@@ -1192,8 +1204,8 @@ Blockly.Java.parseJBridgeComponentBlock = function(componentBlock){
        code = Blockly.Java.parseJBridgeEventBlock(componentBlock);
   }else if (componentType == "component_set_get"){
       if (componentBlock.setOrGet == "set"){
-          code = Blockly.Java.parseJBridgeSetBlock(componentBlock);
           jBridgeIsIndividualBlock = true;
+          code = Blockly.Java.parseJBridgeSetBlock(componentBlock);
       }else{
           code = Blockly.Java.parseJBridgeGetBlock(componentBlock);
       }
@@ -1438,7 +1450,10 @@ Blockly.Java.parseJBridgeSetBlock = function(setBlock){
   var YailList = "YailList";
   var value = "";
   var code = "";
-  for (var x = 0, childBlock; childBlock = setBlock.childBlocks_[x]; x++) {
+  //iterate through one child or until the second to last block depending on children
+  var childLength = setBlock.childBlocks_.length > 1? setBlock.childBlocks_.length -1 : 1;
+  for (var x = 0,childBlock; x < childLength; x++) {
+    childBlock = setBlock.childBlocks_[x];
     var genCode = Blockly.Java.parseBlock(childBlock);
      if(jBridgeIsIndividualBlock){
         code = code + genCode + "\n";
@@ -1466,6 +1481,10 @@ Blockly.Java.parseJBridgeSetBlock = function(setBlock){
       value = Math.round(value);
   }
   code = Blockly.Java.genJBridgeSetBlock(componentName, property, value) + "\n" + code;
+  //parse the next block if there is one
+  if(setBlock.childBlocks_.length > 1){
+      code += Blockly.Java.parseBlock(setBlock.childBlocks_[setBlock.childBlocks_.length - 1]);
+  }
   return code;
 };
 
@@ -1718,7 +1737,32 @@ Blockly.Java.parseJBridgeMathBlocks = function(mathBlock){
     code = Blockly.Java.parseJBridgeMathRandomInt(mathBlock);
   }else if(type == "math_random_float"){
     code = Blockly.Java.parseJBridgeMathRandomFloatBlock(mathBlock);
-  }else if(type == "math_add"){
+  }else if (Blockly.Java.isMathOperationBlock(mathBlock)){
+    code = Blockly.Java.parseMathOperationBlock(mathBlock);
+  }else if(Blockly.Java.isSingleMathBlock(mathBlock)){
+    code = Blockly.Java.parseJBridgeMathSingleBlock(mathBlock);
+  }else if(type == "math_convert_angles"){
+    code = Blockly.Java.parseJBridgeMathConvertAngleBlock(mathBlock);
+  }else if(type == "math_convert_number"){
+    code = Blockly.Java.parseJBridgeMathConvertNumberBlock(mathBlock);
+  }else if(type == "math_is_a_number"){
+    code = Blockly.Java.parseJBridgeMathIsNumberBlock(mathBlock);
+  }
+  return code;
+};
+
+Blockly.Java.isSingleMathBlock = function(mathBlock){
+  return singleMathTypes.indexOf(type) > -1;
+}
+
+Blockly.Java.isMathOperationBlock = function(mathBlock){
+    return mathOperationBlocks.indexOf(mathBlock.type) >= 0;
+};
+
+Blockly.Java.parseMathOperationBlock = function(mathBlock){
+  var code = "";
+  var type = mathBlock.type;
+  if(type == "math_add"){
     code = Blockly.Java.parseJBridgeMathAdd(mathBlock);
   }else if(type == "math_subtract"){
     code = Blockly.Java.parseJBridgeMathSubtract(mathBlock);
@@ -1732,16 +1776,21 @@ Blockly.Java.parseJBridgeMathBlocks = function(mathBlock){
     code = Blockly.Java.parseJBridgeMathAtan2(mathBlock);
   }else if(type == "math_power"){
     code = Blockly.Java.parseJBridgeMathPowerBlock(mathBlock);
-  }else if(singleMathTypes.indexOf(type) > -1){
-    code = Blockly.Java.parseJBridgeMathSingleBlock(mathBlock);
-  }else if(type == "math_convert_angles"){
-    code = Blockly.Java.parseJBridgeMathConvertAngleBlock(mathBlock);
-  }else if(type == "math_convert_number"){
-    code = Blockly.Java.parseJBridgeMathConvertNumberBlock(mathBlock);
-  }else if(type == "math_is_a_number"){
-    code = Blockly.Java.parseJBridgeMathIsNumberBlock(mathBlock);
   }
   return code;
+};
+
+Blockly.Java.castChildToInteger = function(block, childNumber, value){
+  if (block.childBlocks_[childNumber - 1].category != "Math"){
+    if(block.childBlocks_[childNumber - 1].category != "Variables"){
+      value = "Integer.valueOf(" + value + ")";
+    }else if (jBridgeLexicalVarTypes[value] != undefined && jBridgeLexicalVarTypes[value] != JAVA_INT){
+      value = "Integer.valueOf(" + value + ")";
+    }else if (jBridgeGlobalVarTypes[value] != undefined && jBridgeGlobalVarTypes[value] != JAVA_INT){
+      value = "Integer.valueOf(" + value + ")";
+    }   
+  }
+  return value;
 };
 
 /**
@@ -1869,13 +1918,11 @@ Blockly.Java.parseJBridgeMathOnListBlock = function(mathBlock){
 Blockly.Java.parseJBridgeMathPowerBlock = function(mathBlock){
   var code = "";
   var leftValue = Blockly.Java.parseBlock(mathBlock.childBlocks_[0]);
-  if(leftValue.slice(-7) == ".Text()"){
-      leftValue = "Integer.parseInt(" + leftValue + ")";
-  }
   var rightValue = Blockly.Java.parseBlock(mathBlock.childBlocks_[1]);
-  if(rightValue.slice(-7) == ".Text()"){
-      rightValue = "Integer.parseInt(" + rightValue + ")";
-  }
+  
+  leftValue = Blockly.Java.castChildToInteger(mathBlock, 1, leftValue);
+  rightValue = Blockly.Java.castChildToInteger(mathBlock, 2, rightValue);
+  
   code += "Math.pow(" + leftValue + ", " + rightValue + ")";
   return code;
 };
@@ -1888,31 +1935,34 @@ Blockly.Java.parseJBridgeMathNumberBlock = function(mathBlock){
 
 Blockly.Java.parseJBridgeMathAdd = function(mathBlock){
     var leftValue = Blockly.Java.parseBlock(mathBlock.childBlocks_[0]);
-    if(leftValue.slice(-7) == ".Text()"){
-      leftValue = "Integer.parseInt(" + leftValue + ")";
-    }
     var rightValue = Blockly.Java.parseBlock(mathBlock.childBlocks_[1]);
-    if(rightValue.slice(-7) == ".Text()"){
-      rightValue = "Integer.parseInt(" + rightValue + ")";
-    }
+    leftValue = Blockly.Java.castChildToInteger(mathBlock, 1, leftValue);
+    rightValue = Blockly.Java.castChildToInteger(mathBlock, 2, rightValue);
+   
     return Blockly.Java.genJBridgeMathOperation(leftValue, rightValue, "+");
 };
 
 Blockly.Java.parseJBridgeMathSubtract = function(mathBlock){
     var leftValue = Blockly.Java.parseBlock(mathBlock.childBlocks_[0]);
     var rightValue = Blockly.Java.parseBlock(mathBlock.childBlocks_[1]);
+    leftValue = Blockly.Java.castChildToInteger(mathBlock, 1, leftValue);
+    rightValue = Blockly.Java.castChildToInteger(mathBlock, 2, rightValue);
     return Blockly.Java.genJBridgeMathOperation(leftValue, rightValue, "-");
 };
 
 Blockly.Java.parseJBridgeMathMultiply = function(mathBlock){
     var leftValue = Blockly.Java.parseBlock(mathBlock.childBlocks_[0]);
     var rightValue = Blockly.Java.parseBlock(mathBlock.childBlocks_[1]);
+    leftValue = Blockly.Java.castChildToInteger(mathBlock, 1, leftValue);
+    rightValue = Blockly.Java.castChildToInteger(mathBlock, 2, rightValue);
     return Blockly.Java.genJBridgeMathOperation(leftValue, rightValue, "*");
 };
 
 Blockly.Java.parseJBridgeMathDivision = function(mathBlock){
     var leftValue = Blockly.Java.parseBlock(mathBlock.childBlocks_[0]);
     var rightValue = Blockly.Java.parseBlock(mathBlock.childBlocks_[1]);
+    leftValue = Blockly.Java.castChildToInteger(mathBlock, 1, leftValue);
+    rightValue = Blockly.Java.castChildToInteger(mathBlock, 2, rightValue);
     return Blockly.Java.genJBridgeMathOperation(leftValue, rightValue, "/");
 };
 
@@ -2932,12 +2982,8 @@ Blockly.Java.parseJBridgeMathCompare = function (mathBlock){
   var operator = mathBlock.getFieldValue("OP");
   var leftValue = Blockly.Java.parseBlock(mathBlock.childBlocks_[0]);
   var rightValue = Blockly.Java.parseBlock(mathBlock.childBlocks_[1]);
-  if (mathBlock.childBlocks_[0].category.toLowerCase() != "math" && leftValue.indexOf("Integer.valueOf(") != 0){
-      leftValue = "Integer.valueOf(" + leftValue + ")";
-  }
-  if (mathBlock.childBlocks_[1].category.toLowerCase() != "math" && rightValue.indexOf("Integer.valueOf(") != 0){
-      rightValue = "Integer.valueOf(" + rightValue + ")";
-  }
+  leftValue = Blockly.Java.castChildToInteger(mathBlock, 1, leftValue);
+  rightValue = Blockly.Java.castChildToInteger(mathBlock, 2, rightValue);
   var op = Blockly.Java.getJBridgeOperator(operator);
   if(op == "==" && (leftValue.indexOf("String.valueOf(") == 0)){
     return Blockly.Java.genJBridgeStringEqualsCompare(leftValue, rightValue, op);
@@ -2954,6 +3000,8 @@ Blockly.Java.parseJBridgeMathCompare = function (mathBlock){
 Blockly.Java.parseJBridgeMathAtan2 = function (mathBlock){
   var leftValue = Blockly.Java.parseBlock(mathBlock.childBlocks_[0]);
   var rightValue = Blockly.Java.parseBlock(mathBlock.childBlocks_[1]);
+  leftValue = Blockly.Java.castChildToInteger(mathBlock, 1, leftValue);
+  rightValue = Blockly.Java.castChildToInteger(mathBlock, 2, rightValue);
   return Blockly.Java.genJBridgeMathAtan2(leftValue, rightValue);
 };
 
