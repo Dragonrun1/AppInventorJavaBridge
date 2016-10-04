@@ -115,6 +115,7 @@ var jBridgeImportsMap = new Object();
 var jBridgeProceduresMap = new Object();
 var jBridgeEventMethodsList = [];
 var jBridgeIsIndividualBlock = false; // is to Identify if a block is Iduvidal root block or sub-block
+var jBridgeIsProcedureChild = true; //used to identify if block is a child of procedure where special casting is needed
 var jBridgeCurrentScreen;
 var JBRIDGE_COMPONENT_TEXT_PROPERTIES = ["text", "picture", "source"];
 
@@ -157,7 +158,11 @@ var JAVA_OBJECT = "Object";
 
 //Param type Map start. Includes methods and individual events
 var methodParamsMap = {
-
+    //text properties
+    'Text': {0 : JAVA_STRING},
+    'Picture': {0 : JAVA_STRING},
+    'Source': {0 : JAVA_STRING},
+    
    //canvas methods
     'BackgroundColor' : {0 : JAVA_INT},
     'BackgroundImage' : {0: JAVA_STRING},
@@ -1450,17 +1455,7 @@ Blockly.Java.parseJBridgeSetBlock = function(setBlock){
   var YailList = "YailList";
   var value = "";
   var code = "";
-  //iterate through one child or until the second to last block depending on children
-  var childLength = setBlock.childBlocks_.length > 1? setBlock.childBlocks_.length -1 : 1;
-  for (var x = 0,childBlock; x < childLength; x++) {
-    childBlock = setBlock.childBlocks_[x];
-    var genCode = Blockly.Java.parseBlock(childBlock);
-     if(jBridgeIsIndividualBlock){
-        code = code + genCode + "\n";
-     }else{
-        value = value + genCode;
-     }
-  }
+  value = Blockly.Java.parseChildrenForMethod(property, setBlock.childBlocks_);
   //If value is not already a string, apply String.valueOf(value)
   if(JBRIDGE_COMPONENT_TEXT_PROPERTIES.indexOf(property.toLowerCase()) > -1){
     //setting a string property to an integer should call String.valueOf()
@@ -2141,10 +2136,11 @@ Blockly.Java.parseJBridgeProcDefNoReturn = function(proceduresBlock){
     procParms.push("Object " + params);
   }
   var statementList = [];
+  jBridgeIsProcedureChild = true;
   for (var x = 0, childBlock; childBlock = proceduresBlock.childBlocks_[x]; x++) {
     statementList.push(Blockly.Java.parseBlock(childBlock));
   }
-  
+  jBridgeIsProcedureChild = false;
   jBridgeProceduresMap[procName] = Blockly.Java.genJBridgeProcDefNoReturn(procName, procParms.join(", "), statementList.join("\n"));
 
   return code;
@@ -3381,3 +3377,132 @@ Blockly.Java.addPermisionsAndIntents = function(name){
 Blockly.Java.removeColonsAndNewlines = function(code){
     return code.replace(/[;\n]*/g, "");
 }
+
+Blockly.Java.parseChildrenForMethod = function(property, children){
+  var propertyParamTypes = methodParamsMap[property];
+  
+  //iterate through one child or until the second to last block depending on children
+  var childCode = [];
+  var childLength = children.length > 1? children.length -1 : 1;
+  for (var x = 0,childBlock; x < childLength; x++) {
+    childBlock = children[x];
+    var type = propertyParamTypes[x];
+    var genCode = Blockly.Java.parseBlock(childBlock);
+    if (type == JAVA_STRING){
+      genCode = Blockly.Java.castToString(genCode, childBlock);
+    }else if(type == JAVA_INT){
+      genCode = Blockly.Java.castToInt(genCode, childBlock);
+    }else if(type == JAVA_FLOAT){
+      genCode = Blockly.Java.castToFloat(genCode, childBlock);
+    }else if(type == JAVA_BOOLEAN){
+      genCode = Blockly.Java.castToBoolean(genCode, childBlock);
+    }else{
+    }
+    childCode.push(genCode);
+  }
+  var code = childCode.join(",");
+  if(jBridgeIsIndividualBlock){
+      code = code + genCode + "\n";
+  } 
+  return code;
+};
+
+Blockly.Java.castToString = function(code, block){
+  var cast = false;
+  if(jBridgeIsProcedureChild){
+    cast = true;
+  }else if (code.startsWith("String.valueOf(")){
+    cast = false;
+  }else if (block.category != "Text"){
+    if (block.category == "Variables"){
+      var varName =Blockly.Java.parseJBridgeVariableGetBlock(block);
+       if (jBridgeGlobalVarTypes[varName] == JAVA_STRING){
+         cast = false;
+       }else if(jBridgeLexicalVarTypes[varName] == JAVA_SPRITE){
+         cast = false;
+       }
+    }else{
+      cast = true;
+    }
+  }
+  if (cast == true){
+    return "String.valueOf(" + code + ")";
+  }else {
+    return code;
+  }
+};
+
+Blockly.Java.castToInt = function(code, block){
+  var cast = false;
+  if(jBridgeIsProcedureChild){
+    cast = true;
+  }else if (code.startsWith("Integer.valueOf(")){
+    cast = false;
+  }else if (block.category != "Text"){
+    if (block.category == "Variables"){
+      var varName =Blockly.Java.parseJBridgeVariableGetBlock(block);
+       if (jBridgeGlobalVarTypes[varName] == JAVA_INT){
+         cast = false;
+       }else if(jBridgeLexicalVarTypes[varName] == JAVA_INT){
+         cast = false;
+       }
+    }else{
+      cast = true;
+    }
+  }
+  if (cast == true){
+    return "Integer.valueOf(" + code + ")";
+  }else {
+    return code;
+  }
+};
+
+Blockly.Java.castToFloat = function(code, block){
+  var cast = false;
+  if(jBridgeIsProcedureChild){
+    cast = true;
+  }else if (code.startsWith("(float)")){
+    cast = false;
+  }else if (block.category != "Text"){
+    if (block.category == "Variables"){
+      var varName =Blockly.Java.parseJBridgeVariableGetBlock(block);
+       if (jBridgeGlobalVarTypes[varName] == JAVA_FLOAT){
+         cast = false;
+       }else if(jBridgeLexicalVarTypes[varName] == JAVA_FLOAT){
+         cast = false;
+       }
+    }else{
+      cast = true;
+    }
+  }
+  if (cast == true){
+    return "(float)" + code;
+  }else {
+    return code;
+  }
+};
+
+Blockly.Java.castToBoolean = function(code, block){
+  var cast = false;
+  if(jBridgeIsProcedureChild){
+    cast = true;
+  }else if (code.startsWith("(boolean)")){
+    cast = false;
+  }else if (block.category != "Text"){
+    if (block.category == "Variables"){
+      var varName =Blockly.Java.parseJBridgeVariableGetBlock(block);
+       if (jBridgeGlobalVarTypes[varName] == JAVA_BOOLEAN){
+         cast = false;
+       }else if(jBridgeLexicalVarTypes[varName] == JAVA_BOOLEAN){
+         cast = false;
+       }
+    }else{
+      cast = true;
+    }
+  }
+  if (cast == true){
+    return "(boolean)" + code;
+  }else {
+    return code;
+  }
+};
