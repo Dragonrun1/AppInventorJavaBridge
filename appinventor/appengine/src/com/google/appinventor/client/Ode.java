@@ -723,6 +723,15 @@ public class Ode implements EntryPoint {
                   @Override
                   public void execute() {
                     Downloader.getInstance().download(ServerLayout.downloadJavaFilePath(projectId, userName, projectName, javaFileName));
+                    AsyncCallback<Long> callback = new OdeAsyncCallback<Long>() {
+                      @Override
+                      public void onSuccess(Long result) {
+
+                      }
+                    };
+                    String path = "src/appinventor/ai_" + Ode.getInstance().getUser().getUserName()+"/gen/" + projectName + "/" + javaFileName;
+                    Ode.getInstance().getProjectService().deleteFile(sessionId, projectId, path, callback);
+
                   }
                 });
       }
