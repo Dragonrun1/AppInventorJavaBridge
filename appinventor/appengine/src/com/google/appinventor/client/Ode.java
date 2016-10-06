@@ -721,12 +721,11 @@ public class Ode implements EntryPoint {
         cmd.startExecuteChain(Tracking.PROJECT_ACTION_BUILD_YAIL_YA, projectRootNode,
                 new Command() {
                   @Override
-                  public void execute() {
-                    Downloader.getInstance().download(ServerLayout.downloadJavaFilePath(projectId, userName, projectName, javaFileName));
+                  public void execute() {                    
                     AsyncCallback<Long> callback = new OdeAsyncCallback<Long>() {
                       @Override
                       public void onSuccess(Long result) {
-
+                        Downloader.getInstance().download(ServerLayout.downloadJavaFilePath(projectId, userName, projectName, javaFileName));
                       }
                     };
                     String path = "src/appinventor/ai_" + Ode.getInstance().getUser().getUserName()+"/gen/" + projectName + "/" + javaFileName;
