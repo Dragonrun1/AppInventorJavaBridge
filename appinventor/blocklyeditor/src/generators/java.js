@@ -110,7 +110,7 @@ var jBridgeComponentMap = new Object();
 var jBridgeGlobalVarTypes = new Object();
 var jBridgeLexicalVarTypes = new Object();
 var JBRIDGE_COMPONENT_SKIP_PROPERTIES = ["Uuid", "$Version", "TextAlignment"]; //properties to skip when reading Json File
-var JBRIDGE_JSON_TEXT_PROPERTIES = ["Title", "Text", "BackgroundImage", "Image", "Icon", "Source", "Picture", "Hint", "Action", "ActivityClass", "ActivityPackage", "ServiceURL", "Country", "Language"]; //Properties that should include the double qoutes "" in the output JBridge Javacode
+var JBRIDGE_JSON_TEXT_PROPERTIES = ["Title", "Text", "BackgroundImage", "Image", "Icon", "Source", "Picture", "Hint", "Action", "ActivityClass", "ActivityPackage", "ServiceURL", "Country", "Language", "ElementsFromString", "Prompt"]; //Properties that should include the double qoutes "" in the output JBridge Javacode
 var jBridgeImportsMap = new Object();
 var jBridgeProceduresMap = new Object();
 var jBridgeEventMethodsList = [];
@@ -316,6 +316,9 @@ var methodParamsMap = {
     'GetValue' :{0: JAVA_STRING},
     'StoreValue' :{0: JAVA_STRING, 1: JAVA_OBJECT},
 
+    //firebase
+    'GotValue' :{0: JAVA_STRING, 1: JAVA_OBJECT},
+    
     //tinyDB
     'ClearTag' :{0: JAVA_STRING}
     //
