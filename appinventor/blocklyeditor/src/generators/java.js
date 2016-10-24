@@ -16,10 +16,10 @@ goog.require('Blockly.Generator');
 Blockly.Java = new Blockly.Generator('Java');
 
 /**
- * List of illegal variable names. This is not intended to be a security feature.  Blockly is 
+ * List of illegal variable names. This is not intended to be a security feature.  Blockly is
  * 100% client-side, so bypassing this list is trivial.  This is intended to prevent users from
  * accidentally clobbering a built-in object or function.
- * 
+ *
  * TODO: fill this in or remove it.
  * @private
  */
@@ -116,6 +116,8 @@ var jBridgeProceduresMap = new Object();
 var jBridgeEventMethodsList = [];
 var jBridgeIsIndividualBlock = false; // is to Identify if a block is Iduvidal root block or sub-block
 var jBridgeCurrentScreen;
+var jBridgeParsingEventMethod = false;
+var jBridgeEventMethodSetupCode = "";
 var JBRIDGE_COMPONENT_TEXT_PROPERTIES = ["text", "picture", "source"];
 
 var jBridgePermissionToAdd = new Object; //this should be a set
@@ -395,7 +397,7 @@ var TYPE_JAVA_ARRAYLIST = "ArrayList<Object>";
 
 /**
  * Generate the Yail code for this blocks workspace, given its associated form specification.
- * 
+ *
  * @param {String} formJson JSON string describing the contents of the form. This is the JSON
  *    content from the ".scm" file for this form.
  * @param {String} packageName the name of the package (to put in the define-form call)
@@ -403,7 +405,7 @@ var TYPE_JAVA_ARRAYLIST = "ArrayList<Object>";
  * @returns {String} the generated code if there were no errors.
  */
 Blockly.Java.getFormJava = function(formJson, packageName, forRepl) {
-  var jsonObject = JSON.parse(formJson); 
+  var jsonObject = JSON.parse(formJson);
   var javaCode = [];
   javaCode.push(Blockly.Java.genJBridgeCode(Blockly.mainWorkspace.getTopBlocks(true), jsonObject));
   var prityPrintCode = Blockly.Java.prityPrintJBridgeCode(javaCode.join('\n'));
@@ -423,12 +425,12 @@ Blockly.Java.genJBridgeCode = function(topBlocks, jsonObject){
   Blockly.Java.sortBlocksByPriority(topBlocks);
   Blockly.Java.parseTopBlocks(topBlocks);
 
-  var code = Blockly.Java.JBRIDGE_PACKAGE_NAME + 
+  var code = Blockly.Java.JBRIDGE_PACKAGE_NAME +
   Blockly.Java.JBRIDGE_BASE_IMPORTS +
   Blockly.Java.genComponentImport(jBridgeImportsMap)+
   Blockly.Java.genJBridgeClass(topBlocks);
 
-  return code;  
+  return code;
 };
 
 Blockly.Java.sortBlocksByPriority = function(topBlocks){
@@ -495,7 +497,7 @@ Blockly.Java.parseJBridgeJsonComopnents = function (componentJson, rootName){
   jBridgeComponentMap[name].push({"Type": componentJson.$Type}); //<- look here?
 
   jBridgeVariableDefinitionMap[name] = componentJson.$Type;
-  jBridgeImportsMap[componentJson.$Type] = "import com.google.appinventor.components.runtime."+componentJson.$Type+";"; 
+  jBridgeImportsMap[componentJson.$Type] = "import com.google.appinventor.components.runtime."+componentJson.$Type+";";
   var newObj = name
                +" = new "
                +componentJson.$Type
@@ -503,13 +505,13 @@ Blockly.Java.parseJBridgeJsonComopnents = function (componentJson, rootName){
                +rootName
                +");";
 
-  jBridgeInitializationList.push(newObj);  
+  jBridgeInitializationList.push(newObj);
   if(componentJson.$Type.toLowerCase() == "imagesprite" || componentJson.$Type.toLowerCase() == "ball" ){ //just inserted 7/20/16 by *Elia*
-    jBridgeInitializationList.push(name +".Initialize();");  
+    jBridgeInitializationList.push(name +".Initialize();");
   }
   var componentsObj = undefined;
   for (var key in componentJson) {
-    if (JBRIDGE_COMPONENT_SKIP_PROPERTIES.indexOf(key) <= -1 
+    if (JBRIDGE_COMPONENT_SKIP_PROPERTIES.indexOf(key) <= -1
          && key != "$Name" && key != "$Type" && componentJson.hasOwnProperty(key)) {
       if(key == "$Components"){
         componentsObj = componentJson[key];
@@ -535,7 +537,7 @@ Blockly.Java.parseJBridgeJsonComopnents = function (componentJson, rootName){
         if(componentJson[key].substring(0,2) == "&H" && componentJson[key].length == 10){
           printableValue ="0x"+componentJson[key].substring(2);
         }
-        //for True and False properties 
+        //for True and False properties
         if(valueOfLowerCase == "true" || valueOfLowerCase == "false"){
               printableValue = valueOfLowerCase;
         }
@@ -547,11 +549,11 @@ Blockly.Java.parseJBridgeJsonComopnents = function (componentJson, rootName){
       }
     }
   }
-  //Assuming that $Components Property is always an array 
+  //Assuming that $Components Property is always an array
   if(componentsObj != undefined){
     for(var i=0;i<componentsObj.length;i++){
       Blockly.Java.parseJBridgeJsonComopnents(componentsObj[i], name);
-    } 
+    }
   }
 };
 
@@ -569,7 +571,7 @@ return code;
 Blockly.Java.parseComponentDefinition = function(jBridgeVariableDefinitionMap){
   var code = "";
   for (var key in jBridgeVariableDefinitionMap) {
-      code = code 
+      code = code
              + Blockly.Java.genComponentDefinition(jBridgeVariableDefinitionMap[key], key)
              +"\n";
              Blockly.Java.addPermisionsAndIntents(jBridgeVariableDefinitionMap[key]);
@@ -596,8 +598,8 @@ Blockly.Java.genComponentDefinition = function(type, name){
 Blockly.Java.genComponentImport = function(jBridgeImportsMap){
   var code = "";
   for (var key in jBridgeImportsMap) {
-      code = code 
-             + '\n' 
+      code = code
+             + '\n'
              + jBridgeImportsMap[key];
   }
   return code;
@@ -677,8 +679,8 @@ Blockly.Java.genJBridgeEventMethods = function(){
 Blockly.Java.genJBridgeDefineProcedure = function(jBridgeProceduresMap){
   var code = "";
   for (var key in jBridgeProceduresMap) {
-      code = code 
-             + '\n' 
+      code = code
+             + '\n'
              + jBridgeProceduresMap[key];
   }
   return code;
@@ -824,14 +826,14 @@ Blockly.Java.parseJBridgeControlOpenScreenWithStartValue = function(controlBlock
     var code = "";
     var screenName = Blockly.Java.parseBlock(controlBlock.childBlocks_[0]);
     var startValue = Blockly.Java.parseBlock(controlBlock.childBlocks_[1]);
-    
+
     //remove any quotes and spaces
     screenName = screenName.replace(/"+/g, "");
-    code += "startActivity(new Intent().setClass(this, " 
-            + screenName 
-            + ".class).putExtra(\"startValue\", " 
+    code += "startActivity(new Intent().setClass(this, "
+            + screenName
+            + ".class).putExtra(\"startValue\", "
             + startValue
-            + "));\n";  
+            + "));\n";
     return code;
 };
 
@@ -844,13 +846,13 @@ Blockly.Java.parseJBridgeControlOpenScreenWithStartValue = function(controlBlock
 Blockly.Java.parseJBridgeControlEvalIgnore = function(controlBlock){
     var code = "";
     var statement = Blockly.Java.parseBlock(controlBlock.childBlocks_[0]);
-    code += statement;    
+    code += statement;
     return code;
 };
 
 /**
  * Parses an App Inventor block that:
- * Tests a given condition. 
+ * Tests a given condition.
  * If the condition is true, performs the actions in the then-do sequence of blocks and returns the then-return value
  * Otherwise, performs the actions in the else-do sequence of blocks and returns the else-return value.
  * @param controlBlock The App Inventor Block
@@ -859,17 +861,17 @@ Blockly.Java.parseJBridgeControlEvalIgnore = function(controlBlock){
 Blockly.Java.parseJBridgeControlChoose = function(controlBlock){
     var code = "";
     var condition = Blockly.Java.parseBlock(controlBlock.childBlocks_[0]);
-    var thenStatement = Blockly.Java.parseBlock(controlBlock.childBlocks_[1]);       
+    var thenStatement = Blockly.Java.parseBlock(controlBlock.childBlocks_[1]);
     var elseStatement = Blockly.Java.parseBlock(controlBlock.childBlocks_[2]);
     //ternary operator
-    code += "((" + condition + ") ?" + thenStatement + ": " + elseStatement + ")";    
+    code += "((" + condition + ") ?" + thenStatement + ": " + elseStatement + ")";
     return code;
 };
 
 /**
  * Parses an App Inventor block that:
- * Tests the test condition. 
- * If true, performs the action given in do, then tests again. 
+ * Tests the test condition.
+ * If true, performs the action given in do, then tests again.
  * When test is false, the block ends.
  * @param controlBlock The App Inventor Block
  * @return The equivalent Java Code
@@ -878,11 +880,11 @@ Blockly.Java.parseJBridgeControlWhileBlock = function(controlBlock){
     var code = "";
     var condition = Blockly.Java.parseBlock(controlBlock.childBlocks_[0]);
     var body = Blockly.Java.parseBlock(controlBlock.childBlocks_[1]);
-    code += Blockly.Java.genJBridgeControlWhileBlock(body, condition);    
-    
+    code += Blockly.Java.genJBridgeControlWhileBlock(body, condition);
+
     var nextBlock = Blockly.Java.parseBlock(controlBlock.childBlocks_[2]);
     code += nextBlock;
-    
+
     return code;
 };
 
@@ -894,7 +896,7 @@ Blockly.Java.parseJBridgeControlWhileBlock = function(controlBlock){
 */
 Blockly.Java.genJBridgeControlWhileBlock = function(body, condition){
   var code = "";
-  code = "while(" + condition + "){\n" 
+  code = "while(" + condition + "){\n"
        + body
        + "\n} \n";
   return code;
@@ -902,7 +904,7 @@ Blockly.Java.genJBridgeControlWhileBlock = function(body, condition){
 
 /**
  * Parses an App Inventor block that:
- * Runs the block in the do section for each numeric value in the range from start to end, 
+ * Runs the block in the do section for each numeric value in the range from start to end,
  * stepping the value each time.
  * @param controlBlock The App Inventor Block
  * @return The equivalent Java Code
@@ -927,9 +929,9 @@ Blockly.Java.parseJBridgeControlForRangeBlock = function(controlBlock){
     }
     var iterator = controlBlock.getFieldValue('VAR');
     jBridgeLexicalVarTypes[iterator] = JAVA_INT;
-    
-    code += Blockly.Java.genJBridgeControlForRangeBlock(from, to, by, statement, iterator);    
-    
+
+    code += Blockly.Java.genJBridgeControlForRangeBlock(from, to, by, statement, iterator);
+
     if(controlBlock.childBlocks_[4] != undefined){
         var nextBlock = Blockly.Java.parseBlock(controlBlock.childBlocks_[4]);
         code += nextBlock;
@@ -967,12 +969,12 @@ Blockly.Java.parseJBridgeControlOpenAnotherScreenBlock = function(controlBlock){
     //remove any quotes and spaces
     screenName = screenName.replace(/"+/g, "");
     code += "startActivity(new Intent().setClass(this, " + screenName + ".class));\n";
-    return code;    
+    return code;
 };
 
 /**
  * Parses an App Inventor block that:
- * Tests a given condition. 
+ * Tests a given condition.
  * If the condition is true, performs the actions in a given sequence of blocks
  * @param controlIfBlock The App Inventor Block
  * @return The equivalent Java Code
@@ -992,9 +994,9 @@ Blockly.Java.parseJBridgeControlIfBlock = function(controlIfBlock){
     ifStatement = Blockly.Java.parseBlock(controlIfBlock.childBlocks_[0]);
   }else{
     ifCondition = Blockly.Java.parseBlock(controlIfBlock.childBlocks_[0]);
-    ifStatement = Blockly.Java.parseBlock(controlIfBlock.childBlocks_[1]);    
+    ifStatement = Blockly.Java.parseBlock(controlIfBlock.childBlocks_[1]);
   }
-  code =  Blockly.Java.genJBridgeControlIfBlock(ifCondition, ifStatement);  
+  code =  Blockly.Java.genJBridgeControlIfBlock(ifCondition, ifStatement);
   var index = 2 + (elseIfCount * 2);
   if(elseIfCount > 0){
     for(var i = 2; i < index; i = i + 2){
@@ -1005,19 +1007,19 @@ Blockly.Java.parseJBridgeControlIfBlock = function(controlIfBlock){
         elseIfStatement = Blockly.Java.parseBlock(controlIfBlock.childBlocks_[i]);
       }else{
         elseIfCondition = Blockly.Java.parseBlock(controlIfBlock.childBlocks_[i]);
-        elseIfStatement = Blockly.Java.parseBlock(controlIfBlock.childBlocks_[i+1]);    
+        elseIfStatement = Blockly.Java.parseBlock(controlIfBlock.childBlocks_[i+1]);
       }
-      code = code  
+      code = code
              + Blockly.Java.genJBridgeControlElseIfBlock(elseIfCondition, elseIfStatement);
     }
   }
   if(elseCount == 1){
     var elseStatement = Blockly.Java.parseBlock(controlIfBlock.childBlocks_[index]);
-    code = code 
+    code = code
            + Blockly.Java.genJBridgeControlElseBlock(elseStatement);
   }
   for (var x = index+elseCount ; x < controlIfBlock.childBlocks_.length; x++){
-    code = code 
+    code = code
            + Blockly.Java.parseBlock(controlIfBlock.childBlocks_[x]);
   }
 
@@ -1029,7 +1031,7 @@ Blockly.Java.parseJBridgeControlIfBlock = function(controlIfBlock){
   //     if(x%2 == 0){
   //         conditions.push(Blockly.Java.parseBlock(controlIfBlock.childBlocks_[x]));
   //       }
-  //       else ifElseStatements.push(Blockly.Java.parseBlock(controlIfBlock.childBlocks_[x  
+  //       else ifElseStatements.push(Blockly.Java.parseBlock(controlIfBlock.childBlocks_[x
   //     }
   //     if(elseCount>0) elseStatement = Blockly.Java.parseBlock(controlIfBlock.childBlocks_[controlIfBlock.childBlocks_.length-1]);
   //     return Blockly.Java.genJBridgeControlIfBlock(conditions, ifStatement, ifElseStatements, elseStatement);
@@ -1152,8 +1154,8 @@ Blockly.Java.genJBridgeVariableGetBlock = function(paramName){
 
 //It itertates through all the parent to find the specific blockType and loads fieldName map
 Blockly.Java.getJBridgeParentBlockFieldMap = function (block, blockType, fieldName){
-  if(block != undefined && block != null && block.type == blockType){ 
-      return Blockly.Java.getFieldMap(block, fieldName);  
+  if(block != undefined && block != null && block.type == blockType){
+      return Blockly.Java.getFieldMap(block, fieldName);
   }
   if(block == null || block == undefined){
     return new Object();
@@ -1173,7 +1175,7 @@ Blockly.Java.parseJBridgeVariableSetBlock = function(variableSetBlock){
     rightValue = "(" + jBridgeGlobalVarTypes[leftValue] + ") ";
     for(var x = 0, childBlock; childBlock = variableSetBlock.childBlocks_[x]; x++){
         var data = Blockly.Java.parseBlock(childBlock);
-        rightValue = rightValue 
+        rightValue = rightValue
                      + data;
         if (jBridgeIsIndividualBlock){
            code = code + "\n" + data;
@@ -1185,7 +1187,7 @@ Blockly.Java.parseJBridgeVariableSetBlock = function(variableSetBlock){
               if(param1.slice(0,1) == "\"" && param1.slice(-1) == "\""){
                 param1 = param1.slice(1,-1);
               }
-              method = method + "," + param1; 
+              method = method + "," + param1;
             }
             if(Blockly.Java.hasTypeCastKey(method, returnTypeCastMap)){
               rightValue = Blockly.Java.TypeCastOneValue(method, rightValue, returnTypeCastMap);
@@ -1216,8 +1218,8 @@ Blockly.Java.parseJBridgeComponentBlock = function(componentBlock){
     code = Blockly.Java.parseJBridgeMethodCallBlock(componentBlock);
     Blockly.Java.addPermisionsAndIntents(componentBlock.methodName);
     //ParentBlock is set block and the first child block of parent is currentBlock, then this is arg in the parent's block
-    if((componentBlock.parentBlock_.type == "component_set_get" && componentBlock.parentBlock_.setOrGet == "set" && componentBlock.parentBlock_.childBlocks_[0] == componentBlock) 
-      || (componentBlock.parentBlock_.type =="text_join") 
+    if((componentBlock.parentBlock_.type == "component_set_get" && componentBlock.parentBlock_.setOrGet == "set" && componentBlock.parentBlock_.childBlocks_[0] == componentBlock)
+      || (componentBlock.parentBlock_.type =="text_join")
       || (componentBlock.parentBlock_.type =="component_method" && Blockly.Java.checkInputName(componentBlock.parentBlock_, "ARG") && componentBlock.parentBlock_.childBlocks_[0] == componentBlock)
       || (componentBlock.parentBlock_.type =="lexical_variable_set")){
       jBridgeIsIndividualBlock = false;
@@ -1294,7 +1296,7 @@ Blockly.Java.getJBridgeRelativeParamName = function(paramsMap, paramName){
 };
 
 /**
- * Populates a map in which the "keys" are the fieldName given by the 
+ * Populates a map in which the "keys" are the fieldName given by the
  * block, and the "values" are the index of those fieldName values in the params[] java object.
  * @param block The block containing the paramters
  * @param fieldName the field name from the block
@@ -1312,7 +1314,7 @@ Blockly.Java.getFieldMap = function(block, fieldName){
               fieldMap[fieldName] = fieldIndex;
               fieldIndex ++;
           }
-        }  
+        }
       }
     }
   }
@@ -1383,7 +1385,7 @@ Blockly.Java.getFieldList = function(block, fieldName){
           if (fieldName.replace(/ /g,'').length > 0){
               fieldsList.push(fieldName);
           }
-        }  
+        }
       }
     }
   }
@@ -1421,7 +1423,7 @@ Blockly.Java.genJBridgeMethodCallBlock = function(objectName, methodName, params
 };
 
 Blockly.Java.parseJBridgeColorBlock = function(colorBlock){
-  // TOOD Fix the copy pasted or duplicated color palette block 
+  // TOOD Fix the copy pasted or duplicated color palette block
   var color = colorBlock.type.toUpperCase();
   return Blockly.Java.genJBridgeColorBlock(color);
 };
@@ -1467,7 +1469,7 @@ Blockly.Java.parseJBridgeSetBlock = function(setBlock){
   //If value is not already a string, apply String.valueOf(value)
   if(JBRIDGE_COMPONENT_TEXT_PROPERTIES.indexOf(property.toLowerCase()) > -1){
     //setting a string property to an integer should call String.valueOf()
-    if (setBlock.childBlocks_[0].category.toLowerCase() == "math" 
+    if (setBlock.childBlocks_[0].category.toLowerCase() == "math"
             || setBlock.childBlocks_[0].category.toLowerCase() == "lists"){
         value = "String.valueOf(" + value + ")";
     }
@@ -1476,9 +1478,9 @@ Blockly.Java.parseJBridgeSetBlock = function(setBlock){
     if(!jBridgeImportsMap[YailList]){
       jBridgeImportsMap[YailList] = "import com.google.appinventor.components.runtime.util.YailList;";
     }
-    value = "YailList.makeList(" + value + ")";  
+    value = "YailList.makeList(" + value + ")";
   }
-      
+
   if (Blockly.Java.isNumber(value)){
       //Java Bridge requires integers, floating point numbers will throw an exception
       value = Math.round(value);
@@ -1509,7 +1511,7 @@ Blockly.Java.genJBridgeSetBlock = function(componentName, property, value){
 //   code = Blockly.Java.parseJBridgeEventBlock(eventBlock);
 
 //   //Add to RegisterEventsMap
-//   jBridgeRegisterEventMap[eventName] = Blockly.Java.genJBridgeEventDispatcher(eventName); 
+//   jBridgeRegisterEventMap[eventName] = Blockly.Java.genJBridgeEventDispatcher(eventName);
 
 //   return code;
 // };
@@ -1531,11 +1533,17 @@ Blockly.Java.parseJBridgeEventBlock = function(eventBlock, isChildBlock){
   var body = "";
   //reset the event method params from the last event method generation
   eventMethodParamListings = new Object();
+  jBridgeParsingEventMethod = true;
   for (var x = 0, childBlock; childBlock = eventBlock.childBlocks_[x]; x++) {
-      body = body 
+      body = body
              + "\n"
              + Blockly.Java.parseBlock(childBlock);
   }
+  //add any setup code (e.x. List declaration before usage)
+  body = jBridgeEventMethodSetupCode + body;
+  jBridgeEventMethodSetupCode = "";
+
+  jBridgeParsingEventMethod = false;
   //This is to handle the if the component is the Screen Object
   if(componentName == jBridgeCurrentScreen){
     componentName = "this";
@@ -1543,7 +1551,7 @@ Blockly.Java.parseJBridgeEventBlock = function(eventBlock, isChildBlock){
   code = Blockly.Java.genJBridgeEventBlock(componentName, eventName, body);
 
   //Add to RegisterEventsMap
-  jBridgeRegisterEventMap[eventName] = Blockly.Java.genJBridgeEventDispatcher(eventName); 
+  jBridgeRegisterEventMap[eventName] = Blockly.Java.genJBridgeEventDispatcher(eventName);
 
   return code;
 };
@@ -1791,7 +1799,7 @@ Blockly.Java.castChildToInteger = function(block, childNumber, value){
       value = "Integer.valueOf(" + value + ")";
     }else if (jBridgeGlobalVarTypes[value] != undefined && jBridgeGlobalVarTypes[value] != JAVA_INT){
       value = "Integer.valueOf(" + value + ")";
-    }   
+    }
   }
   return value;
 };
@@ -1806,7 +1814,7 @@ Blockly.Java.parseJBridgeMathIsNumberBlock = function(mathBlock){
   var code = "";
   var operand = mathBlock.getFieldValue('OP');
   var value = Blockly.Java.parseBlock(mathBlock.childBlocks_[0]);
-  
+
   if (operand == "NUMBER"){
     code += "String.valueOf(" + value + ")" + ".matches(\"[0-9]+.?[0-9]+\")";
   }else if (operand == "BASE10"){
@@ -1832,15 +1840,15 @@ Blockly.Java.parseJBridgeMathConvertNumberBlock = function(mathBlock){
   if(value.slice(-7) == ".Text()"){
       value = "Integer.parseInt(" + value + ")";
   }
-  
+
   if (operand == "DEC_TO_HEX"){
     code += "Integer.valueOf(String.valueOf(" + value + "), 16)";
   }else if (operand == "HEX_TO_DEC"){
-    code += "Integer.parseInt(String.valueOf(" + value + "), 16)";  
+    code += "Integer.parseInt(String.valueOf(" + value + "), 16)";
   }else if (operand == "DEC_TO_BIN"){
-    code += "Integer.toBinaryString((int)" + value + ")";  
+    code += "Integer.toBinaryString((int)" + value + ")";
   }else if (operand == "BIN_TO_DEC"){
-    code += "Integer.parseInt(String.valueOf(" + value + "), 2)";  
+    code += "Integer.parseInt(String.valueOf(" + value + "), 2)";
   }
   return code;
 };
@@ -1858,11 +1866,11 @@ Blockly.Java.parseJBridgeMathConvertAngleBlock = function(mathBlock){
   if(value.slice(-7) == ".Text()"){
       value = "Integer.parseInt(" + value + ")";
   }
-  
+
   if (operand == "RADIANS_TO_DEGREES"){
     code += "Math.toDegrees(" + value + ")";
   }else if (operand == "DEGREES_TO_RADIANS"){
-    code += "Math.toRadians(" + value + ")";  
+    code += "Math.toRadians(" + value + ")";
   }
   return code;
 };
@@ -1922,10 +1930,10 @@ Blockly.Java.parseJBridgeMathPowerBlock = function(mathBlock){
   var code = "";
   var leftValue = Blockly.Java.parseBlock(mathBlock.childBlocks_[0]);
   var rightValue = Blockly.Java.parseBlock(mathBlock.childBlocks_[1]);
-  
+
   leftValue = Blockly.Java.castChildToInteger(mathBlock, 1, leftValue);
   rightValue = Blockly.Java.castChildToInteger(mathBlock, 2, rightValue);
-  
+
   code += "Math.pow(" + leftValue + ", " + rightValue + ")";
   return code;
 };
@@ -1941,7 +1949,7 @@ Blockly.Java.parseJBridgeMathAdd = function(mathBlock){
     var rightValue = Blockly.Java.parseBlock(mathBlock.childBlocks_[1]);
     leftValue = Blockly.Java.castChildToInteger(mathBlock, 1, leftValue);
     rightValue = Blockly.Java.castChildToInteger(mathBlock, 2, rightValue);
-   
+
     return Blockly.Java.genJBridgeMathOperation(leftValue, rightValue, "+");
 };
 
@@ -1997,7 +2005,7 @@ Blockly.Java.genJBridgeMathRandomInt = function(leftValue, rightValue){
 };
 
 Blockly.Java.genJBridgeMathOperation = function(leftValue, rightValue, operand){
-    var code = "(" 
+    var code = "("
                +leftValue
                + " "
                + operand
@@ -2020,19 +2028,19 @@ Blockly.Java.parseJBridgeGlobalIntializationBlock = function(globalBlock){
   leftValue = globalBlock.getFieldValue('NAME').replace("global ", "");
   rightValue = "";
   for(var x = 0, childBlock; childBlock = globalBlock.childBlocks_[x]; x++){
-        rightValue = rightValue 
+        rightValue = rightValue
                      + Blockly.Java.parseBlock(childBlock);
   }
 
   var childType = globalBlock.childBlocks_[0].category;
-  var variableType = Blockly.Java.getValueType(childType, rightValue);  
+  var variableType = Blockly.Java.getValueType(childType, rightValue);
 
   jBridgeGlobalVarTypes[leftValue] = variableType;
   jBridgeVariableDefinitionMap[leftValue] = variableType;
 
 
   jBridgeInitializationList.push(Blockly.Java.genJBridgeVariableIntializationBlock(leftValue, rightValue));
-  
+
   return "";
 };
 
@@ -2063,7 +2071,7 @@ Blockly.Java.getValueType = function(childType, value){
 
 Blockly.Java.genJBridgeVariableIntializationBlock = function(leftValue, rightValue){
   var code = ""
-  code = leftValue 
+  code = leftValue
          + " = "
          + rightValue
          +";";
@@ -2084,7 +2092,7 @@ var code = "";
   }
   return code;
 };
-  
+
 Blockly.Java.parseJBridgeBooleanBlock = function(logicBlock){
   var value = logicBlock.getFieldValue("BOOL");
   return Blockly.Java.genJBridgeBooleanBlock(value);
@@ -2147,7 +2155,7 @@ Blockly.Java.parseJBridgeProcDefNoReturn = function(proceduresBlock){
   for (var x = 0, childBlock; childBlock = proceduresBlock.childBlocks_[x]; x++) {
     statementList.push(Blockly.Java.parseBlock(childBlock));
   }
-  
+
   jBridgeProceduresMap[procName] = Blockly.Java.genJBridgeProcDefNoReturn(procName, procParms.join(", "), statementList.join("\n"));
 
   return code;
@@ -2161,13 +2169,13 @@ Blockly.Java.parseJBridgeProcDefNoReturn = function(proceduresBlock){
  * @returns {String} the generated code if there were no errors.
  */
 Blockly.Java.genJBridgeProcDefNoReturn = function (procedureName, procedureParams, body){
-  var code = "\npublic void " 
+  var code = "\npublic void "
        + procedureName
        + "("
-       + procedureParams 
+       + procedureParams
        + "){\n"
        + body
-       + "\n}"; 
+       + "\n}";
   return code;
 }
 
@@ -2200,7 +2208,7 @@ Blockly.Java.genJBridgeProcCallNoReturn = function(procName, paramsList){
              + "("
              + paramsList.join(",")
              +");";
-  
+
   return code;
 };
 
@@ -2348,7 +2356,7 @@ Blockly.Java.parseJBridgeTextTrimBlock = function(textBlock){
 
 /**
  * Parsing an App Inventor Text Block that:
- * Returns whether or not the string contains any characters (including spaces). 
+ * Returns whether or not the string contains any characters (including spaces).
  * @param textBlock The Text Block
  * @return The equivalent Java Bridge Code for the Block
  */
@@ -2408,7 +2416,7 @@ Blockly.Java.parseJBridgeTextJoinBlock = function(textBlock){
 
 /**
  * Parsing an App Inventor Text Block that:
- * Returns whether or not the first string is lexicographically <, >, or = the second string 
+ * Returns whether or not the first string is lexicographically <, >, or = the second string
  * depending on which dropdown is selected.
  * @param textBlock The Text Block
  * @return The equivalent Java Bridge Code for the Block
@@ -2417,7 +2425,7 @@ Blockly.Java.parseJBridgeTextCompareBlock = function(textBlock){
   var operator = textBlock.getFieldValue("OP");
   var leftValue = Blockly.Java.parseBlock(textBlock.childBlocks_[0]);
   var rightValue = Blockly.Java.parseBlock(textBlock.childBlocks_[1]);
-  var op = Blockly.Java.getJBridgeOperator(operator) + " 0"; 
+  var op = Blockly.Java.getJBridgeOperator(operator) + " 0";
   return Blockly.Java.getJBridgeTextCompareBlock(leftValue, rightValue, op);
 };
 
@@ -2692,8 +2700,18 @@ Blockly.Java.parseJBridgeListPickRandomItem = function(listBlock){
       jBridgeImportsMap[randomObjName] = "import java.util.Random;";
   }
   var code = "";
-  var listName = Blockly.Java.parseBlock(listBlock.childBlocks_[0]);
-  code += listName + ".get(" + randomObjName + ".nextInt(" + listName + ".size())" + ")";
+  if (listBlock.childBlocks_[0].category == "Lists"){
+    var listCode = Blockly.Java.parseBlock(listBlock.childBlocks_[0]);
+    var listName =  listBlock.childBlocks_[0].comment.text_;
+    if (jBridgeParsingEventMethod == true) {
+      //setting up a new list will happen before picking an item
+      jBridgeEventMethodSetupCode += listCode;
+    }
+    code += listName + ".get(" + randomObjName + ".nextInt(" + listName + ".size())" + ")";
+  }else {
+    var listName = Blockly.Java.parseBlock(listBlock.childBlocks_[0]);
+    code += listName + ".get(" + randomObjName + ".nextInt(" + listName + ".size())" + ")";
+  }
   return code;
 };
 
@@ -2770,25 +2788,6 @@ Blockly.Java.parseJBridgeListIsEmpty = function(listBlock){
 
 /**
  * Parses an App Inventor List block that:
- * Picks an item at random from the list.
- * @param listBlock The List block
- * @return The generated Java code
- */
-Blockly.Java.parseJBridgeListPickRandomItem = function(listBlock){
-  var randomObjName = "random";
-  if(!jBridgeVariableDefinitionMap[randomObjName]){
-      jBridgeVariableDefinitionMap[randomObjName] = "Random";
-      jBridgeInitializationList.push(randomObjName + " = new Random();");
-      jBridgeImportsMap[randomObjName] = "import java.util.Random;";
-  }
-  var code = "";
-  var listName = Blockly.Java.parseBlock(listBlock.childBlocks_[0]);
-  code += listName + ".get(" + randomObjName + ".nextInt(" + listName + ".size())" + ")";
-  return code;
-};
-
-/**
- * Parses an App Inventor List block that:
  * Adds the given items to the end of the list.
  * @param listBlock The List block
  * @return The generated Java code
@@ -2811,7 +2810,7 @@ Blockly.Java.parseJBridgeListAddItemBlock = function(listBlock){
 
 /**
  * Parses an App Inventor List block that:
- * Creates a list from the given blocks. 
+ * Creates a list from the given blocks.
  * @param listBlock The List block
  * @return The generated Java code
  */
@@ -2870,13 +2869,13 @@ Blockly.Java.parseJBridgeListsCreateWithBlock = function(listBlock){
  * Looks at:
  * listBlock.parentBlock_.getFieldValue('NAME').
  * listBlock.parentBlock_.getCommentText()
- * 
+ *
  * Used when naming a new list
  * @param listBlock The block to find the parent name of
  * @return the parent Name of the given listBlock
 */
 Blockly.Java.findParentListName = function(listBlock){
-    var parentName = "";   
+    var parentName = "";
     while (listBlock.parentBlock_ != undefined){
       if (listBlock.parentBlock_.getFieldValue('NAME') != undefined){
         parentName = listBlock.parentBlock_.getFieldValue('NAME').replace("global ", "");
@@ -2885,11 +2884,11 @@ Blockly.Java.findParentListName = function(listBlock){
         parentName = listBlock.parentBlock_.getFieldValue('VAR').replace("global ", "");
         break;
       }else if (listBlock.parentBlock_.getCommentText() != ''){
-        parentName = listBlock.parentBlock_.getCommentText();        
+        parentName = listBlock.parentBlock_.getCommentText();
         break;
       }
       listBlock = listBlock.parentBlock_;
-    }   
+    }
     return parentName;
 };
 
@@ -2906,7 +2905,7 @@ Blockly.Java.parseJBridgeListSelectItemBlock = function(listBlock){
      listName = Blockly.Java.TypeCastOneValue(listName, listName, listTypeCastMap);
   }
   var index = Blockly.Java.parseBlock(listBlock.childBlocks_[1]);
-  return Blockly.Java.genJBridgeListSelectItemBlock(listName, index);  
+  return Blockly.Java.genJBridgeListSelectItemBlock(listName, index);
 };
 
 /**
@@ -2936,7 +2935,7 @@ Blockly.Java.genJBridgeListSelectItemBlock = function(listName, index){
 
 /**
   * Generates java code for a new ArrayList of type Object
-  * The List is of type "Object" because App Inventor lists take many types 
+  * The List is of type "Object" because App Inventor lists take many types
   * @returns {String} code generated if no errors
   */
 Blockly.Java.genJBridgeNewList = function(type){
@@ -2954,7 +2953,7 @@ Blockly.Java.genJBridgeNewList = function(type){
 Blockly.Java.genJBridgeListsAddItemBlock = function(listName, addItem){
    addItem = Blockly.Java.removeColonsAndNewlines(addItem);
    var code = listName
-            + ".add(" 
+            + ".add("
             + addItem
             +"); \n";
    return code;
@@ -2968,11 +2967,11 @@ Blockly.Java.genJBridgeListsAddItemBlock = function(listName, addItem){
   * @returns {String} code generated if no errors
   */
 Blockly.Java.getJBridgeListContainsBlock = function(object, listName){
-  var code = listName 
+  var code = listName
            + ".contains("
            + object
            + ")";
-  return code; 
+  return code;
 };
 
 /**
@@ -3016,7 +3015,7 @@ Blockly.Java.parseJBridgeMathAtan2 = function (mathBlock){
   * @returns {String} code generated if no errors
   */
 Blockly.Java.genJBridgeMathAtan2 = function (leftValue, rightValue){
-  var code = "Math.toDegrees(Math.atan2(" 
+  var code = "Math.toDegrees(Math.atan2("
              + leftValue
              + ", "
              + rightValue
@@ -3033,7 +3032,7 @@ Blockly.Java.genJBridgeMathAtan2 = function (leftValue, rightValue){
   * @returns {String} code generated if no errors
   */
 Blockly.Java.genJBridgeStringEqualsCompare = function (leftValue, rightValue, operator){
-  var code = "(" 
+  var code = "("
              + leftValue
              + ").equals("
              + rightValue
@@ -3192,7 +3191,7 @@ Blockly.Java.parseJBridgeTextChangeCaseBlock = function(textBlock){
     var genCode = "";
     for(var x = 0, childBlock; childBlock = textBlock.childBlocks_[x]; x++){
           genCode = genCode + Blockly.Java.parseBlock(childBlock);
-    }    
+    }
     return Blockly.Java.genJBridgeTextChangeCaseBlock(genCode, op);
 };
 
@@ -3205,7 +3204,7 @@ Blockly.Java.parseJBridgeTextChangeCaseBlock = function(textBlock){
   */
 Blockly.Java.genJBridgeTextChangeCaseBlock = function(inputText, changeCase){
     var code = "String.valueOf("
-              + inputText 
+              + inputText
               + ")."
               + changeCase;
     return code;
@@ -3261,7 +3260,7 @@ Blockly.Java.prityPrintJBridgeCode = function(javaCode){
       indentation = Blockly.Java.prityPrintIndentationJBridge(stack.length);
     }
     prityPrint.push(indentation + line);
-    
+
   }
   return prityPrint.join("\n");
 };
@@ -3292,7 +3291,7 @@ Blockly.Java.prityPrintIndentationJBridge = function(indentLength){
   */
 Blockly.Java.getManifestJSONData = function(formJson) {
     Blockly.Java.initAndroidPermisionAndIntent();
-    var jsonObject = JSON.parse(formJson); 
+    var jsonObject = JSON.parse(formJson);
     Blockly.Java.genJBridgeCode(Blockly.mainWorkspace.getTopBlocks(true), jsonObject);
 
     //forming json return string
@@ -3347,7 +3346,7 @@ Blockly.Java.initAndroidPermisionAndIntent = function(){
     jBridgeMethodAndTypeToPermisions["vibrate"] = ["vibrate"];
     jBridgeMethodAndTypeToPermisions["tinywebdb"] = ["internet"];
     jBridgeMethodAndTypeToPermisions["sendmessage"] = ["receive_sms","send_sms", "voice_receive_sms","voice_send_sms", "manage_accounts", "get_accounts","use_credentials"];
-    
+
     //This includes method Names or Type
     jBridgeAndroidIntents["sendmessage"] = "<receiver android:name=\"com.google.appinventor.components.runtime.util.SmsBroadcastReceiver\"\r\n\r\n android:enabled=\"true\" android:exported=\"true\">\r\n\r\n"
                             + "<intent-filter>\r\n\r\n        \r\n\r\n        "
@@ -3368,7 +3367,7 @@ Blockly.Java.addPermisionsAndIntents = function(name){
     var permissions = jBridgeMethodAndTypeToPermisions[name];
     for(var i=0; i<permissions.length; i++){
       jBridgePermissionToAdd[permissions[i]] = true;
-    }   
+    }
   }
   if(name in jBridgeAndroidIntents){
     jBridgeIntentsToAdd[name] = true;
@@ -3379,7 +3378,7 @@ Blockly.Java.addPermisionsAndIntents = function(name){
  * Method that strips all of the ";" and "\n" characters from the code.
  * Used for methods that are generated but wrapped within another method
  * @param {String} the code to strip
- * @return {String} the stripped code 
+ * @return {String} the stripped code
 */
 Blockly.Java.removeColonsAndNewlines = function(code){
     return code.replace(/[;\n]*/g, "");
