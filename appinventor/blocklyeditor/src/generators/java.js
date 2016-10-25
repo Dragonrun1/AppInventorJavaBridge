@@ -114,6 +114,7 @@ var JBRIDGE_JSON_TEXT_PROPERTIES = ["Title", "Text", "BackgroundImage", "Image",
 var jBridgeImportsMap = new Object();
 var jBridgeProceduresMap = new Object();
 var jBridgeEventMethodsList = [];
+var jBridgeListNames = [];
 var jBridgeIsIndividualBlock = false; // is to Identify if a block is Iduvidal root block or sub-block
 var jBridgeCurrentScreen;
 var jBridgeParsingEventMethod = false;
@@ -459,6 +460,7 @@ Blockly.Java.initAllVariables = function(){
     jBridgeImportsMap = new Object();
     jBridgeProceduresMap = new Object();
     jBridgeEventMethodsList = [];
+    jBridgeListNames = [];
 };
 
 /**
@@ -2607,8 +2609,19 @@ Blockly.Java.parseJBridgeListToCSVRow = function(listBlock){
  */
 Blockly.Java.parseJBridgeListCopyList = function(listBlock){
   var code = "";
-  var listName = Blockly.Java.parseBlock(listBlock.childBlocks_[0]);
-  code += "new ArrayList<Object>(" + listName + ");";
+  var listName = "";
+
+  if (listBlock.childBlocks_[0].category == "Lists"){
+    var listCode = Blockly.Java.parseBlock(listBlock.childBlocks_[0]);
+    jBridgeEventMethodSetupCode += listCode;
+    listName = listBlock.childBlocks_[0].comment.text_;
+  }else {
+    listName = Blockly.Java.parseBlock(listBlock.childBlocks_[0]);
+  }
+
+  var copiedListName = Blockly.Java.createListName(listBlock);
+  listBlock.setCommentText(copiedListName);
+  code += "ArrayList<Object> " + copiedListName + " = new ArrayList<Object>(" + listName + ");";
   return code;
 };
 
@@ -2720,7 +2733,13 @@ Blockly.Java.parseJBridgeListPickRandomItem = function(listBlock){
   var code = "";
   if (listBlock.childBlocks_[0].category == "Lists"){
     var listCode = Blockly.Java.parseBlock(listBlock.childBlocks_[0]);
-    var listName =  listBlock.childBlocks_[0].comment.text_;
+    var listName = "";
+    if (listBlock.childBlocks_[0].comment != undefined && listBlock.childBlocks_[0].comment.text_ != undefined){
+      listName =  listBlock.childBlocks_[0].comment.text_;
+    }else {
+      listName = Blockly.Java.createListName(listBlock);
+    }
+
     if (jBridgeParsingEventMethod == true) {
       //setting up a new list will happen before picking an item
       jBridgeEventMethodSetupCode += listCode;
@@ -2843,11 +2862,10 @@ Blockly.Java.parseJBridgeListsCreateWithBlock = function(listBlock){
    }else if(listBlock.parentBlock_.getFieldValue('VAR') != undefined){
       listName = listBlock.parentBlock_.getFieldValue('VAR').replace("global ", "");
    }else {
-      isChildList = true;
-      parentName = Blockly.Java.findParentListName(listBlock);
-      listName = parentName + "SubList";
-      //set list name as comment for next recursive block to use
-      listBlock.setCommentText(listName);
+     isChildList = true;
+     listName = Blockly.Java.createListName(listBlock);
+     //set list name as comment for next recursive block to use
+     listBlock.setCommentText(listName);
    }
    for (var x = 0, childBlock; childBlock = listBlock.childBlocks_[x]; x++) {
      var addItemData = Blockly.Java.parseBlock(childBlock);
@@ -2880,6 +2898,28 @@ Blockly.Java.parseJBridgeListsCreateWithBlock = function(listBlock){
           + code;
    }
    return code;
+};
+
+/**
+ *  Creates a unique list name
+ */
+Blockly.Java.createListName = function(listBlock){
+  var parentName = Blockly.Java.findParentListName(listBlock);
+  var listName = parentName + "SubList";
+
+  //append a number at the end of a list whose name is already used
+  if (jBridgeListNames.indexOf(listName) >= 0){
+    var count = 0;
+    for (var nameIndex in jBridgeListNames){
+      if (jBridgeListNames[nameIndex] == listName){
+        count++;
+      }
+    }
+    listName = listName + count;
+  }
+
+  jBridgeListNames.push(listName);
+  return listName;
 };
 
 /**
