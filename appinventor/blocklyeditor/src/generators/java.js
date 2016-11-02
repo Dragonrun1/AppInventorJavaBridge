@@ -623,6 +623,7 @@ Blockly.Java.genJBridgeClass =  function (topBlocks){
   return code;
 };
 
+
 /**
  * Generates public class declarations, event handlers, and their corresponding public methods.
  *
@@ -1714,7 +1715,7 @@ Blockly.Java.specialCast = function(body, key, paramList, typeCastMap){
   }
 
   if (v != null ){
-    for (paramName in paramList) {
+    for (var paramName in paramList) {
         if (body.search(paramName) >= 0){
              parameters.push(v[x].replace(/XXX/g, "params["+ paramList[paramName] + "]"));
          x++;
@@ -2087,8 +2088,10 @@ var code = "";
       code = Blockly.Java.parseJBridgeLogicOperationBlock(logicBlock);
   }else if (componentType == "logic_compare"){
       code = Blockly.Java.parseJBridgeLogicCompareBlocks(logicBlock);
-  }else if (componentType == "logic_negate"){
+  }else if (componentType == "logic_negate") {
       code = Blockly.Java.parseJBridgeLogicNegateBlocks(logicBlock);
+  }else if (componentType =="logic_or"){
+      code = Blockly.Java.parseJBridgeLogicOrBlocks(logicBlock);
   }
   return code;
 };
@@ -2108,6 +2111,21 @@ Blockly.Java.parseJBridgeLogicCompareBlocks = function(logicBlock){
 Blockly.Java.parseJBridgeLogicNegateBlocks = function(logicBlock){
   var value = Blockly.Java.parseBlock(logicBlock.childBlocks_[0]);
   return Blockly.Java.genJBridgeLogicNegateBlock(value);
+};
+
+Blockly.Java.parseJBridgeLogicOrBlocks = function(logicBlock) {
+    var code = ""
+    var value = ""
+    for(var x = 0, childBlock; childBlock = logicBlock.childBlocks_[x]; x++){
+        if (logicBlock.childBlocks_[x+1]!= undefined) {
+            value = Blockly.Java.parseBlock(childBlock);
+            code = code + value + " || ";
+        }else{
+            value = Blockly.Java.parseBlock(childBlock);
+            code = code  + value;
+        }
+    }
+    return code;
 };
 
 
@@ -2132,6 +2150,12 @@ Blockly.Java.genJBridgeLogicNegateBlock = function (value){
   return code;
 };
 
+// Blockly.Java.genJBridgeLogicNegateBlock = function (value){
+//         var code = "!("
+//             + value
+//             + ")";
+//         return code;
+// };
 Blockly.Java.parseJBridgeProceduresBlocks = function(proceduresBlock){
   var code = "";
   var proceduresType = proceduresBlock.type;
@@ -3182,7 +3206,7 @@ Blockly.Java.genJBridgeMathRandomFloatBlock = function(){
   * @param {String} textBlock
   * @returns {String} code generated if no errors, as a result of genJBridgeTextChangeCaseBlock
   */
-Blockly.Java.parseJBridgeTextChangeCaseBlock = function(textBlock){
+Blockly.Java.JJBridgeTextChangeCaseBlock = function(textBlock){
     var operator = textBlock.getFieldValue("OP");
     var op = "toLowerCase()";
     if(operator == "UPCASE"){
