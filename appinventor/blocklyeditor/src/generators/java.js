@@ -2150,12 +2150,6 @@ Blockly.Java.genJBridgeLogicNegateBlock = function (value){
   return code;
 };
 
-// Blockly.Java.genJBridgeLogicNegateBlock = function (value){
-//         var code = "!("
-//             + value
-//             + ")";
-//         return code;
-// };
 Blockly.Java.parseJBridgeProceduresBlocks = function(proceduresBlock){
   var code = "";
   var proceduresType = proceduresBlock.type;
