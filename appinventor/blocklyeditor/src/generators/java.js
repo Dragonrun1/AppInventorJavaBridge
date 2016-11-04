@@ -1764,7 +1764,7 @@ Blockly.Java.parseJBridgeMathBlocks = function(mathBlock){
 };
 
 Blockly.Java.isSingleMathBlock = function(mathBlock){
-  return singleMathTypes.indexOf(type) > -1;
+  return singleMathTypes.indexOf(mathBlock.type) > -1;
 }
 
 Blockly.Java.isMathOperationBlock = function(mathBlock){
