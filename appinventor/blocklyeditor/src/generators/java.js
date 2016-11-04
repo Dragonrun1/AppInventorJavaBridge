@@ -455,6 +455,7 @@ Blockly.Java.initAllVariables = function(){
     jBridgeEventsList = [];
     jBridgeVariableDefinitionMap = new Object();
     jBridgeInitializationList = [];
+    jBridgeEventMethodSetupCode = "";
     jBridgeComponentMap = new Object();
     jBridgeGlobalVarTypes = new Object();
     jBridgeImportsMap = new Object();
@@ -649,10 +650,10 @@ Blockly.Java.genJBridgeEventsRegister = function(jBridgeRegisterEventMap){
  */
 Blockly.Java.genJBridgeDefineMethod =  function (){
  var code =  "\nprotected void $define() { \n"
-  + jBridgeInitializationList.join("\n")
-  + "\n"
-  + Blockly.Java.genJBridgeEventsRegister(jBridgeRegisterEventMap)
-  +"\n}";
+   + jBridgeInitializationList.join("\n")
+   + "\n"
+   + Blockly.Java.genJBridgeEventsRegister(jBridgeRegisterEventMap)
+   + "\n}";
     return code;
 };
 
@@ -2036,7 +2037,8 @@ Blockly.Java.parseJBridgeGlobalIntializationBlock = function(globalBlock){
   }
 
   var childType = globalBlock.childBlocks_[0].category;
-  var variableType = Blockly.Java.getValueType(childType, rightValue);
+  //TODO change get value type to pass the block. List blocks dont always return lists (select item block)
+  var variableType = Blockly.Java.getValueType(childType, rightValue, globalBlock.childBlocks_[0]);
 
   jBridgeGlobalVarTypes[leftValue] = variableType;
   jBridgeVariableDefinitionMap[leftValue] = variableType;
@@ -2056,7 +2058,7 @@ Blockly.Java.isNumber = function(value){
   return !isNaN(value);
 };
 
-Blockly.Java.getValueType = function(childType, value){
+Blockly.Java.getValueType = function(childType, value, block){
   var variableType = "String";
   if (childType == "Math"){
     if(value.indexOf(".") != -1){
@@ -2067,7 +2069,11 @@ Blockly.Java.getValueType = function(childType, value){
   }else if(childType == "Logic"){
     variableType = "boolean";
   }else if (childType == "Lists"){
-    variableType = TYPE_JAVA_ARRAYLIST;
+    if (block.type == "lists_select_item"){
+      variableType = JAVA_OBJECT;
+    }else {
+      variableType = TYPE_JAVA_ARRAYLIST;
+    }
   }
   return variableType;
 };
@@ -2609,19 +2615,15 @@ Blockly.Java.parseJBridgeListToCSVRow = function(listBlock){
  */
 Blockly.Java.parseJBridgeListCopyList = function(listBlock){
   var code = "";
-  var listName = "";
 
-  if (listBlock.childBlocks_[0].category == "Lists"){
-    var listCode = Blockly.Java.parseBlock(listBlock.childBlocks_[0]);
-    jBridgeEventMethodSetupCode += listCode;
+  var listName = Blockly.Java.parseBlock(listBlock.childBlocks_[0]);
+  if (listBlock.childBlocks_[0].type == "lists_create_with"){
+    var listcode = listName;
+    //the comment.text_ will be set when parsing a create block
     listName = listBlock.childBlocks_[0].comment.text_;
-  }else {
-    listName = Blockly.Java.parseBlock(listBlock.childBlocks_[0]);
+    jBridgeInitializationList.push(listcode);
   }
-
-  var copiedListName = Blockly.Java.createListName(listBlock);
-  listBlock.setCommentText(copiedListName);
-  code += "ArrayList<Object> " + copiedListName + " = new ArrayList<Object>(" + listName + ");";
+  code += "new ArrayList<Object>(" + listName + ");";
   return code;
 };
 
@@ -2743,6 +2745,8 @@ Blockly.Java.parseJBridgeListPickRandomItem = function(listBlock){
     if (jBridgeParsingEventMethod == true) {
       //setting up a new list will happen before picking an item
       jBridgeEventMethodSetupCode += listCode;
+    }else {
+      jBridgeInitializationList += listCode
     }
     code += listName + ".get(" + randomObjName + ".nextInt(" + listName + ".size())" + ")";
   }else {
@@ -2855,7 +2859,6 @@ Blockly.Java.parseJBridgeListsCreateWithBlock = function(listBlock){
    var code = "";
    var childType = "String";
    var listName = "[Unknown]";
-   var parentName = "";
    var isChildList = false;
    if (listBlock.parentBlock_.getFieldValue('NAME') != undefined){
       listName = listBlock.parentBlock_.getFieldValue('NAME').replace("global ", "");
@@ -2864,12 +2867,12 @@ Blockly.Java.parseJBridgeListsCreateWithBlock = function(listBlock){
    }else {
      isChildList = true;
      listName = Blockly.Java.createListName(listBlock);
-     //set list name as comment for next recursive block to use
-     listBlock.setCommentText(listName);
    }
+  //set list name as comment for next recursive block to use
+  listBlock.setCommentText(listName);
    for (var x = 0, childBlock; childBlock = listBlock.childBlocks_[x]; x++) {
      var addItemData = Blockly.Java.parseBlock(childBlock);
-     childType = Blockly.Java.getValueType(childBlock.type, addItemData);
+     childType = Blockly.Java.getValueType(childBlock.type, addItemData, childBlock);
      if(childType == "int"){
       childType = "Integer";
      }else if(childType == "float"){
@@ -2958,12 +2961,24 @@ Blockly.Java.findParentListName = function(listBlock){
   * @returns {String} code generated if no errors from .genJBridgeListSelectItemBlock
   */
 Blockly.Java.parseJBridgeListSelectItemBlock = function(listBlock){
-  var listName = Blockly.Java.parseBlock(listBlock.childBlocks_[0]);
-  if(Blockly.Java.hasTypeCastKey(listName, listTypeCastMap)){
-     listName = Blockly.Java.TypeCastOneValue(listName, listName, listTypeCastMap);
+  var listName = "";
+  if (listBlock.childBlocks_[0].type == "lists_create_with"){
+    var listCode = Blockly.Java.parseBlock(listBlock.childBlocks_[0]);
+    listName = listBlock.childBlocks_[0].comment.text_;
+    if (jBridgeParsingEventMethod == true){
+      jBridgeEventMethodSetupCode += listCode;
+    }else {
+      jBridgeInitializationList.push(listCode);
+    }
+  }else {
+    listName = Blockly.Java.parseBlock(listBlock.childBlocks_[0]);
+    if(Blockly.Java.hasTypeCastKey(listName, listTypeCastMap)){
+      listName = Blockly.Java.TypeCastOneValue(listName, listName, listTypeCastMap);
+    }
   }
   var index = Blockly.Java.parseBlock(listBlock.childBlocks_[1]);
   return Blockly.Java.genJBridgeListSelectItemBlock(listName, index);
+
 };
 
 /**
