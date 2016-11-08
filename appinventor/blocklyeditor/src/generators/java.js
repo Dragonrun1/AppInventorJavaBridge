@@ -119,7 +119,7 @@ var jBridgeIsIndividualBlock = false; // is to Identify if a block is Iduvidal r
 var jBridgeCurrentScreen;
 var jBridgeParsingEventMethod = false;
 var jBridgeEventMethodSetupCode = "";
-var JBRIDGE_COMPONENT_TEXT_PROPERTIES = ["text", "picture", "source"];
+var JBRIDGE_COMPONENT_TEXT_PROPERTIES = ["Text", "Picture", "Source"];
 
 var jBridgePermissionToAdd = new Object; //this should be a set
 var jBridgeIntentsToAdd = new Object; // this should be a set
@@ -1471,7 +1471,7 @@ Blockly.Java.parseJBridgeSetBlock = function(setBlock){
      }
   }
   //If value is not already a string, apply String.valueOf(value)
-  if(JBRIDGE_COMPONENT_TEXT_PROPERTIES.indexOf(property.toLowerCase()) > -1){
+  if(JBRIDGE_COMPONENT_TEXT_PROPERTIES.indexOf(property) > -1){
     //setting a string property to an integer should call String.valueOf()
     if (setBlock.childBlocks_[0].category.toLowerCase() == "math"
             || setBlock.childBlocks_[0].category.toLowerCase() == "lists"){
@@ -2109,11 +2109,53 @@ Blockly.Java.parseJBridgeBooleanBlock = function(logicBlock){
   return Blockly.Java.genJBridgeBooleanBlock(value);
 };
 
+Blockly.Java.isStringBlock = function(block){
+  var isString = false;
+  if (JBRIDGE_COMPONENT_TEXT_PROPERTIES.indexOf(block.propertyName) == 0){
+    isString = true;
+  }else if (block.category == "Variables"){
+    var varName = block.fieldVar_.name;
+    if (jBridgeVariableDefinitionMap[varName] == JAVA_STRING){
+      isString = true;
+    }
+  }else if (block.category == "Text"){
+    isString = true;
+  }
+  return isString;
+};
+
 Blockly.Java.parseJBridgeLogicCompareBlocks = function(logicBlock){
+  var leftBlock = logicBlock.childBlocks_[0];
+  var rightBlock = logicBlock.childBlocks_[1];
   var operator = logicBlock.getFieldValue("OP");
-  var leftValue = Blockly.Java.parseBlock(logicBlock.childBlocks_[0]);
-  var rightValue = Blockly.Java.parseBlock(logicBlock.childBlocks_[1]);
-  return Blockly.Java.genJBridgeLogicCompareBlock(leftValue, rightValue, Blockly.Java.getJBridgeOperator(operator));
+  var leftValue = Blockly.Java.parseBlock(leftBlock);
+  var rightValue = Blockly.Java.parseBlock(rightBlock);
+
+  var stringCompare = false;
+
+  //cast to string comparison for different types
+  if (Blockly.Java.isStringBlock(leftBlock) && rightBlock.category == "Math"){
+    if (!rightValue.startsWith("String.valueOf(")){
+      rightValue = "String.valueOf(" + rightValue + ")";
+    }
+    stringCompare = true;
+  }else if (Blockly.Java.isStringBlock(rightBlock) && leftBlock.category == "Math"){
+    if (!leftValue.startsWith("String.valueOf(")){
+      leftValue = "String.valueOf(" + rightValue + ")";
+    }
+    stringCompare = true;
+  }
+
+  var code = "";
+  if (stringCompare == true){
+    code += leftValue + ".equals(" + rightValue + ")";
+    if (operator == "NEQ"){
+      code  = "!" + code;
+    }
+  }else{
+    code += Blockly.Java.genJBridgeLogicCompareBlock(leftValue, rightValue, Blockly.Java.getJBridgeOperator(operator));
+  }
+  return code;
 };
 
 Blockly.Java.parseJBridgeLogicNegateBlocks = function(logicBlock){
@@ -2122,8 +2164,8 @@ Blockly.Java.parseJBridgeLogicNegateBlocks = function(logicBlock){
 };
 
 Blockly.Java.parseJBridgeLogicOrBlocks = function(logicBlock) {
-    var code = ""
-    var value = ""
+    var code = "";
+    var value = "";
     for(var x = 0, childBlock; childBlock = logicBlock.childBlocks_[x]; x++){
         if (logicBlock.childBlocks_[x+1]!= undefined) {
             value = Blockly.Java.parseBlock(childBlock);
