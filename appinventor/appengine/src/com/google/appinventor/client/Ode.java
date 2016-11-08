@@ -719,20 +719,15 @@ public class Ode implements EntryPoint {
         //generate and download java file
         ChainableCommand cmd = new SaveAllEditorsCommand(new GenerateJavaCommand(null));
         cmd.startExecuteChain(Tracking.PROJECT_ACTION_BUILD_YAIL_YA, projectRootNode,
-                new Command() {
-                  @Override
-                  public void execute() {                    
-                    AsyncCallback<Long> callback = new OdeAsyncCallback<Long>() {
-                      @Override
-                      public void onSuccess(Long result) {
-                        Downloader.getInstance().download(ServerLayout.downloadJavaFilePath(projectId, userName, projectName, javaFileName));
-                      }
-                    };
-                    String path = "src/appinventor/ai_" + Ode.getInstance().getUser().getUserName()+"/gen/" + projectName + "/" + javaFileName;
-                    Ode.getInstance().getProjectService().deleteFile(sessionId, projectId, path, callback);
+            new Command() {
+              @Override
+              public void execute() {
 
-                  }
-                });
+                String path = "src/appinventor/ai_" + Ode.getInstance().getUser().getUserName()+"/gen/" + projectName + "/" + javaFileName;
+                Downloader.getInstance().download(ServerLayout.downloadJavaFilePath(projectId, userName, projectName, javaFileName));
+
+              }
+            });
       }
     }
   }
