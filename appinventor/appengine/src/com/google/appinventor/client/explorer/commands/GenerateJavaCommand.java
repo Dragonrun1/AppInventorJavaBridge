@@ -1,8 +1,11 @@
 package com.google.appinventor.client.explorer.commands;
 
+import com.google.appinventor.client.ErrorReporter;
 import com.google.appinventor.client.Ode;
 import com.google.appinventor.shared.rpc.project.ProjectNode;
 import com.google.gwt.user.client.Command;
+
+import static com.google.appinventor.client.Ode.MESSAGES;
 
 
 public class GenerateJavaCommand extends ChainableCommand {
@@ -34,7 +37,7 @@ public class GenerateJavaCommand extends ChainableCommand {
                 new Command() {
                     @Override
                     public void execute() {
-                        executionFailedOrCanceled();
+                        ErrorReporter.reportError(MESSAGES.javaGenerationError());
                     }
                 });
     }

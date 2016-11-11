@@ -722,10 +722,7 @@ public class Ode implements EntryPoint {
             new Command() {
               @Override
               public void execute() {
-
-                String path = "src/appinventor/ai_" + Ode.getInstance().getUser().getUserName()+"/gen/" + projectName + "/" + javaFileName;
                 Downloader.getInstance().download(ServerLayout.downloadJavaFilePath(projectId, userName, projectName, javaFileName));
-
               }
             });
       }

@@ -582,7 +582,6 @@ public class BlocklyPanel extends HTMLPanel implements ComponentDatabaseChangeLi
     }
   }
     public String getJava(String formJson, String packageName) throws YailGenerationException {
-        OdeLog.log(formJson);
         if (!blocksInited(formName)) {
             throw new YailGenerationException("Blocks area is not initialized yet", formName);
         }

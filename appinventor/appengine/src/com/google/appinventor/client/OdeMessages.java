@@ -1671,6 +1671,10 @@ public interface OdeMessages extends Messages {
   @Description("Error message reported when a file couldn't be uploaded to the server.")
   String fileUploadError();
 
+  @DefaultMessage("Generation error: Could Generate Java Code")
+  @Description("Error message reported when a java generation is unsuccessful.")
+  String javaGenerationError();
+
   @DefaultMessage("Error: could not upload file because it is too large")
   @Description("Error message reported when a file couldn't be uploaded because of its size.")
   String fileTooLargeError();
