@@ -1895,9 +1895,15 @@ Blockly.Java.parseJBridgeMathSingleBlock = function(mathBlock){
   //Theres no java method for negate
   if (operand == "NEG"){
     code = "Math.abs(" + value + ") * -1";
-  }else{
+  }
+  else{
     var javaMethodName = singleMathJavaNames.get(operand);
-    code = "Math." + javaMethodName + "(" + value + ")";
+      if(javaMethodName == "sqrt"){
+          code = "Math." + javaMethodName + "((float)" + value + ")";
+      }else{
+          code = "Math." + javaMethodName + "(" + value + ")";
+      }
+
   }
   return code;
 };
