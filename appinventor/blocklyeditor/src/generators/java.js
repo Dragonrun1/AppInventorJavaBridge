@@ -215,6 +215,7 @@ var methodParamsMap = {
 
     //sound
     'SoundError' : {0: JAVA_STRING},
+    'Vibrate' : {0: JAVA_INT},
 
     //player
     'PlayerError' : {0: JAVA_STRING},
@@ -1256,30 +1257,45 @@ Blockly.Java.parseJBridgeMethodCallBlock = function(methodCallBlock){
   var test = methodCallBlock.parentBlock_.getFieldValue("ARG0");
   var paramsList = [];
   var code = "";
+
   //parse all the params Block
-  for (var y = 0, paramBlock; paramBlock = methodCallBlock.childBlocks_[y]; y++){
+  var params = methodParamsMap[methodName];
+  var count = 0;
+  if (params != undefined) {
+    for (var _ in params) {
+      var paramBlock = methodCallBlock.childBlocks_[count];
       var genCode = Blockly.Java.parseBlock(paramBlock);
-      if(jBridgeIsIndividualBlock){
-        code = code + genCode+"\n";
-      }else{
+      if (jBridgeIsIndividualBlock) {
+        code = code + genCode + "\n";
+      } else {
         paramsList.push(genCode);
       }
-  }
-  var jBridgeParamList = [];
-
-  for (var y = 0, param; param = paramsList[y]; y++){
-    jBridgeParamList.push(Blockly.Java.getJBridgeRelativeParamName(parentParamMap, param));
-  }
-  if(objectName == "TinyWebDB1" && methodName == "StoreValue"){
-    var YailList = "YailList";
-    if(!jBridgeImportsMap[YailList]){
-      jBridgeImportsMap[YailList] = "import com.google.appinventor.components.runtime.util.YailList;";
+      count++;
     }
-    jBridgeParamList[1] = "YailList.makeList(" + jBridgeParamList[1] + ")";
+
+    //parse next blocks that are not parameters
+    while (count < methodCallBlock.childBlocks_.length){
+      var childBlock = methodCallBlock.childBlocks_[count];
+      var childCode = Blockly.Java.parseBlock(childBlock);
+      code = code + childCode + "\n";
+      count++;
+    }
+
+    var jBridgeParamList = [];
+
+    for (var y = 0, param; param = paramsList[y]; y++){
+      jBridgeParamList.push(Blockly.Java.getJBridgeRelativeParamName(parentParamMap, param));
+    }
+    if(objectName == "TinyWebDB1" && methodName == "StoreValue"){
+      var YailList = "YailList";
+      if(!jBridgeImportsMap[YailList]){
+        jBridgeImportsMap[YailList] = "import com.google.appinventor.components.runtime.util.YailList;";
+      }
+      jBridgeParamList[1] = "YailList.makeList(" + jBridgeParamList[1] + ")";
+    }
+
+    code = Blockly.Java.genJBridgeMethodCallBlock(objectName ,methodName, paramsList) + "\n" + code;
   }
-
-  code = Blockly.Java.genJBridgeMethodCallBlock(objectName ,methodName, paramsList) + "\n" + code;
-
   return code;
 };
 
