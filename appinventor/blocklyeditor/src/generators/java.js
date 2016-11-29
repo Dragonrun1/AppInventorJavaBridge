@@ -1799,13 +1799,22 @@ Blockly.Java.castChildToInteger = function(block, childNumber, value){
   if (block.childBlocks_[childNumber - 1].category != "Math"){
     if(block.childBlocks_[childNumber - 1].category != "Variables"){
       value = "Integer.valueOf(" + value + ")";
-    }else if (jBridgeLexicalVarTypes[value] != undefined && jBridgeLexicalVarTypes[value] != JAVA_INT){
-      value = "Integer.valueOf(" + value + ")";
-    }else if (jBridgeGlobalVarTypes[value] != undefined && jBridgeGlobalVarTypes[value] != JAVA_INT){
-      value = "Integer.valueOf(" + value + ")";
+    }else if (jBridgeLexicalVarTypes[value] != undefined && jBridgeLexicalVarTypes[value] != JAVA_INT) {
+        value = "Integer.valueOf(" + value + ")";
     }
   }
   return value;
+};
+
+Blockly.Java.castObjectChildToInteger = function(block, childNumber, value){
+    if (block.childBlocks_[childNumber - 1].category != "Math"){
+        if(block.childBlocks_[childNumber - 1].category != "Variables"){
+            value = "(int) " + value;
+        }else if (jBridgeLexicalVarTypes[value] != undefined && jBridgeLexicalVarTypes[value] != JAVA_INT) {
+            value = "(int) " + value;
+        }
+    }
+    return value;
 };
 
 /**
@@ -3105,9 +3114,24 @@ Blockly.Java.parseJBridgeMathCompare = function (mathBlock){
   var operator = mathBlock.getFieldValue("OP");
   var leftValue = Blockly.Java.parseBlock(mathBlock.childBlocks_[0]);
   var rightValue = Blockly.Java.parseBlock(mathBlock.childBlocks_[1]);
-  leftValue = Blockly.Java.castChildToInteger(mathBlock, 1, leftValue);
-  rightValue = Blockly.Java.castChildToInteger(mathBlock, 2, rightValue);
+
+  if(mathBlock.childBlocks_[0].category == "Component" && mathBlock.childBlocks_[0].methodName == "GetValue") {
+      leftValue = Blockly.Java.castObjectChildToInteger(mathBlock, 1, leftValue);
+  } else if(!mathBlock.childBlocks_[0].category == "Logic"){
+      leftValue = Blockly.Java.castChildToInteger(mathBlock, 1, leftValue);
+  }
+
+  if(mathBlock.childBlocks_[1].category == "Component" && mathBlock.childBlocks_[1].methodName == "GetValue") {
+      rightValue = Blockly.Java.castObjectChildToInteger(mathBlock, 2, rightValue);
+  } else if(!mathBlock.childBlocks_[1].category == "Logic"){
+      rightValue = Blockly.Java.castChildToInteger(mathBlock, 2, rightValue);
+  }
+
+  // leftValue = Blockly.Java.castChildtoInteger(mathBlock, 0, leftValue);
+  // rightValue = Blockly.Java.castChildToInteger(mathBlock, 1, rightValue);
+
   var op = Blockly.Java.getJBridgeOperator(operator);
+
   if(op == "==" && (leftValue.indexOf("String.valueOf(") == 0)){
     return Blockly.Java.genJBridgeStringEqualsCompare(leftValue, rightValue, op);
   }
@@ -3174,6 +3198,10 @@ Blockly.Java.genJBridgeMathCompare = function (leftValue, rightValue, operator){
              + operator
              + rightValue;
   return code;
+
+
+
+
 };
 
 /**
