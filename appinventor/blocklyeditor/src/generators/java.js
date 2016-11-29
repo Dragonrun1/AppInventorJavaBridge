@@ -1827,7 +1827,7 @@ Blockly.Java.parseMathOperationBlock = function(mathBlock){
 };
 
 Blockly.Java.castChildToInteger = function(block, childNumber, value){
-  if (block.childBlocks_[childNumber - 1].category != "Math"){
+  if (block.childBlocks_[childNumber - 1].category != "Math" && block.childBlocks_[childNumber - 1].category != "Logic"){
     if(block.childBlocks_[childNumber - 1].category != "Variables"){
         if(value.search(".intValue()") < 0) {
             value = "Integer.valueOf(" + value + ")";
