@@ -2195,6 +2195,8 @@ Blockly.Java.parseJBridgeLogicCompareBlocks = function(logicBlock){
       leftValue = "String.valueOf(" + rightValue + ")";
     }
     stringCompare = true;
+  }else if (Blockly.Java.isStringBlock(rightBlock) && Blockly.Java.isStringBlock(rightBlock)){
+    stringCompare = true;
   }
 
   var code = "";
