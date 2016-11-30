@@ -148,7 +148,7 @@ singleMathJavaNames.set("ATAN", "atan");
 var singleMathTypes = ["math_single", "math_trig", "math_abs", "math_neg", "math_round", "math_ceiling", "math_floor"];
 var mathOperationBlocks = ["math_add", "math_subtract", "math_multiply", "math_division", "math_compare", "math_atan2", "math_power"];
 
-var methodParam= new Object();
+var propertyBlockSet = ["Speed"];
 
 var JAVA_INT = "int";
 var JAVA_FLOAT = "float";
@@ -158,6 +158,7 @@ var JAVA_SPRITE = "Sprite";
 var JAVA_VIEW = "AndroidViewComponent";
 var JAVA_OBJECT = "Object";
 
+var methodParam= new Object();
 //Param type Map start. Includes methods and individual events
 var methodParamsMap = {
 
@@ -194,6 +195,7 @@ var methodParamsMap = {
     'Bounce' : {0: JAVA_INT},
     'CollidedWith' : {0: JAVA_SPRITE},
     'CollidingWith': {0: JAVA_SPRITE},
+    'Speed':{0: JAVA_FLOAT},
 
     //ball methods
     'PointInDirection' : {0: JAVA_FLOAT, 1: JAVA_FLOAT},
@@ -365,6 +367,8 @@ methodSpecialCases.set('ProximityChanged', ["((Float)XXX).intValue()"]);
 //slider
 methodSpecialCases.set('PositionChanged', ["((Float)XXX).intValue()"]);
 
+//sprite
+methodSpecialCases.set('Speed', ["((Float)XXX).intValue()"]);
 
 //Map of accepted Screen Properties and castings
 var screenPropertyCastMap = new Map();
@@ -1443,13 +1447,24 @@ Blockly.Java.parseJBridgeGetBlock = function(getBlock){
 };
 
 Blockly.Java.genJBridgeGetBlock = function(componentName, property){
-  var code = componentName
-             +"."
-             +property
-             +"()";
+  var code = Blockly.Java.JBridgeCheckProperty(componentName, property);
   return code;
 };
 
+Blockly.Java.JBridgeCheckProperty = function(componentName, property){
+    var code = "";
+    if (Blockly.Java.withinPropertySet(property)){
+        code = "((Float)" + componentName +"." + property +"()"+").intValue()";
+    }
+    else{
+        code = componentName + "." + property + "()";
+    }
+    return code;
+};
+
+Blockly.Java.withinPropertySet = function(property){
+    return propertyBlockSet.indexOf(property) > -1;
+};
 /* Parses a set block of any component
 */
 Blockly.Java.parseJBridgeSetBlock = function(setBlock){
@@ -1798,9 +1813,13 @@ Blockly.Java.parseMathOperationBlock = function(mathBlock){
 Blockly.Java.castChildToInteger = function(block, childNumber, value){
   if (block.childBlocks_[childNumber - 1].category != "Math"){
     if(block.childBlocks_[childNumber - 1].category != "Variables"){
+        if(value.search(".intValue()") < 0) {
+            value = "Integer.valueOf(" + value + ")";
+        }
+    }else if (jBridgeLexicalVarTypes[value] != undefined && jBridgeLexicalVarTypes[value] != JAVA_INT){
       value = "Integer.valueOf(" + value + ")";
-    }else if (jBridgeLexicalVarTypes[value] != undefined && jBridgeLexicalVarTypes[value] != JAVA_INT) {
-        value = "Integer.valueOf(" + value + ")";
+    }else if (jBridgeGlobalVarTypes[value] != undefined && jBridgeGlobalVarTypes[value] != JAVA_INT){
+      value = "Integer.valueOf(" + value + ")";
     }
   }
   return value;
@@ -2024,6 +2043,7 @@ Blockly.Java.genJBridgeMathRandomInt = function(leftValue, rightValue){
 };
 
 Blockly.Java.genJBridgeMathOperation = function(leftValue, rightValue, operand){
+
     var code = "("
                +leftValue
                + " "
