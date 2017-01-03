@@ -3150,8 +3150,10 @@ Blockly.Java.getJBridgeListContainsBlock = function(object, listName){
   */
 Blockly.Java.parseJBridgeMathCompare = function (mathBlock){
   var operator = mathBlock.getFieldValue("OP");
-  var leftValue = Blockly.Java.parseBlock(mathBlock.childBlocks_[0]);
-  var rightValue = Blockly.Java.parseBlock(mathBlock.childBlocks_[1]);
+  var leftBlock = mathBlock.childBlocks_[0];
+  var rightBlock = mathBlock.childBlocks_[1];
+  var leftValue = Blockly.Java.parseBlock(leftBlock);
+  var rightValue = Blockly.Java.parseBlock(rightBlock);
 
   if(mathBlock.childBlocks_[0].category == "Component" && mathBlock.childBlocks_[0].methodName == "GetValue") {
       leftValue = Blockly.Java.castObjectChildToInteger(mathBlock, 1, leftValue);
@@ -3165,11 +3167,12 @@ Blockly.Java.parseJBridgeMathCompare = function (mathBlock){
       rightValue = Blockly.Java.castChildToInteger(mathBlock, 2, rightValue);
   }
 
-  // leftValue = Blockly.Java.castChildtoInteger(mathBlock, 0, leftValue);
-  // rightValue = Blockly.Java.castChildToInteger(mathBlock, 1, rightValue);
-
   var op = Blockly.Java.getJBridgeOperator(operator);
-
+  if(leftBlock.category != "Math"){
+    leftValue = "Integer.valueOf(" + leftValue + ")";
+  }else if(rightBlock.category != "Math"){
+    rightValue = "Integer.valueOf(" + rightValue + ")";
+  }
   if(op == "==" && (leftValue.indexOf("String.valueOf(") == 0)){
     return Blockly.Java.genJBridgeStringEqualsCompare(leftValue, rightValue, op);
   }
