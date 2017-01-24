@@ -164,6 +164,9 @@ var methodParam= new Object();
 //Param type Map start. Includes methods and individual events
 var methodParamsMap = {
 
+   //string methods
+   'Text' : {0 : JAVA_STRING},
+
    //canvas methods
     'BackgroundColor' : {0 : JAVA_INT},
     'BackgroundImage' : {0: JAVA_STRING},
@@ -324,15 +327,17 @@ var methodParamsMap = {
     'TweetWithImage' : {0: JAVA_STRING},
 
     //tinyWebDB
-    'GetValue' :{0: JAVA_STRING},
+    'GetValue' :{0: JAVA_STRING, 1: JAVA_STRING},
     'StoreValue' :{0: JAVA_STRING, 1: JAVA_OBJECT},
 
     //firebase
     'GotValue' :{0: JAVA_STRING, 1: JAVA_OBJECT},
     
     //tinyDB
-    'ClearTag' :{0: JAVA_STRING}
-    //
+    'ClearTag' :{0: JAVA_STRING},
+
+    //texting
+    'MessageReceived' : {0: JAVA_STRING, 1: JAVA_STRING}
 };
 //Map of double casting
 var methodSpecialCases = new Map();
@@ -1507,7 +1512,7 @@ Blockly.Java.parseJBridgeSetBlock = function(setBlock){
      }
   }
   //always cast parameters when parsing procedure
-  if(isParsingJBridgeProcedure){
+  if(Blockly.Java.shouldParseSetBlockValue(setBlock, setBlock.childBlocks_[0])){
     //component set methods only take one parameter
     var params= methodParamsMap[property];
     if(params != undefined){
@@ -1540,6 +1545,20 @@ Blockly.Java.parseJBridgeSetBlock = function(setBlock){
       code += Blockly.Java.parseBlock(setBlock.childBlocks_[setBlock.childBlocks_.length - 1]);
   }
   return code;
+};
+
+/**
+ * Returns whether a component set block needs to cast its value. For example, this is the case with TinyDB.getValue() where it always
+ * returns a Java Object that needs to be casted to the component method's required type.
+ * */
+Blockly.Java.shouldParseSetBlockValue = function(setBlock, childBlock){
+  var shouldParse = false;
+  if (isParsingJBridgeProcedure){
+    shouldParse = true;
+  }else if (childBlock.typeName == "TinyDB"){
+    shouldParse = true;
+  }
+  return shouldParse;
 };
 
 Blockly.Java.genJBridgeSetBlock = function(componentName, property, value){
@@ -1725,7 +1744,9 @@ Blockly.Java.normalCast = function (body, methodParam, eventMethodParamListings,
      for (var paramName in eventMethodParamListings){
         if (body.search(paramName) >= 0){
             index = eventMethodParamListings[paramName];
-            parameters.push("(" + methodParamsMap[methodParam][index] + ")" + "params[" + eventMethodParamListings[paramName] + "]");
+            if (methodParamsMap[methodParam] != undefined){
+              parameters.push("(" + methodParamsMap[methodParam][index] + ")" + "params[" + eventMethodParamListings[paramName] + "]");
+            }
         }
      }
 
