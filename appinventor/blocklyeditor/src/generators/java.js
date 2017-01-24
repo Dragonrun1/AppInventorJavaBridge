@@ -1873,6 +1873,9 @@ Blockly.Java.castValueToInteger = function(block, value){
     }else if (block.type == "component_set_get"){
       if (block.setOrGet == "get") {
         var property = block.property;
+        if (property == undefined){
+          property = block.propertyName;
+        }
         var params = methodParamsMap[property];
         if (params != undefined){
           var param = params[0];
