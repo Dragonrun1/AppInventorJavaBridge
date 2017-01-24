@@ -171,7 +171,7 @@ var methodParamsMap = {
     'BackgroundColor' : {0 : JAVA_INT},
     'BackgroundImage' : {0: JAVA_STRING},
     'DrawCircle' : {0: JAVA_INT, 1: JAVA_INT, 2: JAVA_FLOAT, 3: JAVA_BOOLEAN},
-    'DrawLine' : {0: JAVA_INT, 1: JAVA_INT, 2: JAVA_INT, 3: JAVA_INT, 4: JAVA_INT, 5: JAVA_INT, 6: JAVA_BOOLEAN},
+    'DrawLine' : {0: JAVA_INT, 1: JAVA_INT, 2: JAVA_INT, 3: JAVA_INT},
     'DrawPoint' : {0: JAVA_INT, 1:JAVA_INT},
     'DrawText' : {0: JAVA_STRING, 1: JAVA_INT, 2: JAVA_INT},
     'DrawTextAtAngle' : {0:JAVA_STRING, 1:JAVA_INT, 2: JAVA_INT, 3: JAVA_FLOAT},
