@@ -8,11 +8,9 @@ package com.google.appinventor.components.runtime.util;
 
 import com.google.appinventor.components.runtime.errors.YailRuntimeError;
 
-import gnu.lists.LList;
-import gnu.lists.Pair;
-
 import org.json.JSONException;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
@@ -24,7 +22,7 @@ import android.util.Log;
  * by App Inventor components.
  *
  */
-public class YailList extends Pair {
+public class YailList {
 
   private static final String LOG_TAG = "YailList";
 
@@ -38,15 +36,17 @@ public class YailList extends Pair {
   // legitimate Yail data types.  See the definition of sanitization
   // in runtime.scm.
 
+  private ArrayList<Object> items;
   /**
    * Create an empty YailList.
    */
   public YailList() {
-    super(YailConstants.YAIL_HEADER, LList.Empty);
+    items = new ArrayList<Object>();
   }
 
-  private YailList(Object cdrval) {
-    super(YailConstants.YAIL_HEADER, cdrval);
+  private YailList(Object object) {
+    items = new ArrayList<Object>();
+    items.add(object);
   }
 
   /**
@@ -60,38 +60,36 @@ public class YailList extends Pair {
    * Create a YailList from an array.
    */
   public static YailList makeList(Object[] objects) {
-    LList newCdr = Pair.makeList(objects, 0);
-    return new YailList(newCdr);
+    YailList newYailList = new YailList();
+    for (Object item: objects){
+      newYailList.items.add(item);
+    }
+    return newYailList;
   }
 
   /**
    * Create a YailList from a List.
    */
   public static YailList makeList(List vals) {
-    LList newCdr = Pair.makeList(vals);
-    return new YailList(newCdr);
+    YailList list = new YailList();
+    list.items = new ArrayList<Object>(vals);
+    return list;
   }
 
   /**
    * Create a YailList from a Collection.
    */
   public static YailList makeList(Collection vals) {
-    LList newCdr = Pair.makeList(vals.toArray(), 0);
-    return new YailList(newCdr);
+    YailList list = new YailList();
+    list.items = new ArrayList<Object>(vals);
+    return list;
   }
 
   /**
    * Return this YailList as an array.
    */
-  @Override
   public Object[] toArray() {
-    if (cdr instanceof Pair) {
-      return ((Pair) cdr).toArray();
-    } else if (cdr instanceof LList) {
-      return ((LList) cdr).toArray();
-    } else {
-      throw new YailRuntimeError("YailList cannot be represented as an array", "YailList Error.");
-    }
+    return items.toArray();
   }
 
   /**
@@ -102,12 +100,13 @@ public class YailList extends Pair {
    */
 
   public String[] toStringArray() {
-    int size = this.size();
-    String[] objects = new String[size];
-    for (int i = 1; i <= size; i++) {
-      objects[i - 1] = YailListElementToString(get(i));
+    String[] stringArray = new String[items.size()];
+    for (int i=0; i < stringArray.length; i++){
+      Object item = items.get(i);
+      stringArray[i] = item.toString();
     }
-    return objects;
+
+    return stringArray;
   }
 
   /**
@@ -126,6 +125,10 @@ public class YailList extends Pair {
     }
   }
 
+  public Object get(int index){
+    return items.get(index - 1);
+  }
+
   /**
    * Return a strictly syntactically correct JSON text
    * representation of this YailList. Only supports String, Number,
@@ -136,9 +139,9 @@ public class YailList extends Pair {
       StringBuilder json = new StringBuilder();
       String separator = "";
       json.append('[');
-      int size = this.size();
-      for (int i = 1; i <= size; i++) {
-        Object value = get(i);
+      int size = items.size();
+      for (int i = 0; i < size; i++) {
+        Object value = items.get(i);
         json.append(separator).append(JsonUtil.getJsonRepresentation(value));
         separator = ",";
       }
@@ -154,9 +157,8 @@ public class YailList extends Pair {
   /**
    * Return the size of this YailList.
    */
-  @Override
   public int size() {
-    return super.size() - 1;
+    return items.size();
   }
 
   /**
@@ -164,26 +166,20 @@ public class YailList extends Pair {
    */
   @Override
   public String toString() {
-    if (cdr instanceof Pair) {
-      return ((Pair) cdr).toString();
-    } else if (cdr instanceof LList) {
-      return ((LList) cdr).toString();
-    } else {
-      throw new RuntimeException("YailList cannot be represented as a String");
-    }
+    return items.toString();
   }
 
   /**
    * Return the String at the given index.
    */
   public String getString(int index) {
-    return get(index + 1).toString();
+    return items.get(index-1).toString();
   }
 
   /**
    * Return the Object at the given index.
    */
   public Object getObject(int index) {
-    return get(index + 1);
+    return items.get(index-1);
   }
 }
