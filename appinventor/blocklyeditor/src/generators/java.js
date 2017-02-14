@@ -1890,9 +1890,15 @@ Blockly.Java.castValueToInteger = function(block, value){
       }
     }
   }
-  if(needsCasting){
-    value = "Integer.valueOf(" + value + ")";
+  if (needsCasting && block.category != "Lists") {
+      value = "Integer.valueOf(" + value + ")";
+      }
+  else{
+      if(needsCasting){
+          value = "Integer.valueOf((int)" + value + ")"
+      }
   }
+
   return value;
 };
 
