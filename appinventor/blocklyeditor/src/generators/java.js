@@ -1890,13 +1890,12 @@ Blockly.Java.castValueToInteger = function(block, value){
       }
     }
   }
-  if (needsCasting && block.category != "Lists") {
+  if (needsCasting) {
+      //Need to force cast Objects returned by Lists to int
+      if (block.category == "Lists"){
+          value = "(int)" + value
+      }
       value = "Integer.valueOf(" + value + ")";
-      }
-  else{
-      if(needsCasting){
-          value = "Integer.valueOf((int)" + value + ")"
-      }
   }
 
   return value;
