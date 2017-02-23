@@ -2239,24 +2239,13 @@ public class ObjectifyStorageIo implements  StorageIo {
                     }
 
                     //save icon and JavaBridge in storage.
-                    InputStream javaBridge = getClass().getResourceAsStream("resources/AIBridge.jar");
+                    InputStream javaBridge = getClass().getResourceAsStream("resources/AppInventor-JavaLibrary.jar");
                     try {
                         byte[] fileContent1 = new byte[javaBridge.available()];
                         javaBridge.read(fileContent1);
                         FileData fd = new FileData();
-                        fd.fileName = "lib/AIBridge.jar";
+                        fd.fileName = "lib/AppInventor-JavaLibrary.jar";
                         fd.content = fileContent1;
-                        fileData.add(fd);
-                    } catch (IOException e) {
-                        e.printStackTrace();
-                    }
-                    InputStream android = getClass().getResourceAsStream("resources/android-support-v4.jar");
-                    try {
-                        byte[] fileContent2 = new byte[android.available()];
-                        android.read(fileContent2);
-                        FileData fd = new FileData();
-                        fd.fileName = "lib/android-support-v4.jar";
-                        fd.content = fileContent2;
                         fileData.add(fd);
                     } catch (IOException e) {
                         e.printStackTrace();
@@ -2275,7 +2264,6 @@ public class ObjectifyStorageIo implements  StorageIo {
                     finally{
                         try {
                             javaBridge.close();
-                            android.close();
                             icon.close();
                         } catch (IOException e) {
                             e.printStackTrace();
