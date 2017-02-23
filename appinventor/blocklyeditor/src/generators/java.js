@@ -227,6 +227,8 @@ var methodParamsMap = {
 
     //player
     'PlayerError' : {0: JAVA_STRING},
+    'Pause' : {},
+    'Start' : {},
 
     //camcorder
     'AfterRecording' : {0: JAVA_STRING},
