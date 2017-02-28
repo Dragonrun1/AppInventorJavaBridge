@@ -151,6 +151,10 @@ var mathOperationBlocks = ["math_add", "math_subtract", "math_multiply", "math_d
 
 var propertyBlockSet = ["Speed"];
 
+var JAVA_CLASS_INT = "Integer";
+var JAVA_CLASS_FLOAT = "Float";
+var JAVA_CLASS_DOUBLE = "Double";
+var JAVA_CLASS_BOOLEAN = "Boolean";
 var JAVA_INT = "int";
 var JAVA_FLOAT = "float";
 var JAVA_DOUBLE = "double";
@@ -1193,11 +1197,11 @@ Blockly.Java.parseJBridgeVariableSetBlock = function(variableSetBlock){
     leftValue = Blockly.Java.getJBridgeRelativeParamName(paramsMap, leftValue);
 
     var rightValue = "";
-    rightValue = "(" + jBridgeGlobalVarTypes[leftValue] + ") ";
+    var type = jBridgeGlobalVarTypes[leftValue];
     for(var x = 0, childBlock; childBlock = variableSetBlock.childBlocks_[x]; x++){
         var data = Blockly.Java.parseBlock(childBlock);
-        rightValue = rightValue
-                     + data;
+        type = Blockly.Java.findObjectCastType(type);
+        rightValue = "(" + type + ") " + data;
         if (jBridgeIsIndividualBlock){
            code = code + "\n" + data;
         }else {
@@ -1222,6 +1226,19 @@ Blockly.Java.parseJBridgeVariableSetBlock = function(variableSetBlock){
     return code;
   };
 
+Blockly.Java.findObjectCastType = function(javaType){
+  var castType = javaType;
+  if (javaType == JAVA_INT){
+    castType = JAVA_CLASS_INT;
+  } else if (javaType == JAVA_BOOLEAN){
+    castType = JAVA_CLASS_BOOLEAN
+  } else if (javaType == JAVA_FLOAT) {
+    castType = JAVA_CLASS_FLOAT;
+  } else if (javaType == JAVA_DOUBLE) {
+    castType = JAVA_CLASS_DOUBLE;
+  }
+  return castType;
+};
 
 Blockly.Java.parseJBridgeComponentBlock = function(componentBlock){
   var code = "";
@@ -1702,10 +1719,9 @@ Blockly.Java.createCalledMethodParameterString = function (body) {
 
     if (Blockly.Java.checkCast(methodParam, methodSpecialCases)){ //if it contains special casting
         stringParam = Blockly.Java.specialCast(body, methodParam, eventMethodParamListings, methodSpecialCases);
-    }
-    else{ //regular cast
+    } else{ //regular cast
         stringParam = Blockly.Java.normalCast(body, methodParam, eventMethodParamListings, methodParamsMap);
-        }
+    }
 
     return stringParam;
 };
@@ -1747,7 +1763,8 @@ Blockly.Java.normalCast = function (body, methodParam, eventMethodParamListings,
         if (body.search(paramName) >= 0){
             index = eventMethodParamListings[paramName];
             if (methodParamsMap[methodParam] != undefined){
-              parameters.push("(" + methodParamsMap[methodParam][index] + ")" + "params[" + eventMethodParamListings[paramName] + "]");
+              var objectCastType = Blockly.Java.findObjectCastType(methodParamsMap[methodParam][index]);
+              parameters.push("(" + objectCastType + ")" + "params[" + eventMethodParamListings[paramName] + "]");
             }
         }
      }
