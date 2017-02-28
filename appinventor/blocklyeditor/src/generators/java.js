@@ -1576,6 +1576,9 @@ Blockly.Java.shouldParseSetBlockValue = function(setBlock, childBlock){
     shouldParse = true;
   }else if (childBlock.typeName == "TinyDB"){
     shouldParse = true;
+  }else if (Blockly.Java.isMathOperationBlock(childBlock)){
+    //Math operations might return doubles
+    shouldParse = true;
   }
   return shouldParse;
 };
@@ -1898,7 +1901,7 @@ Blockly.Java.castValueToInteger = function(block, value){
         var params = methodParamsMap[property];
         if (params != undefined){
           var param = params[0];
-          if (methodParamsMap[param] != JAVA_INT || methodParamsMap[param] != JAVA_DOUBLE || methodParamsMap[param] != JAVA_FLOAT){
+          if (param != JAVA_INT && param != JAVA_DOUBLE && param != JAVA_FLOAT){
             needsCasting = true;
           }
         }
@@ -3668,6 +3671,9 @@ Blockly.Java.castToType = function(type, code){
       break;
     case JAVA_INT:
       castedCode = "Integer.valueOf(" + code + ")";
+      break;
+    case JAVA_FLOAT:
+      castedCode = "(float) (" + code + ")";
       break;
     default:
       castedCode = code;
