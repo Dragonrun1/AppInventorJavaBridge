@@ -13,20 +13,20 @@ import com.google.appinventor.client.editor.youngandroid.YaBlocksEditor;
 import com.google.appinventor.client.editor.youngandroid.YaFormEditor;
 import com.google.appinventor.client.editor.youngandroid.YaProjectEditor;
 
-import com.google.appinventor.client.explorer.commands.AddFormCommand;
-import com.google.appinventor.client.explorer.commands.ChainableCommand;
-import com.google.appinventor.client.explorer.commands.DeleteFileCommand;
+import com.google.appinventor.client.explorer.commands.*;
 
 import com.google.appinventor.client.output.OdeLog;
 
 import com.google.appinventor.client.tracking.Tracking;
 
+import com.google.appinventor.client.utils.Downloader;
 import com.google.appinventor.client.widgets.DropDownButton.DropDownItem;
 
 import com.google.appinventor.client.widgets.Toolbar;
 
 import com.google.appinventor.common.version.AppInventorFeatures;
 
+import com.google.appinventor.shared.rpc.ServerLayout;
 import com.google.appinventor.shared.rpc.project.ProjectRootNode;
 import com.google.appinventor.shared.rpc.project.youngandroid.YoungAndroidSourceNode;
 
@@ -36,10 +36,11 @@ import com.google.common.collect.Maps;
 import com.google.gwt.core.client.Callback;
 import com.google.gwt.core.client.Scheduler;
 
+import com.google.gwt.event.dom.client.ClickEvent;
+import com.google.gwt.event.dom.client.ClickHandler;
 import com.google.gwt.user.client.Command;
 import com.google.gwt.user.client.Window;
-import com.google.gwt.user.client.ui.HorizontalPanel;
-import com.google.gwt.user.client.ui.Label;
+import com.google.gwt.user.client.ui.*;
 
 import java.util.LinkedList;
 import java.util.List;
@@ -180,10 +181,164 @@ public class DesignToolbar extends Toolbar {
         MESSAGES.switchToFormEditorButton(), new SwitchToFormEditorAction()), true);
     addButton(new ToolbarItem(WIDGET_NAME_SWITCH_TO_BLOCKS_EDITOR,
         MESSAGES.switchToBlocksEditorButton(), new SwitchToBlocksEditorAction()), true);
+    addButton(new ToolbarItem("Java Bridge", "Generate Java", new ShowJBridgeWindowAction()));
 
     // Gray out the Designer button and enable the blocks button
     toggleEditor(false);
     Ode.getInstance().getTopToolbar().updateFileMenuButtons(0);
+  }
+
+  public void showJBridgeWindow(){
+    final PopupPanel jBridgePanel = new PopupPanel(false);
+    jBridgePanel.addStyleName("genpanel-popup_panel");
+
+    FlowPanel topTitleBar = new FlowPanel();
+    Label genTitle = new Label("App Inventor Java Bridge");
+    Label genSubTitle = new Label("View the Java equivalent of your App Inventor apps!");
+    genSubTitle.addStyleName("genpanel-subtitle");
+    topTitleBar.add(genTitle);
+    topTitleBar.add(genSubTitle);
+    topTitleBar.addStyleName("genpanel-titleBar");
+
+    Label currentProjectName = new Label();
+    currentProjectName.addStyleName("genpanel-projectName");
+
+    Grid genButtonsGrid = new Grid(2, 2);
+    Label genJavaFileDesc = new Label("Shows the Java code equivalent for the current " +
+            "open Screen");
+    genJavaFileDesc.addStyleName("genpanel-genButton-Description");
+    Label genJavaProjDesc = new Label("Generates a Java project that can be " +
+            "imported into Android " +
+            "Studio or Eclipse");
+    genJavaProjDesc.addStyleName("genpanel-genButton-Description");
+    Button genJavaFileButton = new Button("Java File");
+    genJavaFileButton.addStyleName("genpanel-genButton");
+    Button genJavaProjButton = new Button("Java Project");
+    genJavaProjButton.addStyleName("genpanel-genButton");
+    genButtonsGrid.setWidget(0, 0, genJavaFileButton);
+    genButtonsGrid.setWidget(1, 0, genJavaFileDesc);
+    genButtonsGrid.setWidget(0, 1, genJavaProjButton);
+    genButtonsGrid.setWidget(1, 1, genJavaProjDesc);
+    genButtonsGrid.addStyleName("genpanel-buttonGrid");
+
+    HTML seperatorLine = new HTML();
+    seperatorLine.addStyleName("genpanel-hr");
+
+    HTML helpList = new HTML("<ul>\n" +
+            "\t<li><a target=\"_blank\" href=\"https://docs.google.com/document/d/1oW7DSgy_Dx0LGnmf8kh7yytC6s3tZnrZsybI83op8nI/edit?usp=sharing\">Setting up your Java Project in Android Studio</a> (Preferred)</li>" +
+            "\t<li><a target=\"_blank\" href=\"https://docs.google.com/document/d/1VRXZOnNkcxlDgn589p7jrST377bG7FQOU2mm20yUoQo/edit?usp=sharing\">Setting up your Java Project in Eclipse</a></li>" +
+            "</u>");
+    helpList.addStyleName("genpanel-genInstructions");
+
+    Button closeWindownButton = new Button("close");
+
+    HTML moreInfoBar = new HTML();
+
+    if (Ode.getInstance().getCurrentYoungAndroidProjectRootNode() == null){
+      currentProjectName.setText("No project is currently open");
+      genJavaFileButton.setEnabled(false);
+      genJavaProjButton.setEnabled(false);
+      genJavaFileButton.setStyleName("genpanel-disabled-genButton");
+      genJavaProjButton.setStyleName("genpanel-disabled-genButton");
+    }else {
+      currentProjectName.setText(Ode.getInstance().getCurrentYoungAndroidProjectRootNode().getName());
+      genJavaFileButton.setEnabled(true);
+      genJavaProjButton.setEnabled(true);
+      genJavaFileButton.setStyleName("genpanel-genButton");
+      genJavaProjButton.setStyleName("genpanel-genButton");
+    }
+
+    FlowPanel content = new FlowPanel();
+    content.add(topTitleBar);
+    content.add(currentProjectName);
+    content.add(genButtonsGrid);
+    content.add(seperatorLine);
+    content.add(helpList);
+    content.add(closeWindownButton);
+
+    closeWindownButton.addClickHandler(new ClickHandler() {
+      @Override
+      public void onClick(ClickEvent event) {
+        jBridgePanel.hide();
+      }
+    });
+
+    genJavaFileButton.addClickHandler(new ClickHandler() {
+      @Override
+      public void onClick(ClickEvent event) {
+        new GenerateJavaAction().execute();
+      }
+    });
+
+    genJavaProjButton.addClickHandler(new ClickHandler() {
+      @Override
+      public void onClick(ClickEvent event) {
+        new ExportJavaProjectAction().execute();
+      }
+    });
+
+    jBridgePanel.add(content);
+    jBridgePanel.setHeight("530px");
+    jBridgePanel.setWidth("800px");
+    jBridgePanel.show();
+    jBridgePanel.center();
+  }
+
+  public class ShowJBridgeWindowAction implements Command{
+    @Override
+    public void execute() {
+      showJBridgeWindow();
+    }
+  }
+
+  public class ExportJavaProjectAction implements Command{
+    @Override
+    public void execute() {
+      final long projectId = Ode.getInstance().getCurrentYoungAndroidProjectId();
+      final ProjectRootNode projectRootNode = Ode.getInstance().getCurrentYoungAndroidProjectRootNode();
+      final String projectName = Ode.getInstance().getCurrentYoungAndroidProjectRootNode().getName();
+      final String userName = Ode.getInstance().getUser().getUserName();
+      //generate and download project
+      ChainableCommand cmd = new SaveAllEditorsCommand(new GenerateJavaCommand(null));
+      cmd.startExecuteChain(Tracking.PROJECT_ACTION_BUILD_YAIL_YA, projectRootNode,
+              new Command() {
+                @Override
+                public void execute() {
+                  ChainableCommand cmd1 = new SaveAllEditorsCommand(new GenerateManifestCommand(null));
+                  cmd1.startExecuteChain(Tracking.PROJECT_ACTION_BUILD_YAIL_YA, projectRootNode,
+                          new Command() {
+                            @Override
+                            public void execute() {
+                              //download project
+                              Downloader.getInstance().download(ServerLayout.downloadJavaProjectPath(projectId,userName, projectName));
+                            }
+                          });
+                }
+              });
+    }
+  }
+
+  public class GenerateJavaAction implements Command {
+    @Override
+    public void execute() {
+      final ProjectRootNode projectRootNode = Ode.getInstance().getCurrentYoungAndroidProjectRootNode();
+      if (projectRootNode != null) {
+        final long projectId = Ode.getInstance().getCurrentYoungAndroidProjectId();
+        final String projectName = Ode.getInstance().getCurrentYoungAndroidProjectRootNode().getName();
+        final String javaFileName = Ode.getInstance().getCurrentFileEditor().getFileNode().getName().replace(".scm", "").replace(".bky", "") + ".java";
+        final String userName = Ode.getInstance().getUser().getUserName();
+
+        //generate and download java file
+        ChainableCommand cmd = new SaveAllEditorsCommand(new GenerateJavaCommand(null));
+        cmd.startExecuteChain(Tracking.PROJECT_ACTION_BUILD_YAIL_YA, projectRootNode,
+                new Command() {
+                  @Override
+                  public void execute() {
+                    Downloader.getInstance().download(ServerLayout.downloadJavaFilePath(projectId, userName, projectName, javaFileName));
+                  }
+                });
+      }
+    }
   }
 
   private class AddFormAction implements Command {

@@ -574,42 +574,6 @@ public class Ode implements EntryPoint {
     }
     // else projectIdString == 0; do nothing
   }
-
-  public void openYoungAndroidProjectInDesigner(final Project project) {
-    ProjectRootNode projectRootNode = project.getRootNode();
-    if (projectRootNode == null) {
-      // The project nodes haven't been loaded yet.
-      // Add a ProjectChangeListener so we'll be notified when they have been loaded.
-      project.addProjectChangeListener(new ProjectChangeAdapter() {
-        @Override
-        public void onProjectLoaded(Project projectLoaded) {
-          project.removeProjectChangeListener(this);
-          openYoungAndroidProjectInDesigner(project);
-        }
-      });
-      project.loadProjectNodes();
-
-    } else {
-      // The project nodes have been loaded. Tell the viewer to open
-      // the project. This will cause the projects source files to be fetched
-      // asynchronously, and loaded into file editors.
-      ViewerBox.getViewerBox().show(projectRootNode);
-      // Note: we can't call switchToDesignView until the Screen1 file editor
-      // finishes loading. We leave that to setCurrentFileEditor(), which
-      // will get called at the appropriate time.
-      String projectIdString = Long.toString(project.getProjectId());
-      if (!History.getToken().equals(projectIdString)) {
-        // insert token into history but do not trigger listener event
-        History.newItem(projectIdString, false);
-      }
-      if (assetManager == null) {
-        assetManager = AssetManager.getInstance();
-      }
-      assetManager.loadAssets(project.getProjectId());
-    }
-    getTopToolbar().updateFileMenuButtons(1);
-  }
-
   public void showJBridgeWindow(){
     final PopupPanel jBridgePanel = new PopupPanel(false);
     jBridgePanel.addStyleName("genpanel-popup_panel");
@@ -627,11 +591,11 @@ public class Ode implements EntryPoint {
 
     Grid genButtonsGrid = new Grid(2, 2);
     Label genJavaFileDesc = new Label("Shows the Java code equivalent for the current " +
-                                              "open Screen");
+            "open Screen");
     genJavaFileDesc.addStyleName("genpanel-genButton-Description");
     Label genJavaProjDesc = new Label("Generates a Java project that can be " +
-                                              "imported into Android " +
-                                              "Studio or Eclipse");
+            "imported into Android " +
+            "Studio or Eclipse");
     genJavaProjDesc.addStyleName("genpanel-genButton-Description");
     Button genJavaFileButton = new Button("Java File");
     genJavaFileButton.addStyleName("genpanel-genButton");
@@ -647,9 +611,9 @@ public class Ode implements EntryPoint {
     seperatorLine.addStyleName("genpanel-hr");
 
     HTML helpList = new HTML("<ul>\n" +
-                                 "\t<li><a target=\"_blank\" href=\"https://docs.google.com/document/d/1oW7DSgy_Dx0LGnmf8kh7yytC6s3tZnrZsybI83op8nI/edit?usp=sharing\">Setting up your Java Project in Android Studio</a> (Preferred)</li>" +
-                                 "\t<li><a target=\"_blank\" href=\"https://docs.google.com/document/d/1VRXZOnNkcxlDgn589p7jrST377bG7FQOU2mm20yUoQo/edit?usp=sharing\">Setting up your Java Project in Eclipse</a></li>" +
-                             "</u>");
+            "\t<li><a target=\"_blank\" href=\"https://docs.google.com/document/d/1oW7DSgy_Dx0LGnmf8kh7yytC6s3tZnrZsybI83op8nI/edit?usp=sharing\">Setting up your Java Project in Android Studio</a> (Preferred)</li>" +
+            "\t<li><a target=\"_blank\" href=\"https://docs.google.com/document/d/1VRXZOnNkcxlDgn589p7jrST377bG7FQOU2mm20yUoQo/edit?usp=sharing\">Setting up your Java Project in Eclipse</a></li>" +
+            "</u>");
     helpList.addStyleName("genpanel-genInstructions");
 
     Button closeWindownButton = new Button("close");
@@ -706,30 +670,7 @@ public class Ode implements EntryPoint {
     jBridgePanel.center();
   }
 
-  private class GenerateJavaAction implements Command {
-    @Override
-    public void execute() {
-      final ProjectRootNode projectRootNode = Ode.getInstance().getCurrentYoungAndroidProjectRootNode();
-      if (projectRootNode != null) {
-        final long projectId = Ode.getInstance().getCurrentYoungAndroidProjectId();
-        final String projectName = Ode.getInstance().getCurrentYoungAndroidProjectRootNode().getName();
-        final String javaFileName = Ode.getInstance().getCurrentFileEditor().getFileNode().getName().replace(".scm", "").replace(".bky", "") + ".java";
-        final String userName = Ode.getInstance().getUser().getUserName();
-
-        //generate and download java file
-        ChainableCommand cmd = new SaveAllEditorsCommand(new GenerateJavaCommand(null));
-        cmd.startExecuteChain(Tracking.PROJECT_ACTION_BUILD_YAIL_YA, projectRootNode,
-            new Command() {
-              @Override
-              public void execute() {
-                Downloader.getInstance().download(ServerLayout.downloadJavaFilePath(projectId, userName, projectName, javaFileName));
-              }
-            });
-      }
-    }
-  }
-
-  private class ExportJavaProjectAction implements Command{
+  public class ExportJavaProjectAction implements Command{
     @Override
     public void execute() {
       final long projectId = Ode.getInstance().getCurrentYoungAndroidProjectId();
@@ -754,6 +695,64 @@ public class Ode implements EntryPoint {
                 }
               });
     }
+  }
+
+  public class GenerateJavaAction implements Command {
+    @Override
+    public void execute() {
+      final ProjectRootNode projectRootNode = Ode.getInstance().getCurrentYoungAndroidProjectRootNode();
+      if (projectRootNode != null) {
+        final long projectId = Ode.getInstance().getCurrentYoungAndroidProjectId();
+        final String projectName = Ode.getInstance().getCurrentYoungAndroidProjectRootNode().getName();
+        final String javaFileName = Ode.getInstance().getCurrentFileEditor().getFileNode().getName().replace(".scm", "").replace(".bky", "") + ".java";
+        final String userName = Ode.getInstance().getUser().getUserName();
+
+        //generate and download java file
+        ChainableCommand cmd = new SaveAllEditorsCommand(new GenerateJavaCommand(null));
+        cmd.startExecuteChain(Tracking.PROJECT_ACTION_BUILD_YAIL_YA, projectRootNode,
+                new Command() {
+                  @Override
+                  public void execute() {
+                    Downloader.getInstance().download(ServerLayout.downloadJavaFilePath(projectId, userName, projectName, javaFileName));
+                  }
+                });
+      }
+    }
+  }
+
+  public void openYoungAndroidProjectInDesigner(final Project project) {
+    ProjectRootNode projectRootNode = project.getRootNode();
+    if (projectRootNode == null) {
+      // The project nodes haven't been loaded yet.
+      // Add a ProjectChangeListener so we'll be notified when they have been loaded.
+      project.addProjectChangeListener(new ProjectChangeAdapter() {
+        @Override
+        public void onProjectLoaded(Project projectLoaded) {
+          project.removeProjectChangeListener(this);
+          openYoungAndroidProjectInDesigner(project);
+        }
+      });
+      project.loadProjectNodes();
+
+    } else {
+      // The project nodes have been loaded. Tell the viewer to open
+      // the project. This will cause the projects source files to be fetched
+      // asynchronously, and loaded into file editors.
+      ViewerBox.getViewerBox().show(projectRootNode);
+      // Note: we can't call switchToDesignView until the Screen1 file editor
+      // finishes loading. We leave that to setCurrentFileEditor(), which
+      // will get called at the appropriate time.
+      String projectIdString = Long.toString(project.getProjectId());
+      if (!History.getToken().equals(projectIdString)) {
+        // insert token into history but do not trigger listener event
+        History.newItem(projectIdString, false);
+      }
+      if (assetManager == null) {
+        assetManager = AssetManager.getInstance();
+      }
+      assetManager.loadAssets(project.getProjectId());
+    }
+    getTopToolbar().updateFileMenuButtons(1);
   }
 
   /**
