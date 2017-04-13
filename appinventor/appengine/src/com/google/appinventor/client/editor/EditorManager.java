@@ -11,29 +11,20 @@ import com.google.appinventor.client.Ode;
 import com.google.appinventor.client.OdeAsyncCallback;
 import com.google.appinventor.client.editor.youngandroid.YaBlocksEditor;
 import com.google.appinventor.client.editor.youngandroid.YailGenerationException;
-import com.google.appinventor.client.explorer.commands.ChainableCommand;
-import com.google.appinventor.client.explorer.commands.GenerateJavaCommand;
-import com.google.appinventor.client.explorer.commands.GenerateManifestCommand;
-import com.google.appinventor.client.explorer.commands.SaveAllEditorsCommand;
 import com.google.appinventor.client.explorer.project.Project;
 import com.google.appinventor.client.output.OdeLog;
 import com.google.appinventor.client.settings.project.ProjectSettings;
-import com.google.appinventor.client.tracking.Tracking;
-import com.google.appinventor.client.utils.Downloader;
 import com.google.appinventor.shared.rpc.BlocksTruncatedException;
-import com.google.appinventor.shared.rpc.ServerLayout;
 import com.google.appinventor.shared.rpc.project.FileDescriptorWithContent;
 import com.google.appinventor.shared.rpc.project.ProjectRootNode;
 import com.google.common.collect.Maps;
-import com.google.gwt.event.dom.client.ClickEvent;
-import com.google.gwt.event.dom.client.ClickHandler;
+import com.google.gwt.json.client.JSONValue;
 import com.google.gwt.json.client.JSONArray;
 import com.google.gwt.json.client.JSONObject;
+import com.google.gwt.json.client.JSONString;
 import com.google.gwt.json.client.JSONParser;
-import com.google.gwt.json.client.JSONValue;
 import com.google.gwt.user.client.Command;
 import com.google.gwt.user.client.Timer;
-import com.google.gwt.user.client.ui.*;
 
 import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -118,7 +109,7 @@ public final class EditorManager {
 
         // Add the editor to the openProjectEditors map.
         openProjectEditors.put(projectId, projectEditor);
-        
+
         // Tell the DesignToolbar about this project
         Ode.getInstance().getDesignToolbar().addProject(projectId, projectRootNode.getName());
 
@@ -153,8 +144,8 @@ public final class EditorManager {
     if (projectEditor != null) {
       for (String fileId : fileIds) {
         FileEditor fileEditor = projectEditor.getFileEditor(fileId);
-        // in case the file is not open in an editor (possible?) check 
-        // the FileEditors for null. 
+        // in case the file is not open in an editor (possible?) check
+        // the FileEditors for null.
         if (fileEditor != null) {
           dirtyFileEditors.remove(fileEditor);
         }
@@ -313,22 +304,22 @@ public final class EditorManager {
       projectSettings.saveSettings(callAfterSavingCommand);
     }
   }
-  
+
   /**
-   * For each block editor (screen) in the current project, generate and save yail code for the 
+   * For each block editor (screen) in the current project, generate and save yail code for the
    * blocks.
    *
    * @param successCommand  optional command to be executed if yail generation and saving succeeds.
    * @param failureCommand  optional command to be executed if yail generation and saving fails.
    */
-  public void generateYailForBlocksEditors(final Command successCommand, 
+  public void generateYailForBlocksEditors(final Command successCommand,
       final Command failureCommand) {
     List<FileDescriptorWithContent> yailFiles =  new ArrayList<FileDescriptorWithContent>();
     long currentProjectId = Ode.getInstance().getCurrentYoungAndroidProjectId();
     for (long projectId : openProjectEditors.keySet()) {
       if (projectId == currentProjectId) {
-        // Generate yail for each blocks editor in this project and add it to the list of 
-        // yail files. If an error occurs we stop the generation process, report the error, 
+        // Generate yail for each blocks editor in this project and add it to the list of
+        // yail files. If an error occurs we stop the generation process, report the error,
         // and return without executing nextCommand.
         ProjectEditor projectEditor = openProjectEditors.get(projectId);
         for (FileEditor fileEditor : projectEditor.getOpenFileEditors()) {
@@ -337,7 +328,7 @@ public final class EditorManager {
             try {
               yailFiles.add(yaBlocksEditor.getYail());
             } catch (YailGenerationException e) {
-              ErrorReporter.reportInfo(MESSAGES.yailGenerationError(e.getFormName(), 
+              ErrorReporter.reportInfo(MESSAGES.yailGenerationError(e.getFormName(),
                   e.getMessage()));
               if (failureCommand != null) {
                 failureCommand.execute();
@@ -349,7 +340,7 @@ public final class EditorManager {
         break;
       }
     }
-   
+
     Ode.getInstance().getProjectService().save(Ode.getInstance().getSessionId(),
         yailFiles,
         new OdeAsyncCallback<Long>(MESSAGES.saveErrorMultipleFiles()) {
@@ -359,7 +350,7 @@ public final class EditorManager {
           successCommand.execute();
         }
       }
-      
+
       @Override
       public void onFailure(Throwable caught) {
         super.onFailure(caught);
@@ -370,24 +361,43 @@ public final class EditorManager {
     });
   }
 
-    public void generateJavaForBlocksEditors(final Command successCommand,
-                                             final Command failureCommand) {
+    public void generateJavaForBlocksEditors(final Command successCommand, final Command failureCommand)
+    {
         List<FileDescriptorWithContent> yailFiles =  new ArrayList<FileDescriptorWithContent>();
         long currentProjectId = Ode.getInstance().getCurrentYoungAndroidProjectId();
-        for (long projectId : openProjectEditors.keySet()) {
-            if (projectId == currentProjectId) {
+
+        boolean errors = false;
+        for (long projectId : openProjectEditors.keySet())
+        {
+            if (projectId == currentProjectId)
+            {
                 // Generate yail for each blocks editor in this project and add it to the list of
                 // yail files. If an error occurs we stop the generation process, report the error,
                 // and return without executing nextCommand.
                 ProjectEditor projectEditor = openProjectEditors.get(projectId);
-                for (FileEditor fileEditor : projectEditor.getOpenFileEditors()) {
-                    if (fileEditor instanceof YaBlocksEditor) {
+                for (FileEditor fileEditor : projectEditor.getOpenFileEditors())
+                {
+                    if (fileEditor instanceof YaBlocksEditor)
+                    {
                         YaBlocksEditor yaBlocksEditor = (YaBlocksEditor) fileEditor;
-                        try {
-                            yailFiles.add(yaBlocksEditor.getJava());
+                        try
+                        {
+                            FileDescriptorWithContent javaJsonResponse = yaBlocksEditor.getJava();
+
+                            String jsonResponse = javaJsonResponse.getContent();
+                            jsonResponse = parseJavaJSONResponse(jsonResponse);
+                            if (jsonResponse == null){
+                                errors = true;
+                                break;
+                            }
+                            javaJsonResponse.setContent(jsonResponse);
+                            yailFiles.add(javaJsonResponse);
                             OdeLog.log("successful generation");
-                        } catch (YailGenerationException e) {
-                            if (failureCommand != null) {
+                        }
+                        catch (YailGenerationException e)
+                        {
+                            if (failureCommand != null)
+                            {
                                 failureCommand.execute();
                             }
                             return;
@@ -398,24 +408,50 @@ public final class EditorManager {
             }
         }
 
-        Ode.getInstance().getProjectService().save(Ode.getInstance().getSessionId(),
-                yailFiles,
-                new OdeAsyncCallback<Long>(MESSAGES.saveErrorMultipleFiles()) {
-                    @Override
-                    public void onSuccess(Long date) {
-                        if (successCommand != null) {
-                            successCommand.execute();
+        if (!errors){
+            Ode.getInstance().getProjectService().save(Ode.getInstance().getSessionId(),
+                    yailFiles,
+                    new OdeAsyncCallback<Long>(MESSAGES.saveErrorMultipleFiles()) {
+                        @Override
+                        public void onSuccess(Long date) {
+                            if (successCommand != null) {
+                                successCommand.execute();
+                            }
                         }
-                    }
 
-                    @Override
-                    public void onFailure(Throwable caught) {
-                        super.onFailure(caught);
-                        if (failureCommand != null) {
-                            failureCommand.execute();
+                        @Override
+                        public void onFailure(Throwable caught) {
+                            super.onFailure(caught);
+                            if (failureCommand != null) {
+                                failureCommand.execute();
+                            }
                         }
-                    }
-                });
+                    });
+        }
+    }
+
+    /**
+     * Parses the JSON object returned from the Java Bridge Generator and returns the generated code
+     * @param jsonResponse The String json response
+     * @return the Java Code for the generation or null if there was an error
+     */
+    public String parseJavaJSONResponse(String jsonResponse){
+        String javaCode = null;
+        JSONValue jsonValue = JSONParser.parseStrict(jsonResponse);
+        JSONObject jsonContent = jsonValue.isObject();
+        if (jsonContent != null){
+            boolean success = Boolean.valueOf(jsonContent.get("success").toString());
+            if (success){
+                JSONString jsonString = jsonContent.get("java_code").isString();
+                javaCode = jsonString.stringValue();
+            }else {
+                JSONArray errorsObject = jsonContent.get("errors").isArray();
+                if (errorsObject != null){
+                    ErrorReporter.reportError(errorsObject.get(0).toString());
+                }
+            }
+        }
+        return javaCode;
     }
 
     public void generateManifestForBlocksEditors(final Command successCommand,
@@ -466,10 +502,10 @@ public final class EditorManager {
                     }
                 });
     }
-    
+
     /**
      * Parses the returned JSON (containing permission/intent info) for the manifest file.
-     * Returns a collection with only one file (The manifest) 
+     * Returns a collection with only one file (The manifest)
      * (To save a "FileDescriptorWithContent" it must be in a collection)
      * @param manifestJSONFiles The list of JSON data files
      * @return a list containing "one" manifest file with the necessary information
@@ -515,7 +551,7 @@ public final class EditorManager {
         }
       }
 
-      //replace the first file's content with the created manifest string. 
+      //replace the first file's content with the created manifest string.
       //(easier than creating another file and the files are already named "AnrdoidManifest.xml")
       manifestJSONFiles.get(0).setContent(createManifest(mainScreenName, alternateScreens, permissionsList, intents));
       //add that first file to the Collection

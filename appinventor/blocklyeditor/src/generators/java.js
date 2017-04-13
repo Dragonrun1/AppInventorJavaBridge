@@ -338,7 +338,7 @@ var methodParamsMap = {
 
     //firebase
     'GotValue' :{0: JAVA_STRING, 1: JAVA_OBJECT},
-    
+
     //tinyDB
     'ClearTag' :{0: JAVA_STRING},
 
@@ -417,6 +417,15 @@ listTypeCastMap.set("bookItem", ["((ArrayList<?>)XXX)"]);
 //Java Component Types
 var TYPE_JAVA_ARRAYLIST = "ArrayList<Object>";
 
+
+//JSON Parameters
+var JSONKEY_JAVACODE = "java_code";
+var JSONKEY_SUCCESS = "success";
+var JSONVALUE_UNSUCCESSFUL = "false";
+var JSONVALUE_SUCCESSFUL = "true";
+var JSONKEY_ERRORS = "errors";
+
+var generationErrors = [];
 /**
  * Generate the Yail code for this blocks workspace, given its associated form specification.
  *
@@ -427,11 +436,28 @@ var TYPE_JAVA_ARRAYLIST = "ArrayList<Object>";
  * @returns {String} the generated code if there were no errors.
  */
 Blockly.Java.getFormJava = function(formJson, packageName, forRepl) {
-  var jsonObject = JSON.parse(formJson);
-  var javaCode = [];
-  javaCode.push(Blockly.Java.genJBridgeCode(Blockly.mainWorkspace.getTopBlocks(true), jsonObject));
-  var prityPrintCode = Blockly.Java.prityPrintJBridgeCode(javaCode.join('\n'));
-  return prityPrintCode;
+  var screenJSONInfo = JSON.parse(formJson);
+
+  var jsonResponse = new Object();
+  try {
+    var javaCodeList = [];
+    javaCodeList.push(Blockly.Java.genJBridgeCode(Blockly.mainWorkspace.getTopBlocks(true), screenJSONInfo));
+    var javaCode = Blockly.Java.prettyPrintJBridgeCode(javaCodeList.join('\n'));
+    
+    jsonResponse[JSONKEY_SUCCESS] = generationErrors.length == 0;
+    if (generationErrors.length > 0){
+      jsonResponse[JSONKEY_ERRORS] = generationErrors;
+    }else {
+      jsonResponse[JSONKEY_JAVACODE] = javaCode;
+    }
+  } catch (e) {
+    // catch any runtime errors
+    jsonResponse[JSONKEY_SUCCESS] = JSONVALUE_UNSUCCESSFUL;
+    generationErrors.push("Generation Error");
+    jsonResponse[JSONKEY_ERRORS] = generationErrors;
+  }
+
+  return JSON.stringify(jsonResponse);
 };
 
 /**
@@ -1816,6 +1842,7 @@ Blockly.Java.specialCast = function(body, key, paramList, typeCastMap){
 
   for (var i = 0; i < parameters.length; i++) {
      stringParam += parameters[i];
+
       //skip the comma at the end
      if (i !== parameters.length-1) {
         stringParam += ", ";
@@ -1823,7 +1850,6 @@ Blockly.Java.specialCast = function(body, key, paramList, typeCastMap){
    }
 
   return stringParam;
-  //return resultList;
 };
 
 
@@ -1861,7 +1887,6 @@ Blockly.Java.isSingleMathBlock = function(mathBlock){
 Blockly.Java.isMathOperationBlock = function(mathBlock){
     return mathOperationBlocks.indexOf(mathBlock.type) >= 0;
 };
-
 Blockly.Java.parseMathOperationBlock = function(mathBlock){
   var code = "";
   var type = mathBlock.type;
@@ -2261,7 +2286,6 @@ Blockly.Java.isStringBlock = function(block){
   }
   return isString;
 };
-
 Blockly.Java.parseJBridgeLogicCompareBlocks = function(logicBlock){
   var leftBlock = logicBlock.childBlocks_[0];
   var rightBlock = logicBlock.childBlocks_[1];
@@ -3523,7 +3547,7 @@ Blockly.Java.genJBridgeListIsListBlock = function(genCode){
   * @param {String} javaCode generated
   * @return{String} Prity code generated if no errors
   */
-Blockly.Java.prityPrintJBridgeCode = function(javaCode){
+Blockly.Java.prettyPrintJBridgeCode = function(javaCode){
   var stack=new Array();
   var lines = javaCode.split('\n');
   var prityPrint = [];

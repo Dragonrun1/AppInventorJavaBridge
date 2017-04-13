@@ -37,7 +37,6 @@ public class GenerateJavaCommand extends ChainableCommand {
                 new Command() {
                     @Override
                     public void execute() {
-                        ErrorReporter.reportError(MESSAGES.javaGenerationError());
                     }
                 });
     }
