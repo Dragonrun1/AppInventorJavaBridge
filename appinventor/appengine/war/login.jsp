@@ -33,7 +33,7 @@ if (locale == null) {
     font-family: 'Courier New', Courier, monospace;">App Inventor<br>Java Bridge
     </h1>
     <h3 style="color:#ffae00;font-size: 24px;">A University of San Francisco Project</h3>
-    <p style="margin-bottom: 25px;"><a href="http://www.appinventor.org/jbridge"
+    <p style="margin-bottom: 25px;"><a target="_blank" href="http://www.appinventor.org/jbridge"
                             style="color:white;">
                             Learn More about the Java Bridge Project
                          </a>
@@ -43,62 +43,21 @@ if (locale == null) {
   <% if (error != null) {
     out.println("<center><font color=red><b>" + error + "</b></font></center><br/>");
   } %>
-  <form method=POST action="/login">
-    <center><table>
-      <tr><td><input style="height: 35px;" placeholder="Email" type=text name=email value="" size="35"></td></tr>
-      <tr><td></td></td>
-        <tr><td><input style="height: 35px;" placeholder="Password" type=password name=password value="" size="35"></td></tr>
-      </table></center>
-      <% if (locale != null && !locale.equals("")) {
-       %>
-       <input type=hidden name=locale value="<%= locale %>">
-       <% }
-       if (repo != null && !repo.equals("")) {
-         %>
-         <input type=hidden name=repo value="<%= repo %>">
-       <% }
-       if (galleryId != null && !galleryId.equals("")) {
-         %>
-         <input type=hidden name=galleryId value="<%= galleryId %>">
-       <% } %>
-       <% if (redirect != null && !redirect.equals("")) {
-         %>
-         <input type=hidden name=redirect value="<%= redirect %>">
-       <% } %>
-       <p></p>
-     <center>
-      <input type=Submit value="${login}" style="border: 0px;padding: 10px;padding-left: 56px;border-radius: 17px;padding-right: 56px;font-size: 16px;background-color: white;">
-      </center>
-  </form>
    <p></p>
-
+   <p></p>
+   <p></p>
    <%    if (useGoogleLabel != null && useGoogleLabel.equals("true")) { %>
      <center><p><a href="<%= new UriBuilder("/login/google")
      .add("locale", locale)
      .add("repo", repo)
      .add("galleryId", galleryId)
-     .add("redirect", redirect).build() %>" style="text-decoration:none;text-decoration: none;background-color: #DF4A32;color: white;padding: 10px;border-radius: 17px;">Sign in with Google</a></p>
+     .add("redirect", redirect).build() %>" style="text-decoration:none;text-decoration: none;background-color: #DF4A32;color: white;padding: 15px;font-size: 20px;border-radius: 17px;">Sign in with Google</a></p>
     </center>
    <%    } %>
 
-   <center>
-         <p><a href="/login/sendlink"
-               style="color:white;text-decoration:none;">
-               ${passwordclickhereLabel}
-            </a>
-         </p>
-      </center>
-
    <footer>
     <p></p>
-    <center>
-      <%    if (locale != null && locale.equals("zh_CN")) { %>
-      <a href="http://www.weibo.com/mitappinventor" target="_blank"><img class="img-scale"
-        src="/images/mzl.png" width="30" height="30" title="Sina WeiBo"></a>&nbsp;
-        <%    } %>
-        <a href="http://www.appinventor.mit.edu" target="_blank"><img class="img-scale"
-          src="/images/login-app-inventor.jpg" width="50" height="30" title="MIT App Inventor"></a>
-    </center>
+
     <p></p>
     <p style="text-align: center; clear:both;">
     <br>

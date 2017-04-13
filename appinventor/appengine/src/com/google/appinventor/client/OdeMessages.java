@@ -5910,14 +5910,15 @@ public interface OdeMessages extends Messages {
 
 
   //Ode.java messages
-  @DefaultMessage("Welcome to App Inventor 2!")
+  @DefaultMessage("Welcome to App Inventor Java Bridge!")
   @Description("")
   String createNoProjectsDialogText();
 
-  @DefaultMessage("You do not have any projects in App Inventor 2. " +
-      "To learn how to use App Inventor, click the \"Guide\" " +
-      "link at the top of the window; or to start your first project, " +
-      "click the \"Start New Project\" button at the upper left of the window.")
+  @DefaultMessage("This version of App Inventor contains the Java Bridge." +
+          "Java Bridge will generate the Java Code Equivalent for your App Inventor apps!" +
+      "To get started, import an .aia file or create a new app." +
+      "Then click on the \"Java Bridge\" button in the Designer toolbar or navigate" +
+          " to Build -> Java Bridge to generate the Java for your app!")
   @Description("")
   String createNoProjectsDialogMessage1();
 
