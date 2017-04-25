@@ -1720,11 +1720,9 @@ Blockly.Java.createMethodParameterString = function (body) {
    // var castValue = new Object();
     var index = new Object ();
     for (var paramName in eventMethodParamListings){
-        if (body.search(paramName) >= 0){
-            index = eventMethodParamListings[paramName];
-            var castValue = methodParamsMap[methodParam][index];
-            parameters.push(castValue + " " + paramName);
-        }
+      index = eventMethodParamListings[paramName];
+      var castValue = methodParamsMap[methodParam][index];
+      parameters.push(castValue + " " + paramName);
     }
     var stringParam = "";
     for (var i = 0; i < parameters.length; i++) {
@@ -1783,19 +1781,17 @@ Blockly.Java.checkCast = function(methodParam, methodSpecialCases){
  * @param {Object} mapping from method to casting
  * @returns {String} the generated casting in java
  */
-Blockly.Java.normalCast = function (body, methodParam, eventMethodParamListings, methodParamsMap){
+ Blockly.Java.normalCast = function (body, methodParam, eventMethodParamListings, methodParamsMap){
      var parameters = [];
      var stringParam = "";
      var index = new Object(); //get key from methodParasMap
 
      for (var paramName in eventMethodParamListings){
-        if (body.search(paramName) >= 0){
-            index = eventMethodParamListings[paramName];
-            if (methodParamsMap[methodParam] != undefined){
-              var objectCastType = Blockly.Java.findObjectCastType(methodParamsMap[methodParam][index]);
-              parameters.push("(" + objectCastType + ")" + "params[" + eventMethodParamListings[paramName] + "]");
-            }
-        }
+       index = eventMethodParamListings[paramName];
+       if (methodParamsMap[methodParam] != undefined){
+         var objectCastType = Blockly.Java.findObjectCastType(methodParamsMap[methodParam][index]);
+         parameters.push("(" + objectCastType + ")" + "params[" + eventMethodParamListings[paramName] + "]");
+       }
      }
 
      for (var i = 0; i < parameters.length; i++) {
@@ -1833,10 +1829,8 @@ Blockly.Java.specialCast = function(body, key, paramList, typeCastMap){
 
   if (v != null ){
     for (var paramName in paramList) {
-        if (body.search(paramName) >= 0){
-             parameters.push(v[x].replace(/XXX/g, "params["+ paramList[paramName] + "]"));
-         x++;
-        }
+      parameters.push(v[x].replace(/XXX/g, "params["+ paramList[paramName] + "]"));
+      x++;
     }
   }
 
