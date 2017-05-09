@@ -162,6 +162,8 @@ var JAVA_BOOLEAN = "boolean";
 var JAVA_STRING = "String";
 var JAVA_SPRITE = "Sprite";
 var JAVA_VIEW = "AndroidViewComponent";
+var JAVA_YAIL_LIST = "YailList";
+var JAVA_ARRAY_LIST = "ArrayList";
 var JAVA_OBJECT = "Object";
 
 var methodParam= new Object();
@@ -214,7 +216,6 @@ var methodParamsMap = {
     'Heading' : {0: JAVA_FLOAT},
 
     //camera
-    'TakePicture' : {0: JAVA_STRING},
     'AfterPicture' : {0: JAVA_STRING},
 
     //videoPlayer
@@ -343,7 +344,19 @@ var methodParamsMap = {
     'ClearTag' :{0: JAVA_STRING},
 
     //texting
-    'MessageReceived' : {0: JAVA_STRING, 1: JAVA_STRING}
+    'MessageReceived' : {0: JAVA_STRING, 1: JAVA_STRING},
+
+    //screen methods
+    'OtherScreenClosed' : {0: JAVA_STRING, 1: JAVA_OBJECT},
+
+    //Image methods
+    'Picture' : {0: JAVA_STRING},
+
+    //Text Box Methods
+    'Hint' : {0: JAVA_STRING},
+
+    //List picker methods
+    'Elements' : {0: JAVA_YAIL_LIST}
 };
 //Map of double casting
 var methodSpecialCases = new Map();
@@ -1317,9 +1330,14 @@ Blockly.Java.parseJBridgeMethodCallBlock = function(methodCallBlock){
   var params = methodParamsMap[methodName];
   var count = 0;
   if (params != undefined) {
-    for (var _ in params) {
+    for (var typeIndex in params) {
       var paramBlock = methodCallBlock.childBlocks_[count];
       var genCode = Blockly.Java.parseBlock(paramBlock);
+
+      //assert the param is casted to type required by method
+      var requiredType = params[typeIndex];
+      genCode = Blockly.Java.assertType(requiredType, genCode, paramBlock);
+
       if (jBridgeIsIndividualBlock) {
         code = code + genCode + "\n";
       } else {
@@ -1547,14 +1565,30 @@ Blockly.Java.parseJBridgeSetBlock = function(setBlock){
   var code = "";
   //iterate through one child or until the second to last block depending on children
   var childLength = setBlock.childBlocks_.length > 1? setBlock.childBlocks_.length -1 : 1;
+
+  //retreive param types for component set method
+  var paramTypes = methodParamsMap[property];
+  var supportedMethod = false;
+  if (paramTypes != undefined){
+    supportedMethod = true;
+  }else {
+    generationErrors.push("Component Set Method (" + property + ") not supported in " + jBridgeCurrentScreen);
+  }
   for (var x = 0,childBlock; x < childLength; x++) {
     childBlock = setBlock.childBlocks_[x];
     var genCode = Blockly.Java.parseBlock(childBlock);
-     if(jBridgeIsIndividualBlock){
-        code = code + genCode + "\n";
-     }else{
-        value = value + genCode;
-     }
+
+    //assert param is casted to required type
+    if (supportedMethod){
+      var paramType = paramTypes[x];
+      genCode = Blockly.Java.assertType(paramType, genCode, childBlock);
+    }
+
+    if(jBridgeIsIndividualBlock){
+      code = code + genCode + "\n";
+    }else{
+      value = value + genCode;
+    }
   }
   //always cast parameters when parsing procedure
   if(Blockly.Java.shouldParseSetBlockValue(setBlock, setBlock.childBlocks_[0])){
@@ -1618,19 +1652,6 @@ Blockly.Java.genJBridgeSetBlock = function(componentName, property, value){
              +");";
   return code;
 };
-
-// Blockly.Java.paseJBridgeEventBlock = function(eventBlock){
-//   var code = "";
-//   var eventName = eventBlock.eventName;
-//   var componentName = eventBlock.instanceName;
-
-//   code = Blockly.Java.parseJBridgeEventBlock(eventBlock);
-
-//   //Add to RegisterEventsMap
-//   jBridgeRegisterEventMap[eventName] = Blockly.Java.genJBridgeEventDispatcher(eventName);
-
-//   return code;
-// };
 
 
 /**
@@ -1721,8 +1742,13 @@ Blockly.Java.createMethodParameterString = function (body) {
     var index = new Object ();
     for (var paramName in eventMethodParamListings){
       index = eventMethodParamListings[paramName];
-      var castValue = methodParamsMap[methodParam][index];
-      parameters.push(castValue + " " + paramName);
+      var methodMap = methodParamsMap[methodParam];
+      if (methodMap != undefined){
+        var castValue = methodParamsMap[methodParam][index];
+        parameters.push(castValue + " " + paramName);
+      }else {
+        generationErrors.push("Cannot find method param entry for " + methodParam + "." + paramName);
+      }
     }
     var stringParam = "";
     for (var i = 0; i < parameters.length; i++) {
@@ -2216,27 +2242,29 @@ Blockly.Java.isNumber = function(value){
 };
 
 Blockly.Java.getValueType = function(childType, value, block){
-  var variableType = "String";
+  var variableType = JAVA_STRING;
   if (childType == "Math"){
     if(value.indexOf(".") != -1){
-      variableType = "float";
+      variableType = JAVA_FLOAT;
     }else{
-      variableType = "int";
+      variableType = JAVA_INT;
     }
   }else if(childType == "Logic"){
-    variableType = "boolean";
+    variableType = JAVA_BOOLEAN;
   }else if (childType == "Lists"){
     if (block.type == "lists_select_item"){
       variableType = JAVA_OBJECT;
     }else {
       variableType = TYPE_JAVA_ARRAYLIST;
     }
+  }else if (childType == "Colors"){
+    variableType = JAVA_INT;
   }
   return variableType;
 };
 
 Blockly.Java.genJBridgeVariableIntializationBlock = function(leftValue, rightValue){
-  var code = ""
+  var code = "";
   code = leftValue
          + " = "
          + rightValue
@@ -3176,6 +3204,7 @@ Blockly.Java.parseJBridgeListSelectItemBlock = function(listBlock){
     }
   }else {
     listName = Blockly.Java.parseBlock(listBlock.childBlocks_[0]);
+    listName = Blockly.Java.assertType(JAVA_ARRAY_LIST, listName, listBlock.childBlocks_[0]);
     if(Blockly.Java.hasTypeCastKey(listName, listTypeCastMap)){
       listName = Blockly.Java.TypeCastOneValue(listName, listName, listTypeCastMap);
     }
@@ -3684,10 +3713,80 @@ Blockly.Java.removeColonsAndNewlines = function(code){
 };
 
 /**
+ * Asserts that the given code will be casted to the required type
+ * @param type The type to cast to
+ * @param code The code to cast
+ * @param childBlock The Block used to generate the code
+ */
+Blockly.Java.assertType = function(type, code, childBlock){
+  var castedCode = code;
+  switch (type){
+    case JAVA_STRING:
+      castedCode = Blockly.Java.castValueToString(childBlock, code);
+      break;
+    case JAVA_INT:
+      castedCode = Blockly.Java.castValueToInteger(childBlock, code);
+      break;
+    case JAVA_FLOAT:
+      castedCode = "Float.valueOf(" + code + ")";
+      break;
+    case JAVA_ARRAY_LIST:
+      castedCode = Blockly.Java.castValueToArrayList(childBlock, code);
+  }
+  return castedCode;
+};
+
+Blockly.Java.castValueToArrayList = function(block, value){
+  var needsCasting = false;
+  if (block.category != "Lists"){
+    needsCasting = true;
+  }
+  if (needsCasting) {
+    value = Blockly.Java.castToType(JAVA_ARRAY_LIST, value);
+  }
+
+  return value;
+};
+
+Blockly.Java.castValueToString = function(block, value){
+  var needsCasting = false;
+  if (block.category != "Text"){
+    if(block.category == "Variables"){
+      if (jBridgeLexicalVarTypes[value] != undefined && jBridgeLexicalVarTypes[value] != JAVA_STRING){
+        needsCasting = true;
+      }else if (jBridgeGlobalVarTypes[value] != undefined && jBridgeGlobalVarTypes[value] != JAVA_STRING){
+        needsCasting = true;
+      }
+    }else if (block.type == "component_set_get"){
+      if (block.setOrGet == "get") {
+        var property = block.property;
+        if (property == undefined){
+          property = block.propertyName;
+        }
+        var params = methodParamsMap[property];
+        if (params != undefined){
+          var param = params[0];
+          if (param != JAVA_STRING){
+            needsCasting = true;
+          }
+        }
+      }
+    } else if (block.category == "Math"){
+      needsCasting = true;
+    }
+  }
+  if (needsCasting) {
+    value = Blockly.Java.castToType(JAVA_STRING, value);
+  }
+
+  return value;
+};
+
+/**
  * Casts the given value to the given Java type
  */
 Blockly.Java.castToType = function(type, code){
-  var castedCode;
+  var castedCode = code;
   switch (type){
     case JAVA_STRING:
       castedCode = "String.valueOf(" + code + ")";
@@ -3698,8 +3797,10 @@ Blockly.Java.castToType = function(type, code){
     case JAVA_FLOAT:
       castedCode = "(float) (" + code + ")";
       break;
-    default:
-      castedCode = code;
+    case JAVA_ARRAY_LIST:
+      castedCode = "((List)" + code + ")" ;
+      jBridgeImportsMap["List"] = "import java.util.List;";
+      break;
   }
   return castedCode;
 };
