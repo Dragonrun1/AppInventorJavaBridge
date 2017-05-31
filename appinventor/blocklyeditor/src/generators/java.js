@@ -214,6 +214,8 @@ var methodParamsMap = {
     'EdgeReached' : {0: JAVA_INT},
     'Enabled' : {0: JAVA_BOOLEAN},
     'Heading' : {0: JAVA_FLOAT},
+    'Y' : {0: JAVA_DOUBLE},
+    'X' : {0: JAVA_DOUBLE},
 
     //camera
     'AfterPicture' : {0: JAVA_STRING},
@@ -345,6 +347,8 @@ var methodParamsMap = {
 
     //texting
     'MessageReceived' : {0: JAVA_STRING, 1: JAVA_STRING},
+    'PhoneNumber' : {0: JAVA_STRING},
+    'Message' : {0: JAVA_STRING},
 
     //screen methods
     'OtherScreenClosed' : {0: JAVA_STRING, 1: JAVA_OBJECT},
