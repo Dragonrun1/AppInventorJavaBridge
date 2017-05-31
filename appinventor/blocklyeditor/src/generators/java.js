@@ -1576,7 +1576,7 @@ Blockly.Java.parseJBridgeSetBlock = function(setBlock){
   if (paramTypes != undefined){
     supportedMethod = true;
   }else {
-    generationErrors.push("Component Set Method (" + property + ") not supported in " + jBridgeCurrentScreen);
+    console.log("Component Set Method (" + property + ") not supported in " + jBridgeCurrentScreen);
   }
   for (var x = 0,childBlock; x < childLength; x++) {
     childBlock = setBlock.childBlocks_[x];
