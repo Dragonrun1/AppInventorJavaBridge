@@ -611,8 +611,8 @@ public class Ode implements EntryPoint {
     seperatorLine.addStyleName("genpanel-hr");
 
     HTML helpList = new HTML("<ul>\n" +
-            "\t<li><a target=\"_blank\" href=\"https://docs.google.com/document/d/1oW7DSgy_Dx0LGnmf8kh7yytC6s3tZnrZsybI83op8nI/edit?usp=sharing\">Setting up your Java Project in Android Studio</a> (Preferred)</li>" +
-            "\t<li><a target=\"_blank\" href=\"https://docs.google.com/document/d/1VRXZOnNkcxlDgn589p7jrST377bG7FQOU2mm20yUoQo/edit?usp=sharing\">Setting up your Java Project in Eclipse</a></li>" +
+            "\t<li><a target=\"_blank\" href=\"https://docs.google.com/document/d/1oW7DSgy_Dx0LGnmf8kh7yytC6s3tZnrZsybI83op8nI/edit?usp=sharing\">Setting up your Java Project in Android Studio</a></li>" +
+            "\t<br><br><li><a target=\"_blank\" href=\"http://www.appinventor.org/jbridge\">Learn More</a></li>" +
             "</u>");
     helpList.addStyleName("genpanel-genInstructions");
 
