@@ -756,9 +756,48 @@ Blockly.Java.genJBridgeDefineProcedure = function(jBridgeProceduresMap){
 
 Blockly.Java.parseTopBlocks = function (topBlocks){
     for (var x = 0, block; block = topBlocks[x]; x++) {
-      jBridgeTopBlockCodesList.push(Blockly.Java.parseBlock(block));
+        if(Blockly.Java.floatingBlock(block) == false){
+            jBridgeTopBlockCodesList.push(Blockly.Java.parseBlock(block));
+        }
     }
 };
+
+/**
+ * Determines if the block is a floating block. Floating block is any block who's category is not component, variable, or procedure.
+ * category (i.e. Colors, Variables, etc.)
+ *
+ * @param {String} topBlocks JSON string describing the contents of the form. This is the JSON
+ * content from the ".scm" file for this form.
+ * @returns {Boolean} whether block is a floating block.
+ */
+Blockly.Java.floatingBlock = function (block){
+    if (block == undefined){
+        return false;
+    }
+    jBridgeIsIndividualBlock = false;
+    var blockCategory = block.category;
+    if (blockCategory == "Component"){
+        return false;
+    }else if (blockCategory == "Colors"){
+        return true;
+    }else if (blockCategory == "Variables"){
+        return false;
+    }else if(blockCategory == "Math"){
+        return true;
+    }else if( blockCategory == "Logic"){
+        return true;
+    }else if (blockCategory == "Procedures"){
+        return false;
+    }else if (blockCategory == "Control"){
+        return true;
+    }else if (blockCategory == "Lists"){
+        return true;
+    }else if (blockCategory == "Text"){
+        return true;
+    }
+    return false;
+};
+
 
 Blockly.Java.getJBridgeInstanceName = function(block){
   var name = block.instanceName;
@@ -3596,7 +3635,6 @@ Blockly.Java.prettyPrintJBridgeCode = function(javaCode){
   }
   return prityPrint.join("\n");
 };
-
 
  /**
   *  Adds the permissions and intents to the AndroidManifest.xml file
