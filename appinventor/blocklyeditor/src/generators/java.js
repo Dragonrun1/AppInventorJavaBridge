@@ -323,7 +323,9 @@ var methodParamsMap = {
 
     //sharing
     'ShareFile' :{0: JAVA_STRING},
-    'ShareFileWithMessage' :{0: JAVA_STRING, 1: JAVA_STRING},
+    'ShareFileWithMessage'
+
+        :{0: JAVA_STRING, 1: JAVA_STRING},
     'ShareMessage' :{0: JAVA_STRING},
 
     //twitter
@@ -542,6 +544,7 @@ Blockly.Java.parseJBridgeJsonData = function(jsonObject){
       if (Blockly.Java.hasTypeCastKey(prop, screenPropertyCastMap)){
         var castedValue = Blockly.Java.TypeCastOneValue(prop, jsonProperties[prop] ,screenPropertyCastMap);
         jBridgeInitializationList.push("this." + prop  + "(" + castedValue +");");
+
       }
     }
   }
@@ -673,14 +676,14 @@ Blockly.Java.genComponentImport = function(jBridgeImportsMap){
 };
 
 /**
- * Generates public class declarations, event handlers, and their corresponding public methods.
+ * Generates class declarations, event handlers, and their corresponding public methods.
  *
  * @param {String} topBlocks JSON string describing the contents of the form. This is the JSON
  * content from the ".scm" file for this form.
  * @returns {String} the generated code if there were no errors.
  */
 Blockly.Java.genJBridgeClass =  function (topBlocks){
-  var code = "\npublic class " + jBridgeCurrentScreen + " extends Form implements HandlesEventDispatching { \n"
+  var code = "\nclass " + jBridgeCurrentScreen + " extends Form implements HandlesEventDispatching { \n"
     + Blockly.Java.parseComponentDefinition(jBridgeVariableDefinitionMap)
     + Blockly.Java.genJBridgeDefineMethod()
     + Blockly.Java.genJBridgeDispatchEvent()
@@ -692,7 +695,7 @@ Blockly.Java.genJBridgeClass =  function (topBlocks){
 
 
 /**
- * Generates public class declarations, event handlers, and their corresponding public methods.
+ * Generates class declarations, event handlers, and their corresponding public methods.
  *
  * @param {String} topBlocks JSON string describing the contents of the form. This is the JSON
  * content from the ".scm" file for this form.
@@ -2247,6 +2250,7 @@ Blockly.Java.isNumber = function(value){
 
 Blockly.Java.getValueType = function(childType, value, block){
   var variableType = JAVA_STRING;
+
   if (childType == "Math"){
     if(value.indexOf(".") != -1){
       variableType = JAVA_FLOAT;
