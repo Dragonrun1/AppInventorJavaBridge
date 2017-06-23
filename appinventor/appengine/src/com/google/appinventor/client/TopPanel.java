@@ -271,7 +271,7 @@ public class TopPanel extends Composite {
     // has logged in, the top level *is* ODE; so for now don't make it a link.
     // Add timestamp to logo url to get around browsers that agressively cache
     // the image! This same trick is used in StorageUtil.getFilePath().
-    Image logo = new Image(LOGO_IMAGE_URL + "?t=" + System.currentTimeMillis());
+    /*Image logo = new Image(LOGO_IMAGE_URL + "?t=" + System.currentTimeMillis());
     logo.setSize("40px", "40px");
     logo.setStyleName("ode-Logo");
     String logoUrl = ode.getSystemConfig().getLogoUrl();
@@ -279,8 +279,8 @@ public class TopPanel extends Composite {
       logo.addClickHandler(new WindowOpenClickHandler(logoUrl));
     }
     panel.add(logo);
-    panel.setCellWidth(logo, "50px");
-    Label title = new Label("MIT App Inventor 2");
+    panel.setCellWidth(logo, "50px");*/
+    Label title = new Label("App Inventor Java Bridge");
     Label version = new Label("Beta");
     title.setStyleName("ode-LogoText");
     version.setStyleName("ode-LogoVersion");
@@ -290,8 +290,8 @@ public class TopPanel extends Composite {
     titleContainer.setCellHorizontalAlignment(version, HorizontalPanel.ALIGN_RIGHT);
     panel.add(titleContainer);
     panel.setCellWidth(titleContainer, "180px");
-    panel.setCellHorizontalAlignment(logo, HorizontalPanel.ALIGN_LEFT);
-    panel.setCellVerticalAlignment(logo, HorizontalPanel.ALIGN_MIDDLE);
+    /*panel.setCellHorizontalAlignment(logo, HorizontalPanel.ALIGN_LEFT);
+    panel.setCellVerticalAlignment(logo, HorizontalPanel.ALIGN_MIDDLE);*/
   }
 
   private void addMotd(VerticalPanel panel) {

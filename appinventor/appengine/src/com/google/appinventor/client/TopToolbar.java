@@ -196,53 +196,52 @@ public class TopToolbar extends Composite {
     // Help -> {About, Library, Get Started, Tutorials, Troubleshooting, Forums, Report an Issue,
     //  Companion Information, Show Splash Screen}
     helpItems.add(new DropDownItem(WIDGET_NAME_ABOUT, MESSAGES.aboutMenuItem(),
-        new AboutAction()));
-    helpItems.add(null);
+        new WindowOpenAction("http://www.appinventor.org/jbridge")));
     Config config = Ode.getInstance().getSystemConfig();
-    String libraryUrl = config.getLibraryUrl();
+    /*String libraryUrl = config.getLibraryUrl();
     if (!Strings.isNullOrEmpty(libraryUrl)) {
       helpItems.add(new DropDownItem(WIDGET_NAME_LIBRARY, MESSAGES.libraryMenuItem(),
           new WindowOpenAction(libraryUrl)));
-    }
-    String getStartedUrl = config.getGetStartedUrl();
+    }*/
+    /*String getStartedUrl = config.getGetStartedUrl();
     if (!Strings.isNullOrEmpty(getStartedUrl)) {
       helpItems.add(new DropDownItem(WIDGET_NAME_GETSTARTED, MESSAGES.getStartedMenuItem(),
           new WindowOpenAction(getStartedUrl)));
-    }
-    String extensionsUrl = config.getExtensionsUrl();
+    }*/
+    /*String extensionsUrl = config.getExtensionsUrl();
     if (!Strings.isNullOrEmpty(extensionsUrl)) {
       helpItems.add(new DropDownItem(WIDGET_NAME_EXTENSIONS, MESSAGES.extensionsMenuItem(),
           new WindowOpenAction(extensionsUrl)));
-    }
-    String tutorialsUrl = config.getTutorialsUrl();
+    }*/
+    /*String tutorialsUrl = config.getTutorialsUrl();
     if (!Strings.isNullOrEmpty(tutorialsUrl)) {
       helpItems.add(new DropDownItem(WIDGET_NAME_TUTORIALS, MESSAGES.tutorialsMenuItem(),
           new WindowOpenAction(tutorialsUrl)));
-    }
-    String troubleshootingUrl = config.getTroubleshootingUrl();
+    }*/
+    /*String troubleshootingUrl = config.getTroubleshootingUrl();
     if (!Strings.isNullOrEmpty(troubleshootingUrl)) {
       helpItems.add(new DropDownItem(WIDGET_NAME_TROUBLESHOOTING, MESSAGES.troubleshootingMenuItem(),
           new WindowOpenAction(troubleshootingUrl)));
-    }
-    String forumsUrl = config.getForumsUrl();
+    }*/
+    /*String forumsUrl = config.getForumsUrl();
     if (!Strings.isNullOrEmpty(forumsUrl)) {
       helpItems.add(new DropDownItem(WIDGET_NAME_FORUMS, MESSAGES.forumsMenuItem(),
           new WindowOpenAction(forumsUrl)));
-    }
-    helpItems.add(null);
-    String feedbackUrl = config.getFeedbackUrl();
+    }*/
+//    helpItems.add(null);
+    String feedbackUrl = "https://groups.google.com/forum/?utm_medium=email&utm_source=footer#!forum/app-inventor-java-bridge";
     if (!Strings.isNullOrEmpty(feedbackUrl)) {
       helpItems.add(new DropDownItem(WIDGET_NAME_FEEDBACK, MESSAGES.feedbackMenuItem(),
           new WindowOpenAction(feedbackUrl)));
-      helpItems.add(null);
+//      helpItems.add(null);
     }
-    helpItems.add(new DropDownItem(WIDGET_NAME_COMPANIONINFO, MESSAGES.companionInformation(),
+    /*helpItems.add(new DropDownItem(WIDGET_NAME_COMPANIONINFO, MESSAGES.companionInformation(),
         new AboutCompanionAction()));
     helpItems.add(new DropDownItem(WIDGET_NAME_COMPANIONUPDATE, MESSAGES.companionUpdate(),
         new CompanionUpdateAction()));
     helpItems.add(new DropDownItem(WIDGET_NAME_SHOWSPLASH, MESSAGES.showSplashMenuItem(),
         new ShowSplashAction()));
-
+*/
     // Create the TopToolbar drop down menus.
     fileDropDown = new DropDownButton(WIDGET_NAME_PROJECT, MESSAGES.projectsTabName(),
         fileItems, false);
@@ -712,11 +711,8 @@ public class TopToolbar extends Composite {
       String html = MESSAGES.gitBuildId(GitBuildId.getDate(), GitBuildId.getVersion()) +
           "<BR/>Use Companion: " + BlocklyPanel.getCompVersion();
       Config config = Ode.getInstance().getSystemConfig();
-      String releaseNotesUrl = config.getReleaseNotesUrl();
-      if (!Strings.isNullOrEmpty(releaseNotesUrl)) {
-        html += "<BR/><BR/>Please see <a href=\"" + releaseNotesUrl +
-            "\" target=\"_blank\">release notes</a>";
-      }
+      html += "<BR/><BR/>Please see <a href=\"" + "http://www.appinventor.org/jbridge" +
+              "\" target=\"_blank\">release notes</a>";
       String tosUrl = config.getTosUrl();
       if (!Strings.isNullOrEmpty(tosUrl)) {
         html += "<BR/><BR/><a href=\"" + tosUrl +
