@@ -2244,7 +2244,7 @@ public class ObjectifyStorageIo implements  StorageIo {
                         byte[] fileContent1 = new byte[javaBridge.available()];
                         javaBridge.read(fileContent1);
                         FileData fd = new FileData();
-                        fd.fileName = "lib/AppInventor-JavaLibrary.jar";
+                        fd.fileName = "libs/AppInventor-JavaLibrary.jar";
                         fd.content = fileContent1;
                         fileData.add(fd);
                     } catch (IOException e) {
