@@ -323,7 +323,9 @@ var methodParamsMap = {
 
     //sharing
     'ShareFile' :{0: JAVA_STRING},
-    'ShareFileWithMessage' :{0: JAVA_STRING, 1: JAVA_STRING},
+    'ShareFileWithMessage'
+
+        :{0: JAVA_STRING, 1: JAVA_STRING},
     'ShareMessage' :{0: JAVA_STRING},
 
     //twitter
@@ -542,6 +544,7 @@ Blockly.Java.parseJBridgeJsonData = function(jsonObject){
       if (Blockly.Java.hasTypeCastKey(prop, screenPropertyCastMap)){
         var castedValue = Blockly.Java.TypeCastOneValue(prop, jsonProperties[prop] ,screenPropertyCastMap);
         jBridgeInitializationList.push("this." + prop  + "(" + castedValue +");");
+
       }
     }
   }
@@ -673,14 +676,14 @@ Blockly.Java.genComponentImport = function(jBridgeImportsMap){
 };
 
 /**
- * Generates public class declarations, event handlers, and their corresponding public methods.
+ * Generates class declarations, event handlers, and their corresponding public methods.
  *
  * @param {String} topBlocks JSON string describing the contents of the form. This is the JSON
  * content from the ".scm" file for this form.
  * @returns {String} the generated code if there were no errors.
  */
 Blockly.Java.genJBridgeClass =  function (topBlocks){
-  var code = "\npublic class " + jBridgeCurrentScreen + " extends Form implements HandlesEventDispatching { \n"
+  var code = "\nclass " + jBridgeCurrentScreen + " extends Form implements HandlesEventDispatching { \n"
     + Blockly.Java.parseComponentDefinition(jBridgeVariableDefinitionMap)
     + Blockly.Java.genJBridgeDefineMethod()
     + Blockly.Java.genJBridgeDispatchEvent()
@@ -692,7 +695,7 @@ Blockly.Java.genJBridgeClass =  function (topBlocks){
 
 
 /**
- * Generates public class declarations, event handlers, and their corresponding public methods.
+ * Generates class declarations, event handlers, and their corresponding public methods.
  *
  * @param {String} topBlocks JSON string describing the contents of the form. This is the JSON
  * content from the ".scm" file for this form.
@@ -756,9 +759,48 @@ Blockly.Java.genJBridgeDefineProcedure = function(jBridgeProceduresMap){
 
 Blockly.Java.parseTopBlocks = function (topBlocks){
     for (var x = 0, block; block = topBlocks[x]; x++) {
-      jBridgeTopBlockCodesList.push(Blockly.Java.parseBlock(block));
+        if(Blockly.Java.floatingBlock(block) == false){
+            jBridgeTopBlockCodesList.push(Blockly.Java.parseBlock(block));
+        }
     }
 };
+
+/**
+ * Determines if the block is a floating block. Floating block is any block who's category is not component, variable, or procedure.
+ * category (i.e. Colors, Variables, etc.)
+ *
+ * @param {String} topBlocks JSON string describing the contents of the form. This is the JSON
+ * content from the ".scm" file for this form.
+ * @returns {Boolean} whether block is a floating block.
+ */
+Blockly.Java.floatingBlock = function (block){
+    if (block == undefined){
+        return false;
+    }
+    jBridgeIsIndividualBlock = false;
+    var blockCategory = block.category;
+    if (blockCategory == "Component"){
+        return false;
+    }else if (blockCategory == "Colors"){
+        return true;
+    }else if (blockCategory == "Variables"){
+        return false;
+    }else if(blockCategory == "Math"){
+        return true;
+    }else if( blockCategory == "Logic"){
+        return true;
+    }else if (blockCategory == "Procedures"){
+        return false;
+    }else if (blockCategory == "Control"){
+        return true;
+    }else if (blockCategory == "Lists"){
+        return true;
+    }else if (blockCategory == "Text"){
+        return true;
+    }
+    return false;
+};
+
 
 Blockly.Java.getJBridgeInstanceName = function(block){
   var name = block.instanceName;
@@ -2247,6 +2289,7 @@ Blockly.Java.isNumber = function(value){
 
 Blockly.Java.getValueType = function(childType, value, block){
   var variableType = JAVA_STRING;
+
   if (childType == "Math"){
     if(value.indexOf(".") != -1){
       variableType = JAVA_FLOAT;
@@ -3596,7 +3639,6 @@ Blockly.Java.prettyPrintJBridgeCode = function(javaCode){
   }
   return prityPrint.join("\n");
 };
-
 
  /**
   *  Adds the permissions and intents to the AndroidManifest.xml file
