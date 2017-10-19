@@ -97,7 +97,9 @@ public final class YoungAndroidFormUpgrader {
       // later is connected to an old version of App Inventor.
       // We'll try to load the project but there may be compatibility issues if the project uses
       // future components or other features that the current system doesn't understand.
-      Window.alert(MESSAGES.newerVersionProject());
+
+      // TODO Uncomment for use in production
+      //Window.alert(MESSAGES.newerVersionProject());
       return false;
     }
 
@@ -113,10 +115,14 @@ public final class YoungAndroidFormUpgrader {
       // For a limited time, we assume #2, show a warning, and proceed.
       // TODO(lizlooney) - after the limited time is up (when we think that all appinventor
       // projects have been upgraded), we may decide to refuse to load the project.
-      Window.alert(MESSAGES.veryOldProject());
+
+      // TODO Uncomment for use in production
+      //Window.alert(MESSAGES.veryOldProject());
     }
 
-    return (srcYaVersion < sysYaVersion);
+    // TODO Uncomment for use in production
+    // return (srcYaVersion < sysYaVersion);
+    return false;
   }
 
   /*
