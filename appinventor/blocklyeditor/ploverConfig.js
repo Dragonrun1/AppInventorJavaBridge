@@ -113,7 +113,16 @@
 
     //generator files
     "./src/generators/yail.js",
-    "./src/generators/java.js",
+    "./src/generators/java/java.js",
+    "./src/generators/java/component.js",
+    "./src/generators/java/colors.js",
+    "./src/generators/java/variables.js",
+    "./src/generators/java/math.js",
+    "./src/generators/java/logic.js",
+    "./src/generators/java/procedures.js",
+    "./src/generators/java/control.js",
+    "./src/generators/java/lists.js",
+    "./src/generators/java/text.js",
     "./src/generators/yail/componentblock.js",
     "./src/generators/yail/lists.js",
     "./src/generators/yail/math.js",
