@@ -355,11 +355,9 @@ var TYPE_JAVA_ARRAYLIST = "ArrayList<Object>";
 //JSON Parameters
 var JSONKEY_JAVACODE = "java_code";
 var JSONKEY_SUCCESS = "success";
-var JSONVALUE_UNSUCCESSFUL = "false";
-var JSONVALUE_SUCCESSFUL = "true";
+var JSONVALUE_UNSUCCESSFUL = false;
+var JSONVALUE_SUCCESSFUL = true;
 var JSONKEY_ERRORS = "errors";
-
-var generationErrors = [];
 
 /**
  * Generate the Yail code for this blocks workspace, given its associated form specification.
@@ -379,17 +377,12 @@ Blockly.Java.getFormJava = function (formJson, packageName, forRepl) {
     javaCodeList.push(Blockly.Java.genJBridgeCode(Blockly.mainWorkspace.getTopBlocks(true), screenJSONInfo));
     var javaCode = Blockly.Java.prettyPrintJBridgeCode(javaCodeList.join('\n'));
 
-    jsonResponse[JSONKEY_SUCCESS] = generationErrors.length == 0;
-    if (generationErrors.length > 0) {
-      jsonResponse[JSONKEY_ERRORS] = generationErrors;
-    } else {
-      jsonResponse[JSONKEY_JAVACODE] = javaCode;
-    }
+    jsonResponse[JSONKEY_SUCCESS] = JSONVALUE_SUCCESSFUL;
+    jsonResponse[JSONKEY_JAVACODE] = javaCode;
   } catch (e) {
     // catch any runtime errors
     jsonResponse[JSONKEY_SUCCESS] = JSONVALUE_UNSUCCESSFUL;
-    generationErrors.push("Generation Error");
-    jsonResponse[JSONKEY_ERRORS] = generationErrors;
+    jsonResponse[JSONKEY_ERRORS] = e;
   }
 
   return JSON.stringify(jsonResponse);
@@ -973,7 +966,7 @@ Blockly.Java.createMethodParameterString = function (body) {
       var castValue = methodParamsMap[methodParam][index];
       parameters.push(castValue + " " + paramName);
     } else {
-      generationErrors.push("Cannot find method param entry for " + methodParam + "." + paramName);
+        throw "\"Cannot find method param entry for \" + methodParam + \".\" + paramName";
     }
   }
   var stringParam = "";

@@ -440,15 +440,17 @@ public final class EditorManager {
         JSONValue jsonValue = JSONParser.parseStrict(jsonResponse);
         JSONObject jsonContent = jsonValue.isObject();
         if (jsonContent != null){
-            boolean success = Boolean.valueOf(jsonContent.get("success").toString());
+            boolean success = jsonContent.get("success").isBoolean().booleanValue();
             if (success){
                 JSONString jsonString = jsonContent.get("java_code").isString();
                 javaCode = jsonString.stringValue();
             }else {
-                JSONArray errorsObject = jsonContent.get("errors").isArray();
+                JSONValue errorsObject = jsonContent.get("errors");
+                String errorMessage = "Generation Error";
                 if (errorsObject != null){
-                    ErrorReporter.reportError(errorsObject.get(0).toString());
+                    errorMessage = errorsObject.isString().stringValue();
                 }
+                ErrorReporter.reportError(errorMessage);
             }
         }
         return javaCode;

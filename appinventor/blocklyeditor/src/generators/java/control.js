@@ -47,19 +47,21 @@ Blockly.Java.parseJBridgeControlBlocks = function (controlBlock) {
  * @return The equivalent Java Code
  */
 Blockly.Java.parseJBridgeControlIfBlock = function (controlIfBlock) {
-  var code = "";
+  if (controlIfBlock.childBlocks_.length < 2){
+    throw "If block must contain condition and statement"
+  }
   var elseCount = controlIfBlock.elseCount_;
   var elseIfCount = controlIfBlock.elseifCount_;
-  var ifCondition = "";
-  var ifStatement = "";
+  var ifCondition = Blockly.Java.parseBlock(controlIfBlock.childBlocks_[0]);
+  var ifStatement = Blockly.Java.parseBlock(controlIfBlock.childBlocks_[1]);
   if (controlIfBlock.childBlocks_[1].category == "Logic" || controlIfBlock.childBlocks_[1].type == "text_compare") {
-    ifCondition = Blockly.Java.parseBlock(controlIfBlock.childBlocks_[1]);
-    ifStatement = Blockly.Java.parseBlock(controlIfBlock.childBlocks_[0]);
-  } else {
-    ifCondition = Blockly.Java.parseBlock(controlIfBlock.childBlocks_[0]);
-    ifStatement = Blockly.Java.parseBlock(controlIfBlock.childBlocks_[1]);
+    // Logic and Text Compare blocks are swapped
+    var tmp = ifCondition;
+    ifCondition = ifStatement;
+    ifStatement = tmp;
   }
-  code = Blockly.Java.genJBridgeControlIfBlock(ifCondition, ifStatement);
+
+  var code = Blockly.Java.genJBridgeControlIfBlock(ifCondition, ifStatement);
   var index = 2 + (elseIfCount * 2);
   if (elseIfCount > 0) {
     for (var i = 2; i < index; i = i + 2) {
