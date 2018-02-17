@@ -16,7 +16,7 @@ exports.execute =  function (){
 
   // Open the actual page and load all the JavaScript in it
   // if success is true, all went well
-  page.open('blocklyeditor/src/demos/yail/yail_testing_index.html', function(status) {
+  page.open('blocklyeditor/tests/com/google/appinventor/yail_testing_index.html', function(status) {
     if (status !== 'success') {
       console.log('load of yail_testing_index.html unsuccessful');
       phantom.exit();
