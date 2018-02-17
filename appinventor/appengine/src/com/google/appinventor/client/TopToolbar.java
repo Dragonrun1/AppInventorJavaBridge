@@ -170,10 +170,11 @@ public class TopToolbar extends Composite {
     // Connect -> {Connect to Companion; Connect to Emulator; Connect to USB; Reset Connections}
     connectItems.add(new DropDownItem(WIDGET_NAME_WIRELESS_BUTTON,
         MESSAGES.AICompanionMenuItem(), new WirelessAction()));
-    connectItems.add(new DropDownItem(WIDGET_NAME_EMULATOR_BUTTON,
-        MESSAGES.emulatorMenuItem(), new EmulatorAction()));
-    connectItems.add(new DropDownItem(WIDGET_NAME_USB_BUTTON, MESSAGES.usbMenuItem(),
-        new UsbAction()));
+    // UNSUPPORTED JAVA BRIDGE OPTIONS
+    //connectItems.add(new DropDownItem(WIDGET_NAME_EMULATOR_BUTTON,
+    //    MESSAGES.emulatorMenuItem(), new EmulatorAction()));
+    //connectItems.add(new DropDownItem(WIDGET_NAME_USB_BUTTON, MESSAGES.usbMenuItem(),
+    //    new UsbAction()));
     connectItems.add(null);
     connectItems.add(new DropDownItem(WIDGET_NAME_RESET_BUTTON, MESSAGES.resetConnectionsMenuItem(),
         new ResetAction()));
