@@ -1,0 +1,204 @@
+<!--
+  This is a test for bed for loading Blockly
+  Holds the functions used for phantomJS Java Bridge Tests.
+  Author: Thomas Oropeza (thomasoropeza@gmail.com)
+ -->
+
+<html>
+<head>
+<title> Blockly Test Bed </title>
+
+<!-- Library Components -->
+<script type="text/javascript" src="../../../../../../lib/closure-library/closure/goog/base.js"></script>
+<script type="text/javascript" src="../../../../../../build/blocklyeditor/blockly-all.js"></script>
+<script type="text/javascript" src="../../../../../../build/blocklyeditor/component-types.js"></script>
+
+<script type ="text/javascript">
+
+// -----------------
+// Starting Blockly
+// -----------------
+
+var formJson = "";
+var componentTypes = {};
+var YOUNG_ANDROID_VERSION;
+var BLOCKS_LANGUAGE_VERSION;
+
+function start() {
+
+  // GWT Functions related to the backpack
+  // These have to be defined before initialization
+
+  window.parent.backpack_ = "[]";
+
+  window.parent.BlocklyPanel_getBackpack =
+    function () { return  window.parent.backpack_ };
+
+  window.parent.BlocklyPanel_setBackpack =
+    function (pack) { window.parent.backpack_ = pack };
+
+  var formName = window.location.hash.substr(1);
+
+  // --- Begin Blockly Initialization
+
+  Blockly.inject(document.body);
+
+  // [lyn, 2015/01/02] Logging interferes with equality tests.
+  Blockly.Versioning.setLogging(false);
+
+  // [lyn, 2015/01/02] All BlocklyEvalTests fail in Blockly.TypeBlock.hide
+  // so I've redefined it to avoid errors.
+  Blockly.TypeBlock.hide = function () {};
+
+  Blockly.Drawer.createDom();
+  Blockly.Drawer.init();
+
+  Blockly.BlocklyEditor.formName_ = formName;
+
+  Blockly.showPrefixToUser = true;
+  Blockly.usePrefixInYail = false;
+
+  Blockly.globalNamePrefix = "global"; // For names introduced by global variable declarations
+  Blockly.procedureParameterPrefix = "input"; // For names introduced by procedure/function declarations
+  Blockly.handlerParameterPrefix = "input"; // For names introduced by event handlers
+  Blockly.localNamePrefix = "local"; // For names introduced by local variable declarations
+  Blockly.loopParameterPrefix = "index"; // For names introduced by for loops
+
+  Blockly.menuSeparator = " "; // Separate prefix from name with this. E.g., space in "param x"
+  Blockly.yailSeparator = "_"; // Separate prefix from name with this. E.g., underscore "param_ x"
+
+  // Curried for convenient use in field_lexical_variable.js
+  Blockly.possiblyPrefixMenuNameWith = // e.g., "param x" vs "x"
+    function (prefix) {
+      return function (name) {
+        return (Blockly.showPrefixToUser ? (prefix + Blockly.menuSeparator) : "") + name;
+      }
+    };
+
+  // Curried for convenient use in generators/yail/variables.js
+  Blockly.possiblyPrefixYailNameWith = // e.g., "param_x" vs "x"
+    function (prefix) {
+      return function (name) {
+        return (Blockly.usePrefixInYail ? (prefix + Blockly.yailSeparator) : "") + name;
+      }
+    };
+
+  Blockly.prefixGlobalMenuName = function (name) {
+    return Blockly.globalNamePrefix + Blockly.menuSeparator + name;
+  };
+
+  // Return a list of (1) prefix (if it exists, "" if not) and (2) unprefixed name
+  Blockly.unprefixName = function (name) {
+    if (name.indexOf(Blockly.globalNamePrefix + Blockly.menuSeparator) == 0) {
+      // Globals always have prefix, regardless of flags. Handle these specially
+      return [Blockly.globalNamePrefix, name.substring(Blockly.globalNamePrefix.length + Blockly.menuSeparator.length)];
+    } else if (!Blockly.showPrefixToUser) {
+      return ["", name];
+    } else {
+      var prefixes = [Blockly.procedureParameterPrefix,
+                      Blockly.handlerParameterPrefix,
+                      Blockly.localNamePrefix,
+                      Blockly.loopParameterPrefix]
+      for (i=0; i < prefixes.length; i++) {
+        if (name.indexOf(prefixes[i]) == 0) {
+          // name begins with prefix
+          return [prefixes[i], name.substring(prefixes[i].length + Blockly.menuSeparator.length)]
+        }
+      }
+      // Really an error if get here ...
+      return ["", name];
+    }
+  };
+
+  // GWT Functions related to the backpack
+
+  window.parent.backpack_ = "";
+
+  window.parent.BlocklyPanel_getBackpack =
+    function () { return  window.parent.backpack_ };
+
+  window.parent.BlocklyPanel_setBackpack =
+    function (pack) { window.parent.backpack_ = pack };
+
+  // ----- End the Blockly Initialization
+
+  // These "localized" operations are used in the internationalization code
+  // They are provided by the browser in the actual system, but
+  // are not present in phantomJS.  So define mock versions to be used by the tests.
+
+  window.parent.BlocklyPanel_getLocalizedEventName =
+    function (name) {return name} ;
+
+  window.parent.BlocklyPanel_getLocalizedPropertyName =
+    function (name) {return name} ;
+
+  window.parent.BlocklyPanel_getLocalizedMethodName =
+    function (name) {return name} ;
+
+  window.parent.BlocklyPanel_getLocalizedParameterName =
+    function (name) {return name} ;
+
+  // [lyn, 2015/01/02] Needed by the upgrader in versioning.js
+  // Is there a way to get the actual current version number?
+
+  window.parent.BlocklyPanel_getBlocksLanguageVersion = function () { return BLOCKS_LANGUAGE_VERSION; }
+  window.parent.BlocklyPanel_getYaVersion = function() { return YOUNG_ANDROID_VERSION; }
+
+  // ----- End the Mock locale operations
+
+
+  // ----- Emulate GWT Provided functions
+  BlocklyPanel_getComponentsJSONString = function(type) {
+    return JSON.stringify(componentTypeJson);
+  };
+
+  BlocklyPanel_getComponentInstanceTypeName = function(formName,instanceName) {
+    var json = JSON.parse(formJson);
+    var components = json.Properties.$Components;
+    var findtype = function(components) {
+      for (var i = 0, comp; comp = components[i]; i++) {
+        if (components[i].$Name == instanceName) {
+          return (components[i].$Type)
+        } else {
+          if (comp.$Components) {
+            var retval = findtype(comp.$Components); // Recurse!
+            if (retval) {
+              return retval;
+            }
+          }
+        }
+      }
+    };
+    if (instanceName == json.Properties.$Name) {
+      return (json.Properties.$Type);
+    }
+    var retval = findtype(json.Properties.$Components);
+    return (retval);
+  };
+
+    initComponentTypes();
+    Blockly.ComponentTypes.populateTypes();
+}
+
+function initComponentTypes() {
+    // Note: var componentTypeJson comes from component-types.js
+    for (var i = 0, comp; comp = componentTypeJson[i]; i++) {
+        componentTypes[comp.name] = comp;
+    }
+}
+
+//Contains function for JavaScript strings
+// Polyfill for https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String/contains
+// Pass in the string to match, and if needed, the starting position (defaults to start of String)
+if (!('contains' in String.prototype))
+  String.prototype.contains = function(str, startIndex) {
+    return -1 !== String.prototype.indexOf.call(this, str, startIndex);
+  }
+
+</script>
+</head>
+
+<!--Body will load Blockly onload()-->
+<body onload="start()"></body>
+
+</html>

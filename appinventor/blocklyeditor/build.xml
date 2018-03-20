@@ -17,7 +17,7 @@
 	</target>
 
 	<target name="tests"
-		      depends="BlocklyeditorTests">
+		      depends="BlocklyeditorTests, JavaBridgeTests">
 	</target>
 
 	<!-- =====================================================================
@@ -96,4 +96,11 @@
 		<ai.dojunit aij-testingtarget="BlocklyeditorTests" aij-dir="${blocklyeditor.pkg}">
 		</ai.dojunit>
 	</target>
+
+    <target name="JavaBridgeTests"
+            description="Javascript tests for testing Java Bridge generation">
+        <exec executable="phantomjs" dir="./tests/com/google/appinventor/javabridge" failonerror="true" >
+            <arg file="./tests/com/google/appinventor/javabridge/testExecutor.js"/>
+        </exec>
+    </target>
 </project>

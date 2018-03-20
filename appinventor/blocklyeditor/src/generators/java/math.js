@@ -211,7 +211,7 @@ Blockly.Java.parseJBridgeMathSingleBlock = function (mathBlock) {
     code = "Math.abs(" + value + ") * -1";
   }
   else {
-    var javaMethodName = singleMathJavaNames.get(operand);
+    var javaMethodName = singleMathJavaNames[operand];
     if (javaMethodName == "sqrt") {
       code = "Math." + javaMethodName + "((float)" + value + ")";
     } else {

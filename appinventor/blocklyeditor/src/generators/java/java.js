@@ -49,20 +49,20 @@ var jBridgeMethodAndTypeToPermisions = new Object();
 //predefined helper methods to be declared if used
 var toCSVMethod = "\npublic String toCSV(ArrayList<Object> originalList){\nStringBuilder stringBuilder = new StringBuilder();\nfor (int i=0;i < originalList.size(); i++){\nObject elem = originalList.get(i);\nstringBuilder.append(elem.toString());\nif (i < originalList.size()-1){\nstringBuilder.append(\", \");\n}\n}\nreturn stringBuilder.toString();\n}";
 
-var singleMathJavaNames = new Map();
-singleMathJavaNames.set("ROOT", "sqrt");
-singleMathJavaNames.set("ABS", "abs");
-singleMathJavaNames.set("LN", "log");
-singleMathJavaNames.set("EXP", "exp");
-singleMathJavaNames.set("ROUND", "round");
-singleMathJavaNames.set("CEILING", "ceil");
-singleMathJavaNames.set("FLOOR", "floor");
-singleMathJavaNames.set("SIN", "sin");
-singleMathJavaNames.set("COS", "cos");
-singleMathJavaNames.set("TAN", "tan");
-singleMathJavaNames.set("ASIN", "asin");
-singleMathJavaNames.set("ACOS", "acos");
-singleMathJavaNames.set("ATAN", "atan");
+var singleMathJavaNames = new Object();
+singleMathJavaNames["ROOT"] = "sqrt";
+singleMathJavaNames["ABS"] = "abs";
+singleMathJavaNames["LN"] = "log";
+singleMathJavaNames["EXP"] = "exp";
+singleMathJavaNames["ROUND"] = "round";
+singleMathJavaNames["CEILING"] = "ceil";
+singleMathJavaNames["FLOOR"] = "floor";
+singleMathJavaNames["SIN"] = "sin";
+singleMathJavaNames["COS"] = "cos";
+singleMathJavaNames["TAN"] = "tan";
+singleMathJavaNames["ASIN"] = "asin";
+singleMathJavaNames["ACOS"] = "acos";
+singleMathJavaNames["ATAN"] = "atan";
 
 var singleMathTypes = ["math_single", "math_trig", "math_abs", "math_neg", "math_round", "math_ceiling", "math_floor"];
 var mathOperationBlocks = ["math_add", "math_subtract", "math_multiply", "math_division", "math_compare", "math_atan2", "math_power"];
@@ -281,72 +281,72 @@ var methodParamsMap = {
   'Elements': {0: JAVA_YAIL_LIST}
 };
 //Map of double casting
-var methodSpecialCases = new Map();
+var methodSpecialCases = new Object();
 
 //canvas methods
-methodSpecialCases.set("BackgroundColor", ["((Float)XXX).intValue()"]);
-methodSpecialCases.set("DrawCircle", ["((Float)XXX).intValue()", "((Float)XXX).intValue()", "XXX", "XXX"]);
-methodSpecialCases.set("DrawLine", ["((Float)XXX).intValue()", "((Float)XXX).intValue()", "((Float)XXX).intValue()", "((Float)XXX).intValue()"]);
-methodSpecialCases.set("PaintColor", ["Integer.parseInt(String.valueOf(XXX))"]);
-methodSpecialCases.set("Dragged", ["((Float)XXX).intValue()", "((Float)XXX).intValue()", "((Float)XXX).intValue()", "((Float)XXX).intValue()", "((Float)XXX).intValue()", "((Float)XXX).intValue()", "((Boolean)XXX).booleanValue()"]);
-methodSpecialCases.set("MoveTo", ["((Float)XXX).intValue()", "((Float)XXX).intValue()"]);
-methodSpecialCases.set("Flung", ["((Float)XXX).intValue()", "((Float)XXX).intValue()", "((Float)XXX).intValue()", "((Float)XXX).intValue()", "((Float)XXX).intValue()", "((Float)XXX).intValue()", "((Boolean)XXX).booleanValue()"]);
-methodSpecialCases.set("TouchDown", ["((Float)XXX).intValue()", "((Float)XXX).intValue()"]);
-methodSpecialCases.set("TouchUp", ["((Float)XXX).intValue()", "((Float)XXX).intValue()"]);
-methodSpecialCases.set("Touched", ["((Float)XXX).intValue()", "((Float)XXX).intValue()", "((Boolean)XXX).booleanValue()"]);
-methodSpecialCases.set("PointinDirection", ["((Float)XXX).intValue()", "((Float)XXX).intValue()"]);
+methodSpecialCases["BackgroundColor"] = ["((Float)XXX).intValue()"];
+methodSpecialCases["DrawCircle"] = ["((Float)XXX).intValue()", "((Float)XXX).intValue()", "XXX", "XXX"];
+methodSpecialCases["DrawLine"] = ["((Float)XXX).intValue()", "((Float)XXX).intValue()", "((Float)XXX).intValue()", "((Float)XXX).intValue()"];
+methodSpecialCases["PaintColor"] = ["Integer.parseInt(String.valueOf(XXX))"];
+methodSpecialCases["Dragged"] = ["((Float)XXX).intValue()", "((Float)XXX).intValue()", "((Float)XXX).intValue()", "((Float)XXX).intValue()", "((Float)XXX).intValue()", "((Float)XXX).intValue()", "((Boolean)XXX).booleanValue()"];
+methodSpecialCases["MoveTo"] = ["((Float)XXX).intValue()", "((Float)XXX).intValue()"];
+methodSpecialCases["Flung"] = ["((Float)XXX).intValue()", "((Float)XXX).intValue()", "((Float)XXX).intValue()", "((Float)XXX).intValue()", "((Float)XXX).intValue()", "((Float)XXX).intValue()", "((Boolean)XXX).booleanValue()"];
+methodSpecialCases["TouchDown"] = ["((Float)XXX).intValue()", "((Float)XXX).intValue()"];
+methodSpecialCases["TouchUp"] = ["((Float)XXX).intValue()", "((Float)XXX).intValue()"];
+methodSpecialCases["Touched"] = ["((Float)XXX).intValue()", "((Float)XXX).intValue()", "((Boolean)XXX).booleanValue()"];
+methodSpecialCases["PointinDirection"] = ["((Float)XXX).intValue()", "((Float)XXX).intValue()"];
 
 //clock methods
-methodSpecialCases.set("Duration", ["((Calendar)XXX)", "((Calendar)XXX)"]);
-methodSpecialCases.set("TimerInterval", ["Integer.parseInt(String.valueOf(XXX))"]);
+methodSpecialCases["Duration"] = ["((Calendar)XXX)", "((Calendar)XXX)"];
+methodSpecialCases["TimerInterval"] = ["Integer.parseInt(String.valueOf(XXX))"];
 
 //location sensor
-methodSpecialCases.set("LocationChanged", ["((Float)XXX).intValue()", "((Float)XXX).intValue()", "((Float)XXX).intValue()"]);
+methodSpecialCases["LocationChanged"] = ["((Float)XXX).intValue()", "((Float)XXX).intValue()", "((Float)XXX).intValue()"];
 
 //accelerometer sensor
-methodSpecialCases.set("AccelerationChanged", ["((Float)XXX).intValue()", "((Float)XXX).intValue()", "((Float)XXX).intValue()"]);
+methodSpecialCases["AccelerationChanged"] = ["((Float)XXX).intValue()", "((Float)XXX).intValue()", "((Float)XXX).intValue()"];
 
 //orientation sensor
-methodSpecialCases.set("OrientationChanged", ["((Float)XXX).intValue()", "((Float)XXX).intValue()", "((Float)XXX).intValue()"]);
+methodSpecialCases["OrientationChanged"] = ["((Float)XXX).intValue()", "((Float)XXX).intValue()", "((Float)XXX).intValue()"];
 
 //pedometer
-methodSpecialCases.set('SimpleStep', ["(int)XXX", "((Float)XXX).intValue()"]);
-methodSpecialCases.set('WalkStep', ["(int)XXX", "((Float)XXX).intValue()"]);
+methodSpecialCases['SimpleStep'] = ["(int)XXX", "((Float)XXX).intValue()"];
+methodSpecialCases['WalkStep'] = ["(int)XXX", "((Float)XXX).intValue()"];
 
 //proximity sensor
-methodSpecialCases.set('ProximityChanged', ["((Float)XXX).intValue()"]);
+methodSpecialCases['ProximityChanged'] = ["((Float)XXX).intValue()"];
 
 //slider
-methodSpecialCases.set('PositionChanged', ["((Float)XXX).intValue()"]);
+methodSpecialCases['PositionChanged'] = ["((Float)XXX).intValue()"];
 
 //sprite
-methodSpecialCases.set('Speed', ["((Float)XXX).intValue()"]);
+methodSpecialCases['Speed'] = ["((Float)XXX).intValue()"];
 
 //Map of accepted Screen Properties and castings
-var screenPropertyCastMap = new Map();
-screenPropertyCastMap.set("Title", ["\"XXX\""]);
-screenPropertyCastMap.set("AboutScreen", ["\"XXX\""]);
-screenPropertyCastMap.set("AlignHorizontal", ["XXX"]);
-screenPropertyCastMap.set("AlignVertical", ["XXX"]);
-screenPropertyCastMap.set("AppName", ["\"XXX\""]);
-screenPropertyCastMap.set("BackgroundColor", ["Integer.parseInt(\"XXX\", 16)"]);
-screenPropertyCastMap.set("BackgroundImage", ["\"XXX\""]);
-screenPropertyCastMap.set("Icon", ["\"XXX\""]);
-screenPropertyCastMap.set("Scrollable", ["XXX"]);
+var screenPropertyCastMap = new Object();
+screenPropertyCastMap["Title"] = ["\"XXX\""];
+screenPropertyCastMap["AboutScreen"] = ["\"XXX\""];
+screenPropertyCastMap["AlignHorizontal"] = ["XXX"];
+screenPropertyCastMap["AlignVertical"] = ["XXX"];
+screenPropertyCastMap["AppName"] = ["\"XXX\""];
+screenPropertyCastMap["BackgroundColor"] = ["Integer.parseInt(\"XXX\", 16)"];
+screenPropertyCastMap["BackgroundImage"] = ["\"XXX\""];
+screenPropertyCastMap["Icon"] = ["\"XXX\""];
+screenPropertyCastMap["Scrollable"] = ["XXX"];
 
-var returnTypeCastMap = new Map();
-returnTypeCastMap.set("TinyDB1.GetValue,responseMessage", ["String.valueOf(XXX)"]);
-returnTypeCastMap.set("TinyDB1.GetValue,members", ["(ArrayList<?>)XXX"]);
-returnTypeCastMap.set("QuestionList", ["((ArrayList<?>)XXX)"]);
-returnTypeCastMap.set("AnswerList", ["((ArrayList<?>)XXX)"]);
-returnTypeCastMap.set("answer", ["String.valueOf(XXX)"]);
-returnTypeCastMap.set("resultsList", ["(ArrayList<?>)XXX"]);
-returnTypeCastMap.set("title", ["String.valueOf(XXX)"]);
-returnTypeCastMap.set("cost", ["String.valueOf(XXX)"]);
-returnTypeCastMap.set("isbn", ["String.valueOf(XXX)"]);
+var returnTypeCastMap = new Object();
+returnTypeCastMap["TinyDB1.GetValue,responseMessage"] = ["String.valueOf(XXX)"];
+returnTypeCastMap["TinyDB1.GetValue,members"] = ["(ArrayList<?>)XXX"];
+returnTypeCastMap["QuestionList"] = ["((ArrayList<?>)XXX)"];
+returnTypeCastMap["AnswerList"] = ["((ArrayList<?>)XXX)"];
+returnTypeCastMap["answer"] = ["String.valueOf(XXX)"];
+returnTypeCastMap["resultsList"] = ["(ArrayList<?>)XXX"];
+returnTypeCastMap["title"] = ["String.valueOf(XXX)"];
+returnTypeCastMap["cost"] = ["String.valueOf(XXX)"];
+returnTypeCastMap["isbn"] = ["String.valueOf(XXX)"];
 
-var listTypeCastMap = new Map();
-listTypeCastMap.set("bookItem", ["((ArrayList<?>)XXX)"]);
+var listTypeCastMap = new Object();
+listTypeCastMap["bookItem"] = ["((ArrayList<?>)XXX)"];
 /*** Type cast Map end ***/
 
 //Java Component Types
@@ -852,8 +852,8 @@ Blockly.Java.hasTypeCastKey = function (key, typeCastMap) {
 };
 
 Blockly.Java.getTypeCastValue = function (key, typeCastMap) {
-  if (typeCastMap.has(key)) {
-    return typeCastMap.get(key);
+  if (key in typeCastMap) {
+    return typeCastMap[key];
   }
   return null;
 };
