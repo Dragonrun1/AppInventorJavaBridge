@@ -962,17 +962,17 @@ public final class Compiler {
   private boolean runJarSigner(String apkAbsolutePath, String keystoreAbsolutePath) {
     // TODO(user): maybe make a command line flag for the jarsigner location
     String javaHome = System.getProperty("java.home");
+    String javaSuffix = "";
+    if (System.getProperty("os.name").startsWith("Windows")){
+      javaSuffix = ".exe";
+    }
     // This works on Mac OS X.
     File jarsignerFile = new File(javaHome + SLASH + "bin" +
-        SLASH + "jarsigner");
+        SLASH + "jarsigner" + javaSuffix);
     if (!jarsignerFile.exists()) {
       // This works when a JDK is installed with the JRE.
       jarsignerFile = new File(javaHome + SLASH + ".." + SLASH + "bin" +
-          SLASH + "jarsigner");
-      if (System.getProperty("os.name").startsWith("Windows")) {
-        jarsignerFile = new File(javaHome + SLASH + ".." + SLASH + "bin" +
-            SLASH + "jarsigner.exe");
-      }
+          SLASH + "jarsigner" + javaSuffix);
       if (!jarsignerFile.exists()) {
         LOG.warning("YAIL compiler - could not find jarsigner.");
         err.println("YAIL compiler - could not find jarsigner.");
